@@ -1,0 +1,337 @@
+<div class="container mt-4">
+  <header class="caixa-header">
+    <div>
+      <p class="eyebrow">Ações da igreja</p>
+      <h1>Caixa</h1>
+      <p class="subtitle">Registre cada venda e acompanhe o que ficou para depois.</p>
+    </div>
+    <div class="header-total">
+      <span>Total pago</span>
+      <strong>{{ formatarMoeda(totalPago) }}</strong>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Funcionalidades do caixa">
+    <button type="button" [class.active]="abaAtiva === 'registrar'" (click)="setAba('registrar')">
+      <span class="tab-icon">+</span>
+      <span>Registrar</span>
+    </button>
+    <button type="button" [class.active]="abaAtiva === 'pendentes'" (click)="setAba('pendentes')">
+      <span class="tab-icon">!</span>
+      <span>Fiado</span>
+      @if (gruposPendentes.length) {
+        <span class="tab-count">{{ gruposPendentes.length }}</span>
+      }
+    </button>
+    <button type="button" [class.active]="abaAtiva === 'resumo'" (click)="setAba('resumo')">
+      <span class="tab-icon">=</span>
+      <span>Resumo</span>
+    </button>
+  </nav>
+
+  @if (erro) {
+    <div class="alert" role="alert">{{ erro }}</div>
+  }
+
+  @if (abaAtiva === 'registrar') {
+    <section class="view">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Nova venda</p>
+          <h2>O que foi vendido?</h2>
+        </div>
+        <span class="section-note">Lançamento avulso</span>
+      </div>
+
+      <div class="register-layout" [class.register-layout--with-cart]="carrinho.length">
+        <form class="register-form" (ngSubmit)="registrarLancamento()" #lancamentoForm="ngForm">
+        <div class="category-picker">
+          <span class="field-label">Ação</span>
+          <div class="category-options">
+            <button type="button" [class.selected]="novoLancamento.categoria === 'bazar'" (click)="novoLancamento.categoria = 'bazar'">
+              <span class="category-emoji">B</span>
+              Bazar
+            </button>
+            <button type="button" [class.selected]="novoLancamento.categoria === 'hamburgada'" (click)="novoLancamento.categoria = 'hamburgada'">
+              <span class="category-emoji">H</span>
+              Hamburgada
+            </button>
+            <button type="button" [class.selected]="novoLancamento.categoria === 'feijoada'" (click)="novoLancamento.categoria = 'feijoada'">
+              <span class="category-emoji">F</span>
+              Feijoada
+            </button>
+          </div>
+        </div>
+
+        <div class="quick-items">
+          <span class="field-label">Itens rápidos</span>
+          <div class="quick-item-grid">
+            @for (item of itensRapidos(novoLancamento.categoria); track item.nome) {
+              <button type="button" class="quick-item" [class.quick-item--free]="!item.valor" (click)="selecionarItem(item)">
+                <strong>{{ item.nome }}</strong>
+                <small>{{ item.valor ? formatarMoeda(item.valor) : 'Valor livre' }}</small>
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (modalValorLivreAberto) {
+          <div class="free-item-editor">
+            <div>
+              <span class="field-label">Item diverso</span>
+              <small>Informe o que foi vendido e o valor para adicionar ao carrinho.</small>
+            </div>
+            <div class="free-item-fields">
+              <input [(ngModel)]="itemLivreDescricao" name="item_livre_descricao" placeholder="Descrição do item">
+              <input [(ngModel)]="itemLivreValor" name="item_livre_valor" type="number" min="0.01" step="0.01" placeholder="Valor">
+              <button type="button" class="free-item-confirm" (click)="confirmarItemLivre()">Adicionar</button>
+              <button type="button" class="free-item-cancel" (click)="fecharModalValorLivre()">Cancelar</button>
+            </div>
+          </div>
+        }
+
+        <div class="payment-field field-wide">
+          <span class="field-label">Forma de pagamento</span>
+          <div class="payment-options">
+            <button type="button" [class.selected]="novoLancamento.forma_pagamento === 'pix'" (click)="selecionarFormaPagamento('pix')">Pix</button>
+            <button type="button" [class.selected]="novoLancamento.forma_pagamento === 'debito'" (click)="selecionarFormaPagamento('debito')">Débito</button>
+            <button type="button" [class.selected]="novoLancamento.forma_pagamento === 'credito'" (click)="selecionarFormaPagamento('credito')">Crédito</button>
+            <button type="button" [class.selected]="novoLancamento.forma_pagamento === 'dinheiro'" (click)="selecionarFormaPagamento('dinheiro')">Dinheiro</button>
+            <button type="button" class="pending-option" [class.selected]="novoLancamento.forma_pagamento === 'fiado'" (click)="selecionarFormaPagamento('fiado')">Fiado</button>
+          </div>
+        </div>
+
+        @if (novoLancamento.forma_pagamento === 'fiado') {
+          <label class="field field-wide">
+            <span class="field-label">Quem vai pagar depois?</span>
+            <select name="membro_id" [(ngModel)]="novoLancamento.membro_id" required>
+              <option value="">Selecione o membro</option>
+              @for (membro of membros; track membro.id) {
+                <option [value]="membro.id">{{ membro.nome_completo }}</option>
+              }
+            </select>
+          </label>
+        }
+
+        <label class="field">
+          <span class="field-label">Data</span>
+          <input name="data_venda" type="date" [(ngModel)]="novoLancamento.data_venda" required>
+        </label>
+
+        <label class="field field-wide">
+          <span class="field-label">Observação <small>(opcional)</small></span>
+          <input name="observacoes" [(ngModel)]="novoLancamento.observacoes" placeholder="Alguma anotação?">
+        </label>
+
+          <button type="submit" class="register-button" [disabled]="salvando || !carrinho.length || lancamentoForm.invalid">
+            {{ salvando ? 'Salvando...' : 'Registrar venda' }}
+          </button>
+        </form>
+
+        @if (carrinho.length) {
+          <aside class="cart-panel" aria-label="Carrinho da venda">
+            <div class="cart-heading">
+              <div>
+                <p class="eyebrow">Venda atual</p>
+                <h3>Carrinho</h3>
+              </div>
+              <span>{{ quantidadeCarrinho }} {{ quantidadeCarrinho === 1 ? 'item' : 'itens' }}</span>
+            </div>
+
+            <div class="cart-items">
+              @for (item of carrinho; track item.id) {
+                <div class="cart-item">
+                  <div class="cart-item-main">
+                    <strong>{{ item.nome }}</strong>
+                    <small>{{ nomeCategoria(item.categoria) }} · {{ formatarMoeda(item.valor) }}</small>
+                  </div>
+                  <div class="cart-item-controls">
+                    <button type="button" (click)="alterarQuantidade(item, -1)" aria-label="Diminuir quantidade">-</button>
+                    <strong>{{ item.quantidade }}</strong>
+                    <button type="button" (click)="alterarQuantidade(item, 1)" aria-label="Aumentar quantidade">+</button>
+                  </div>
+                  <strong class="cart-item-total">{{ formatarMoeda(item.valor * item.quantidade) }}</strong>
+                  <button type="button" class="cart-remove" (click)="removerDoCarrinho(item)" aria-label="Remover item">×</button>
+                </div>
+              }
+            </div>
+
+            <div class="cart-total">
+              <span>Total</span>
+              <strong>{{ formatarMoeda(totalCarrinho) }}</strong>
+            </div>
+            <button type="button" class="cart-clear" (click)="limparCarrinho()">Limpar carrinho</button>
+          </aside>
+        }
+      </div>
+    </section>
+  }
+
+  @if (abaAtiva === 'pendentes') {
+    <section class="view">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Pagar depois</p>
+          <h2>Fiado em aberto</h2>
+        </div>
+        <strong class="open-total">{{ formatarMoeda(totalPendente) }}</strong>
+      </div>
+
+      <div class="filter-bar">
+        <span class="filter-label">Filtrar por ação</span>
+        <button type="button" [class.selected]="!filtroCategoria" (click)="filtroCategoria = ''">Todos</button>
+        <button type="button" [class.selected]="filtroCategoria === 'bazar'" (click)="filtroCategoria = 'bazar'">Bazar</button>
+        <button type="button" [class.selected]="filtroCategoria === 'hamburgada'" (click)="filtroCategoria = 'hamburgada'">Hamburgada</button>
+        <button type="button" [class.selected]="filtroCategoria === 'feijoada'" (click)="filtroCategoria = 'feijoada'">Feijoada</button>
+      </div>
+
+      @if (carregando) {
+        <p class="empty-state">Carregando pendências...</p>
+      } @else if (!gruposPendentes.length) {
+        <p class="empty-state">Nenhum fiado em aberto.</p>
+      } @else {
+        <div class="pending-groups">
+          @for (grupo of gruposPendentes; track grupo.vendaId) {
+            <article class="pending-group">
+              <div class="pending-heading">
+                <div>
+                  <strong>{{ grupo.membro }}</strong>
+                  <small>Uma venda · {{ grupo.itens.length }} {{ grupo.itens.length === 1 ? 'item' : 'itens' }}</small>
+                </div>
+                <div class="pending-heading-actions">
+                  <span>{{ formatarMoeda(grupo.total) }}</span>
+                  <button type="button" (click)="marcarVendaComoPaga(grupo)">Marcar venda como paga</button>
+                </div>
+              </div>
+              @for (item of grupo.itens; track item.id) {
+                <div class="pending-item">
+                  <div>
+                    <strong>{{ item.descricao }}</strong>
+                    <small>{{ nomeCategoria(item.categoria) }} · {{ nomeFormaPagamento(item.forma_pagamento) }} · {{ formatarData(item.data_venda) }} · x{{ item.quantidade }}</small>
+                  </div>
+                  <div class="pending-item-actions">
+                    <strong>{{ formatarMoeda(item.valor_total) }}</strong>
+                    <button type="button" (click)="excluirItem(item)">Excluir item</button>
+                  </div>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  @if (abaAtiva === 'resumo') {
+    <section class="view">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Visão geral</p>
+          <h2>Resumo das arrecadações</h2>
+        </div>
+        <div class="summary-actions">
+          <button type="button" class="refresh-button" (click)="exportarExcel()">Excel</button>
+          <button type="button" class="refresh-button" (click)="exportarPdf()">PDF</button>
+          <button type="button" class="refresh-button" (click)="carregarDados()">Atualizar</button>
+        </div>
+      </div>
+
+      <div class="summary-cards">
+        <div class="summary-card summary-card--highlight">
+          <span>Total registrado</span>
+          <strong>{{ formatarMoeda(totalFiltrado) }}</strong>
+        </div>
+        <div class="summary-card summary-card--pending">
+          <span>Em aberto</span>
+          <strong>{{ formatarMoeda(totalPendente) }}</strong>
+        </div>
+        <div class="summary-card">
+          <span>Feijoada</span>
+          <strong>{{ formatarMoeda(totalFeijoada) }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-filter">
+        <span class="filter-label">Mostrar no resumo</span>
+        <button type="button" [class.selected]="!filtroCategoria" (click)="filtroCategoria = ''">Tudo</button>
+        <button type="button" [class.selected]="filtroCategoria === 'bazar'" (click)="filtroCategoria = 'bazar'">Bazar</button>
+        <button type="button" [class.selected]="filtroCategoria === 'hamburgada'" (click)="filtroCategoria = 'hamburgada'">Hamburgada</button>
+        <button type="button" [class.selected]="filtroCategoria === 'feijoada'" (click)="filtroCategoria = 'feijoada'">Feijoada</button>
+        <select [(ngModel)]="filtroStatus" aria-label="Filtrar por situação">
+          <option value="">Pago e pendente</option>
+          <option value="pago">Somente pagos</option>
+          <option value="pendente">Somente pendentes</option>
+        </select>
+      </div>
+
+      <!-- <div class="category-totals">
+        <div><span>Bazar</span><strong>{{ formatarMoeda(totalPorCategoria('bazar')) }}</strong></div>
+        <div><span>Hamburgada</span><strong>{{ formatarMoeda(totalPorCategoria('hamburgada')) }}</strong></div>
+        <div><span>Feijoada</span><strong>{{ formatarMoeda(totalPorCategoria('feijoada')) }}</strong></div>
+      </div> -->
+
+      <div class="payment-totals">
+        <p class="eyebrow">Por forma de pagamento</p>
+        <div class="payment-total-list">
+          <div><span>Pix</span><strong>{{ formatarMoeda(totalPorForma('pix')) }}</strong></div>
+          <div><span>Débito</span><strong>{{ formatarMoeda(totalPorForma('debito')) }}</strong></div>
+          <div><span>Crédito</span><strong>{{ formatarMoeda(totalPorForma('credito')) }}</strong></div>
+          <div><span>Dinheiro</span><strong>{{ formatarMoeda(totalPorForma('dinheiro')) }}</strong></div>
+          <div><span>Fiado</span><strong>{{ formatarMoeda(totalPorForma('fiado')) }}</strong></div>
+        </div>
+      </div>
+
+      @if (!arrecadacoesFiltradas.length) {
+        <p class="empty-state">Nenhum lançamento encontrado com esses filtros.</p>
+      } @else {
+        <div class="sales-list">
+          @for (arrecadacao of arrecadacoesFiltradas; track arrecadacao.id) {
+            <div class="sale-item">
+              <div class="sale-main">
+                <strong>{{ arrecadacao.descricao }}</strong>
+                <small>{{ nomeCategoria(arrecadacao.categoria) }} · {{ nomeFormaPagamento(arrecadacao.forma_pagamento) }} · {{ formatarData(arrecadacao.data_venda) }} · x{{ arrecadacao.quantidade }}</small>
+              </div>
+              <div class="sale-side">
+                <strong>{{ formatarMoeda(arrecadacao.valor_total) }}</strong>
+                <span class="status" [class.status--pending]="arrecadacao.status === 'pendente'">{{ arrecadacao.status === 'pendente' ? 'Pendente' : 'Pago' }}</span>
+              </div>
+              @if (arrecadacao.status === 'pendente' && ehPrimeiroItemDaVenda(arrecadacao)) {
+                <button type="button" class="delete-button" (click)="marcarComoPago(arrecadacao)">Marcar venda como paga</button>
+              }
+              <button type="button" class="delete-button" (click)="excluirItem(arrecadacao)" aria-label="Excluir item">Excluir item</button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>
+
+@if (modalPagamentoAberto) {
+  <div class="payment-modal-backdrop" role="presentation" (click)="fecharModalPagamento()">
+    <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title" (click)="$event.stopPropagation()">
+      <div class="payment-modal-heading">
+        <div>
+          <p class="eyebrow">Quitar fiado</p>
+          <h2 id="payment-modal-title">Como a venda foi paga?</h2>
+          <p>Escolha o método usado no pagamento desta venda.</p>
+        </div>
+        <button type="button" class="payment-modal-close" (click)="fecharModalPagamento()" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="payment-modal-options">
+        <button type="button" [class.selected]="formaPagamentoQuitacao === 'pix'" (click)="formaPagamentoQuitacao = 'pix'">Pix</button>
+        <button type="button" [class.selected]="formaPagamentoQuitacao === 'credito'" (click)="formaPagamentoQuitacao = 'credito'">Crédito</button>
+        <button type="button" [class.selected]="formaPagamentoQuitacao === 'debito'" (click)="formaPagamentoQuitacao = 'debito'">Débito</button>
+        <button type="button" [class.selected]="formaPagamentoQuitacao === 'dinheiro'" (click)="formaPagamentoQuitacao = 'dinheiro'">Dinheiro</button>
+      </div>
+
+      <div class="payment-modal-actions">
+        <button type="button" class="payment-modal-cancel" (click)="fecharModalPagamento()">Cancelar</button>
+        <button type="button" class="payment-modal-confirm" [disabled]="salvando" (click)="confirmarPagamento()">
+          {{ salvando ? 'Salvando...' : 'Confirmar pagamento' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

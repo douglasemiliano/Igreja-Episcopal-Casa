@@ -1,14 +1,45 @@
-<div class="home">
-    Lecionário
-    <div class="container mt-5">
-      <mat-form-field appearance="outline" class="mr-4" style="width: 80%; ">
-        <mat-label>Data específica</mat-label>
-        <input matInput [matDatepicker]="picker1" [(ngModel)]="dataUnica" (ngModelChange)="mudouData()">
-        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-        <mat-datepicker #picker1></mat-datepicker>
-      </mat-form-field>
-    </div>
-    <button mat-stroked-button class="mt-4" style="background-color: purple; color: white;" (click)="goToLecionario()">
-      <mat-icon>search</mat-icon>Pesquisar
-    </button>
+<section class="container mt-4">
+  <div class="welcome-block">
+    <p class="eyebrow">Igreja Episcopal Casa</p>
+    <h1>Central da igreja</h1>
+    <p>Encontre rapidamente as áreas administrativas e as ações do dia.</p>
   </div>
+
+  <div class="quick-links" aria-label="Acessos rápidos">
+    <a class="quick-link quick-link--primary" routerLink="/lecionario">
+      <mat-icon>menu_book</mat-icon>
+      <span>
+        <strong>Lecionário de hoje</strong>
+        <small>Consulte a liturgia e as leituras do dia.</small>
+      </span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+
+    <a class="quick-link" routerLink="/acoes">
+      <mat-icon>volunteer_activism</mat-icon>
+      <span>
+        <strong>Ações e arrecadações</strong>
+        <small>Registre vendas, fiados e acompanhe os resumos.</small>
+      </span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+
+    <a class="quick-link" routerLink="/membros">
+      <mat-icon>people</mat-icon>
+      <span>
+        <strong>Membros</strong>
+        <small>Consulte e mantenha os cadastros da comunidade.</small>
+      </span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+
+    <a class="quick-link" routerLink="/dashboard">
+      <mat-icon>dashboard</mat-icon>
+      <span>
+        <strong>Dashboard</strong>
+        <small>Veja os principais indicadores do sistema.</small>
+      </span>
+      <mat-icon class="arrow">arrow_forward</mat-icon>
+    </a>
+  </div>
+</section>

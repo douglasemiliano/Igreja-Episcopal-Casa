@@ -39,6 +39,9 @@ export class ListarMembrosComponent implements OnInit {
       console.log('Membros carregados:', this.membros);
 
       this.dataSource = new MatTableDataSource(this.membros);
+      this.dataSource.filterPredicate = (membro, filtro) =>
+        [membro.nome_completo, membro.email, membro.telefone, membro.funcao]
+          .filter(Boolean).join(' ').toLowerCase().includes(filtro);
       this.dataSource.data;
 
       // Inicializa confirmacoes com arrays vazios para cada membro

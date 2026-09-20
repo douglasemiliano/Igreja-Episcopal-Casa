@@ -59,6 +59,10 @@
           <td mat-cell *matCellDef="let membro" class="">
             <div class="d-flex gap-2">
 
+              <button mat-icon-button [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes">
+                <mat-icon>visibility</mat-icon>
+              </button>
+
               <button mat-icon-button (click)="confirmarMembro(membro)" [disabled]="membro.confirmacao"> <mat-icon>done</mat-icon>  </button>
               <button mat-icon-button (click)="deletarMembro(membro)"> <mat-icon>delete</mat-icon>  </button>
 

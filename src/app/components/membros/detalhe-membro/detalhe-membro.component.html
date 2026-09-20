@@ -1,0 +1,12 @@
+<div class="member-detail">
+  <a routerLink="/membros" class="back-link"><mat-icon>arrow_back</mat-icon> Voltar para membros</a>
+  @if (carregando) { <p>Carregando histórico...</p> } @else if (erro) { <div class="alert">{{ erro }}</div> } @else {
+    <header class="member-header"><div><p class="eyebrow">Cadastro de membro</p><h1>{{ membro.nome_completo }}</h1><p>{{ membro.funcao || 'Membro da comunidade' }}</p></div><div class="member-contact"><span>{{ membro.email || 'Sem e-mail' }}</span><span>{{ membro.telefone || 'Sem telefone' }}</span></div></header>
+    <section class="history-grid">
+      <article class="history-panel"><h2>Dados pessoais</h2><dl><dt>Data de nascimento</dt><dd>{{ membro.data_nascimento ? (membro.data_nascimento | date:'dd/MM/yyyy') : 'Não informado' }}</dd><dt>Endereço</dt><dd>{{ membro.endereco || 'Não informado' }}</dd><dt>Entrada na igreja</dt><dd>{{ membro.data_entrada ? (membro.data_entrada | date:'dd/MM/yyyy') : 'Não informado' }}</dd></dl></article>
+      <article class="history-panel"><h2>Confirmações</h2>@if (!confirmacoes.length) {<p class="muted">Nenhuma confirmação registrada.</p>} @for (item of confirmacoes; track item.id) {<div class="history-row"><strong>{{ item.data_confirmacao | date:'dd/MM/yyyy' }}</strong><span>{{ item.oficiante || 'Oficiante não informado' }}</span></div>}</article>
+      <article class="history-panel"><h2>Histórico de fiados</h2>@if (!fiados.length) {<p class="muted">Nenhum fiado registrado.</p>} @for (venda of fiados; track venda.id) {<div class="history-row"><strong>{{ moeda(venda.total) }}</strong><span>{{ venda.status === 'pago' ? 'Pago' : 'Pendente' }} · {{ venda.data_venda | date:'dd/MM/yyyy' }}</span></div>}</article>
+      <article class="history-panel"><h2>Registros associados</h2>@if (!registros.length) {<p class="muted">Nenhum registro associado.</p>} @for (registro of registros; track registro.id) {<div class="history-row"><strong>Batismo</strong><span>Registro {{ registro.numero_registro || registro.id }}</span></div>}</article>
+    </section>
+  }
+</div>
