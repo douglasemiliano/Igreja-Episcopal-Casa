@@ -1,0 +1,106 @@
+<div class="relatorios-page">
+  <header class="relatorios-heading">
+    <div>
+      <p class="eyebrow">Relatórios</p>
+      <h1>Relatório de caixas</h1>
+      <p>Selecione um evento para visualizar os caixas e valores arrecadados.</p>
+    </div>
+    <div class="relatorios-actions">
+      <button type="button" class="refresh-button" (click)="carregarBase()">Atualizar</button>
+      <button type="button" class="refresh-button" [disabled]="!linhas.length" (click)="exportarExcel()">Excel</button>
+      <button type="button" class="refresh-button" [disabled]="!linhas.length" (click)="exportarPdf()">PDF</button>
+    </div>
+  </header>
+
+  @if (erro) {
+    <div class="alert" role="alert">{{ erro }}</div>
+  }
+
+  @if (carregando) {
+    <p class="empty-state">Carregando relatórios...</p>
+  } @else {
+    <section class="relatorios-filtro">
+      <label class="filter-field">
+        <span class="filter-label">Evento</span>
+        <select [(ngModel)]="eventoSelecionadoId" (change)="selecionarEvento()" aria-label="Selecionar evento">
+          <option value="">Selecione um evento</option>
+          @for (evento of eventos; track evento.id) {
+            <option [value]="evento.id">{{ evento.titulo }} · {{ evento.inicio | date:'dd/MM/yyyy' }}</option>
+          }
+        </select>
+      </label>
+    </section>
+
+    @if (eventoSelecionado) {
+      <section class="resumo-eventos">
+        <div class="resumo-cards">
+          <div class="resumo-card resumo-card--highlight">
+            <span>Total arrecadado</span>
+            <strong>{{ formatarMoeda(totalArrecadado) }}</strong>
+            <small>vendas pagas no evento</small>
+          </div>
+          <div class="resumo-card resumo-card--warning">
+            <span>Fiado em aberto</span>
+            <strong>{{ formatarMoeda(totalFiado) }}</strong>
+            <small>aguardando pagamento</small>
+          </div>
+          <div class="resumo-card">
+            <span>Caixas na busca</span>
+            <strong>{{ linhas.length }}</strong>
+            <small>{{ linhas.length === 1 ? 'caixa encontrado' : 'caixas encontrados' }}</small>
+          </div>
+        </div>
+
+        <div class="resumo-breakdown">
+          <div class="resumo-panel">
+            <div class="panel-heading"><h2>Por categoria</h2></div>
+            @for (item of totaisCategoria; track item.nome) {
+              <div class="resumo-linha"><span>{{ item.nome }}</span><strong>{{ formatarMoeda(item.total) }}</strong></div>
+            } @empty {
+              <p class="empty-state">Sem vendas pagas.</p>
+            }
+          </div>
+          <div class="resumo-panel">
+            <div class="panel-heading"><h2>Por forma de pagamento</h2></div>
+            @for (item of totaisForma; track item.nome) {
+              <div class="resumo-linha"><span>{{ item.nome }}</span><strong>{{ formatarMoeda(item.total) }}</strong></div>
+            } @empty {
+              <p class="empty-state">Sem vendas pagas.</p>
+            }
+          </div>
+        </div>
+
+        <div class="resumo-panel">
+          <div class="panel-heading"><h2>Caixas do evento</h2></div>
+          @if (!linhas.length) {
+            <p class="empty-state">Nenhum caixa encontrado no período deste evento.</p>
+          } @else {
+            <div class="caixas-list">
+              @for (linha of linhas; track linha.id; let indice = $index) {
+                <article class="caixa-item">
+                  <div class="caixa-item-head">
+                    <strong>Caixa {{ indice + 1 }}</strong>
+                    <small>aberto em {{ formatarDataHora(linha.abertoEm) }}</small>
+                  </div>
+                  <div class="caixa-item-grid">
+                    <div><span>Abertura</span><strong>{{ formatarMoeda(linha.valorAbertura) }}</strong></div>
+                    <div><span>Total vendido</span><strong>{{ formatarMoeda(linha.totalVendas) }}</strong></div>
+                    <div><span>Fiado</span><strong>{{ formatarMoeda(linha.totalFiado) }}</strong></div>
+                    <div><span>Esperado</span><strong>{{ formatarMoeda(linha.valorEsperado) }}</strong></div>
+                    <div><span>Informado</span><strong>{{ formatarMoeda(linha.valorFechamentoInformado) }}</strong></div>
+                    <div>
+                      <span>Diferença</span>
+                      <strong [class.negativa]="linha.diferenca < 0">{{ formatarMoeda(linha.diferenca) }}</strong>
+                    </div>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    } @else {
+      <p class="empty-state">Escolha um evento para ver os valores em tela.</p>
+    }
+  }
+</div>

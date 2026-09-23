@@ -1,5 +1,14 @@
 <div class="container mt-4">
   <header class="caixa-header">
+
+      @if (caixaAtual) {
+    <span class="caixa-badge caixa-badge--aberto">Caixa aberto</span>
+    <small>desde {{ formatarDataHora(caixaAtual.aberto_em) }}</small>
+    <!-- <button type="button" class="caixa-fechar-button" (click)="abrirModalFechamentoCaixa()">Fechar caixa</button> -->
+  } @else {
+    <span class="caixa-badge caixa-badge--fechado">Caixa fechado</span>
+  }
+
     <div>
       <p class="eyebrow">Ações da igreja</p>
       <h1>Caixa</h1>
@@ -11,6 +20,11 @@
     </div>
   </header>
 
+  @if (erro) {
+    <div class="alert" role="alert">{{ erro }}</div>
+  }
+
+  @if (caixaAtual) {
   <nav class="tabs" aria-label="Funcionalidades do caixa">
     <button type="button" [class.active]="abaAtiva === 'registrar'" (click)="setAba('registrar')">
       <span class="tab-icon">+</span>
@@ -28,10 +42,6 @@
       <span>Resumo</span>
     </button>
   </nav>
-
-  @if (erro) {
-    <div class="alert" role="alert">{{ erro }}</div>
-  }
 
   @if (abaAtiva === 'registrar') {
     <section class="view">
@@ -233,6 +243,7 @@
           <button type="button" class="refresh-button" (click)="exportarExcel()">Excel</button>
           <button type="button" class="refresh-button" (click)="exportarPdf()">PDF</button>
           <button type="button" class="refresh-button" (click)="carregarDados()">Atualizar</button>
+          <button type="button" class="btn btn-danger" (click)="abrirModalFechamentoCaixa()">Fechar Caixa</button>
         </div>
       </div>
 
@@ -305,6 +316,17 @@
       }
     </section>
   }
+} @else {
+  <div class="caixa-gate">
+    <div class="caixa-gate-card">
+      <span class="caixa-gate-icon">$</span>
+      <p class="eyebrow">Início do turno</p>
+      <h2>Abra o caixa para começar</h2>
+      <p>As vendas só podem ser registradas com o caixa aberto.</p>
+      <button type="button" class="caixa-abrir-button caixa-gate-button" (click)="abrirModalAberturaCaixa()">Abrir caixa</button>
+    </div>
+  </div>
+}
 </div>
 
 @if (modalPagamentoAberto) {
@@ -330,6 +352,64 @@
         <button type="button" class="payment-modal-cancel" (click)="fecharModalPagamento()">Cancelar</button>
         <button type="button" class="payment-modal-confirm" [disabled]="salvando" (click)="confirmarPagamento()">
           {{ salvando ? 'Salvando...' : 'Confirmar pagamento' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (modalAberturaCaixaAberto) {
+  <div class="payment-modal-backdrop" role="presentation" (click)="fecharModalAberturaCaixa()">
+    <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="abertura-title" (click)="$event.stopPropagation()">
+      <div class="payment-modal-heading">
+        <div>
+          <p class="eyebrow">Início do turno</p>
+          <h2 id="abertura-title">Abrir caixa</h2>
+          <p>Nenhum valor inicial é necessário para abrir o caixa.</p>
+        </div>
+        <button type="button" class="payment-modal-close" (click)="fecharModalAberturaCaixa()" aria-label="Fechar">×</button>
+      </div>
+
+      <label class="field field-wide">
+        <span class="field-label">Observação <small>(opcional)</small></span>
+        <input [(ngModel)]="observacoesAberturaCaixa" name="obs_abertura_caixa" placeholder="Alguma anotação?">
+      </label>
+
+      <div class="payment-modal-actions">
+        <button type="button" class="payment-modal-cancel" (click)="fecharModalAberturaCaixa()">Cancelar</button>
+        <button type="button" class="payment-modal-confirm" [disabled]="salvando" (click)="confirmarAberturaCaixa()">
+          {{ salvando ? 'Abrindo...' : 'Abrir caixa' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (modalFechamentoCaixaAberto) {
+  <div class="payment-modal-backdrop" role="presentation" (click)="fecharModalFechamentoCaixa()">
+    <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="fechamento-title" (click)="$event.stopPropagation()">
+      <div class="payment-modal-heading">
+        <div>
+          <p class="eyebrow">Fim do turno</p>
+          <h2 id="fechamento-title">Fechar caixa</h2>
+          <p>O caixa será fechado com o valor total arrecadado.</p>
+        </div>
+        <button type="button" class="payment-modal-close" (click)="fecharModalFechamentoCaixa()" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="fechamento-resumo">
+        <div><span>Total arrecadado</span><strong>{{ formatarMoeda(totalArrecadadoCaixaAtual) }}</strong></div>
+      </div>
+
+      <label class="field field-wide">
+        <span class="field-label">Observação <small>(opcional)</small></span>
+        <input [(ngModel)]="observacoesFechamentoCaixa" name="obs_fechamento_caixa" placeholder="Alguma anotação?">
+      </label>
+
+      <div class="payment-modal-actions">
+        <button type="button" class="payment-modal-cancel" (click)="fecharModalFechamentoCaixa()">Cancelar</button>
+        <button type="button" class="payment-modal-confirm" [disabled]="salvando" (click)="confirmarFechamentoCaixa()">
+          {{ salvando ? 'Fechando...' : 'Confirmar fechamento' }}
         </button>
       </div>
     </section>

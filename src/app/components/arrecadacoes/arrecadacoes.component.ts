@@ -7,6 +7,7 @@ import { SupabaseService } from '../../services/supabase.service';
 interface Arrecadacao {
   id: string;
   venda_id?: string;
+  caixa_id?: string | null;
   categoria: 'bazar' | 'hamburgada' | 'feijoada';
   descricao: string;
   quantidade: number;
@@ -39,6 +40,22 @@ interface ItemCarrinho {
   nome: string;
   valor: number;
   quantidade: number;
+}
+
+
+interface Caixa {
+  id: string;
+  status: 'aberto' | 'fechado';
+  aberto_por: string;
+  aberto_em: string;
+  valor_abertura: number;
+  observacoes_abertura?: string | null;
+  fechado_por?: string | null;
+  fechado_em?: string | null;
+  valor_fechamento_informado?: number | null;
+  valor_esperado?: number | null;
+  diferenca?: number | null;
+  observacoes_fechamento?: string | null;
 }
 
 @Component({
@@ -78,14 +95,49 @@ export class ArrecadacoesComponent implements OnInit {
     observacoes: ''
   };
 
+  caixaAtual: Caixa | null = null;
+
+modalAberturaCaixaAberto = false;
+observacoesAberturaCaixa = '';
+
+modalFechamentoCaixaAberto = false;
+observacoesFechamentoCaixa = '';
+
   ngOnInit(): void {
     this.carregarDados();
+    this.carregarCaixa();
   }
+
+  async carregarCaixa(): Promise<void> {
+  const { data, error } = await this.supabaseService.getCaixaAberto();
+  if (error) {
+    console.error(error);
+    return;
+  }
+  this.caixaAtual = data ?? null;
+}
+
+get totalArrecadadoCaixaAtual(): number {
+  if (!this.caixaAtual) return 0;
+  const vendaIds = new Set(
+    this.arrecadacoes
+      .filter((item) => item.caixa_id === this.caixaAtual!.id && item.status === 'pago')
+      .map((item) => item.venda_id ?? item.id)
+  );
+  return this.arrecadacoes
+    .filter((item) => vendaIds.has(item.venda_id ?? item.id) && item.status === 'pago')
+    .reduce((total, item) => total + Number(item.valor_total), 0);
+}
+
+  get arrecadacoesCaixaAtual(): Arrecadacao[] {
+  if (!this.caixaAtual) return [];
+  return this.arrecadacoes.filter((item) => item.caixa_id === this.caixaAtual!.id);
+}
 
   get arrecadacoesFiltradas(): Arrecadacao[] {
     const busca = this.filtroBusca.trim().toLowerCase();
 
-    return this.arrecadacoes.filter((arrecadacao) => {
+    return this.arrecadacoesCaixaAtual.filter((arrecadacao) => {
       const correspondeCategoria = !this.filtroCategoria || arrecadacao.categoria === this.filtroCategoria;
       const correspondeStatus = !this.filtroStatus || arrecadacao.status === this.filtroStatus;
       const texto = `${arrecadacao.descricao} ${arrecadacao.membro?.nome_completo ?? ''}`.toLowerCase();
@@ -102,7 +154,7 @@ export class ArrecadacoesComponent implements OnInit {
   }
 
   get totalPendente(): number {
-    return this.arrecadacoes
+    return this.arrecadacoesCaixaAtual
       .filter((arrecadacao) => arrecadacao.status === 'pendente')
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
@@ -130,7 +182,7 @@ export class ArrecadacoesComponent implements OnInit {
   }
 
   get totalPago(): number {
-    return this.arrecadacoes
+    return this.arrecadacoesCaixaAtual
       .filter((arrecadacao) => arrecadacao.status === 'pago')
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
@@ -152,13 +204,13 @@ export class ArrecadacoesComponent implements OnInit {
   }
 
   totalPorCategoria(categoria: 'bazar' | 'hamburgada' | 'feijoada'): number {
-    return this.arrecadacoes
+    return this.arrecadacoesCaixaAtual
       .filter((arrecadacao) => arrecadacao.categoria === categoria)
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
 
   totalPorForma(forma: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado'): number {
-    return this.arrecadacoes
+    return this.arrecadacoesCaixaAtual
       .filter((arrecadacao) => (arrecadacao.forma_pagamento ?? 'dinheiro') === forma)
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
@@ -297,6 +349,11 @@ export class ArrecadacoesComponent implements OnInit {
 
   async registrarLancamento(): Promise<void> {
     this.erro = '';
+
+      if (!this.caixaAtual) {
+    this.erro = 'Abra o caixa antes de registrar vendas.';
+    return;
+  }
 
     if (!this.carrinho.length) {
       this.erro = 'Adicione pelo menos um item ao carrinho.';
@@ -483,6 +540,7 @@ export class ArrecadacoesComponent implements OnInit {
     return vendas.flatMap((venda) => (venda.itens ?? []).map((item: any) => ({
       id: item.id,
       venda_id: venda.id,
+      caixa_id: venda.caixa_id, 
       categoria: item.categoria,
       descricao: item.descricao,
       quantidade: item.quantidade,
@@ -514,4 +572,72 @@ export class ArrecadacoesComponent implements OnInit {
       ? crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
+
+abrirModalAberturaCaixa(): void {
+  this.erro = '';
+  this.observacoesAberturaCaixa = '';
+  this.modalAberturaCaixaAberto = true;
+}
+
+fecharModalAberturaCaixa(): void {
+  this.modalAberturaCaixaAberto = false;
+}
+
+async confirmarAberturaCaixa(): Promise<void> {
+  this.erro = '';
+  this.salvando = true;
+  const { error } = await this.supabaseService.abrirCaixa(
+    0,
+    this.observacoesAberturaCaixa.trim() || null
+  );
+  this.salvando = false;
+
+  if (error) {
+    this.erro = 'Não foi possível abrir o caixa.';
+    console.error(error);
+    return;
+  }
+
+  this.modalAberturaCaixaAberto = false;
+  await this.carregarCaixa();
+}
+
+abrirModalFechamentoCaixa(): void {
+  this.erro = '';
+  this.observacoesFechamentoCaixa = '';
+  this.modalFechamentoCaixaAberto = true;
+}
+
+fecharModalFechamentoCaixa(): void {
+  this.modalFechamentoCaixaAberto = false;
+}
+
+async confirmarFechamentoCaixa(): Promise<void> {
+  this.erro = '';
+  this.salvando = true;
+  const { error } = await this.supabaseService.fecharCaixa(
+    this.totalArrecadadoCaixaAtual,
+    this.observacoesFechamentoCaixa.trim() || null
+  );
+  this.salvando = false;
+
+  if (error) {
+    this.erro = 'Não foi possível fechar o caixa.';
+    console.error(error);
+    return;
+  }
+
+  this.modalFechamentoCaixaAberto = false;
+  this.caixaAtual = null;
+  this.observacoesFechamentoCaixa = '';
+  this.observacoesAberturaCaixa = '';
+  this.limparCarrinho();
+  this.limparFormulario();
+  await this.carregarDados();
+}
+
+formatarDataHora(data: string): string {
+  return new Date(data).toLocaleString('pt-BR');
+}
+
 }

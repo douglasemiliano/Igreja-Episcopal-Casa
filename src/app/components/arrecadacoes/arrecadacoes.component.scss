@@ -1,21 +1,67 @@
+
+/* =========================================================
+   ARRECADAÇÕES / CAIXA
+   Usa os tokens definidos no styles.scss global:
+   --color-primary, --active-background, --card-background,
+   --background-color e --text-color.
+   ========================================================= */
+
 .caixa-page {
-//   max-width: 820px;
+  width: 100%;
+  max-width: 1380px;
   margin: 0 auto;
   color: var(--text-color);
 }
 
+/* ---------- Cabeçalho ---------- */
+
 .caixa-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.4rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1.25rem;
+  position: relative;
+  margin-bottom: 1.25rem;
+  padding: 1.5rem 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+  border-radius: 1rem;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 5%, var(--card-background)),
+      var(--card-background)
+    );
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-color) 7%, transparent);
 }
 
-.eyebrow, .field-label, .filter-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+.caixa-header > .caixa-badge {
+  position: absolute;
+  top: 2rem;
+  right: 8rem;
+}
+
+.caixa-header > small {
+  position: absolute;
+  top: 1.05rem;
+  right: 1.25rem;
+  transform: translateY(1.9rem);
+  color: color-mix(in srgb, var(--text-color) 58%, transparent);
+  font-size: 0.7rem;
+}
+
+.caixa-header > .caixa-fechar-button {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  transform: translateY(3.4rem);
+}
+
+.eyebrow,
+.field-label,
+.filter-label {
+  font-size: 0.72rem;
+  font-weight: var(--font-bold);
+  letter-spacing: 0.075em;
   text-transform: uppercase;
 }
 
@@ -24,63 +70,163 @@
   color: var(--color-primary);
 }
 
-h1, h2 {
-  margin: 0;
+h1,
+h2,
+h3 {
   color: var(--text-color);
 }
 
 h1 {
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.55rem);
+  font-weight: var(--font-extra-bold);
+  letter-spacing: -0.035em;
 }
 
 h2 {
+  margin: 0;
   font-size: 1.35rem;
+  font-weight: var(--font-bold);
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: var(--font-bold);
 }
 
 .subtitle {
+  max-width: 680px;
   margin: 0.45rem 0 0;
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--text-color) 64%, transparent);
+  font-size: 0.9rem;
 }
 
 .header-total {
-  padding: 0.75rem 1rem;
-  border-radius: 0.7rem;
+  min-width: 190px;
+  padding: 0.9rem 1rem;
+  border-radius: 0.8rem;
   background: var(--active-background);
   color: var(--color-primary-contrast);
   text-align: right;
-  white-space: nowrap;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--active-background) 25%, transparent);
 }
 
-.header-total span, .summary-card span {
+.header-total span,
+.summary-card span {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   opacity: 0.78;
 }
 
 .header-total strong {
   display: block;
   margin-top: 0.15rem;
-  font-size: 1.15rem;
+  font-size: 1.25rem;
+  font-weight: var(--font-extra-bold);
 }
+
+.caixa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: var(--font-bold);
+}
+
+.caixa-badge::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.caixa-badge--aberto {
+  color: #2f6840;
+  background: #e6f0e8;
+}
+
+.caixa-badge--fechado {
+  color: #a6402f;
+  background: #f6e4de;
+}
+
+/* ---------- Botões ---------- */
+
+.caixa-fechar-button,
+.caixa-abrir-button,
+.register-button {
+  border: 0;
+  border-radius: 0.55rem;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--font-bold);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.caixa-fechar-button,
+.caixa-abrir-button {
+  padding: 0.55rem 0.9rem;
+}
+
+.caixa-fechar-button:hover,
+.caixa-abrir-button:hover,
+.register-button:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+.caixa-fechar-button:active,
+.caixa-abrir-button:active,
+.register-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* ---------- Alert ---------- */
+
+.alert {
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #efc9c2;
+  border-radius: 0.6rem;
+  background: #f6e4de;
+  color: #8b3024;
+  font-size: 0.85rem;
+  font-weight: var(--font-medium);
+}
+
+/* ---------- Abas ---------- */
 
 .tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.25rem;
   padding: 0.3rem;
-  border-radius: 0.7rem;
-  background: color-mix(in srgb, var(--text-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
 }
 
-.tabs button, .category-options button, .payment-options button, .filter-bar button, .summary-filter button {
-  border: 0;
-  border-radius: 0.5rem;
-  background: transparent;
+.tabs button,
+.category-options button,
+.payment-options button,
+.filter-bar button,
+.summary-filter button {
+  border: 1px solid color-mix(in srgb, var(--text-color) 14%, transparent);
+  border-radius: 0.55rem;
+  background: var(--card-background);
   color: var(--text-color);
   cursor: pointer;
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .tabs button {
@@ -88,13 +234,21 @@ h2 {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  padding: 0.7rem;
-  opacity: 0.7;
+  min-height: 2.7rem;
+  padding: 0.65rem;
+  border-color: transparent;
+  background: transparent;
+  opacity: 0.68;
+}
+
+.tabs button:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--card-background) 75%, transparent);
 }
 
 .tabs button.active {
   background: var(--card-background);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-color) 10%, transparent);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--text-color) 9%, transparent);
   color: var(--color-primary);
   opacity: 1;
 }
@@ -104,9 +258,10 @@ h2 {
   width: 1.35rem;
   height: 1.35rem;
   place-items: center;
-  border-radius: 50%;
+  border-radius: 0.4rem;
   background: color-mix(in srgb, var(--color-primary) 13%, transparent);
-  font-weight: 800;
+  color: var(--color-primary);
+  font-weight: var(--font-extra-bold);
 }
 
 .tab-count {
@@ -115,24 +270,30 @@ h2 {
   border-radius: 99px;
   background: #f6e4de;
   color: #a6402f;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
+  text-align: center;
 }
 
-.alert {
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.55rem;
-  background: #f6e4de;
-  color: #8b3024;
-}
+/* ---------- Conteúdo ---------- */
 
 .view {
+  padding: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+  border-radius: 1rem;
+  background: var(--card-background);
+  box-shadow: 0 7px 22px color-mix(in srgb, var(--text-color) 6%, transparent);
   animation: reveal 0.18s ease-out;
 }
 
 @keyframes reveal {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-heading {
@@ -144,8 +305,12 @@ h2 {
 }
 
 .section-note {
-  font-size: 0.8rem;
-  opacity: 0.65;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-color) 6%, transparent);
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
 }
 
 .summary-actions {
@@ -154,31 +319,57 @@ h2 {
   gap: 0.45rem;
 }
 
+.refresh-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  color: var(--text-color);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: var(--font-semibold);
+}
+
+.refresh-button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ---------- Formulário ---------- */
+
 .register-layout {
   display: block;
 }
 
 .register-layout--with-cart {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(270px, 340px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 350px);
   align-items: start;
   gap: 1rem;
 }
 
-.register-form, .summary-cards, .category-totals {
+.register-form,
+.summary-cards,
+.category-totals {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.category-picker, .quick-items, .field, .payment-field {
+.category-picker,
+.quick-items,
+.payment-field {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  grid-column: 1 / -1;
 }
 
-.category-picker, .quick-items, .payment-field {
-  grid-column: 1 / -1;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .field-wide {
@@ -186,28 +377,43 @@ h2 {
 }
 
 .field-label {
-  color: color-mix(in srgb, var(--text-color) 72%, transparent);
+  color: color-mix(in srgb, var(--text-color) 70%, transparent);
 }
 
 .field-label small {
-  font-weight: 400;
+  font-weight: var(--font-regular);
   letter-spacing: normal;
   text-transform: none;
 }
 
-.category-options, .payment-options, .filter-bar, .summary-filter {
+.category-options,
+.payment-options,
+.filter-bar,
+.summary-filter {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.category-options button, .payment-options button, .filter-bar button, .summary-filter button {
-  padding: 0.65rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
-  background: var(--card-background);
+.category-options button,
+.payment-options button,
+.filter-bar button,
+.summary-filter button {
+  padding: 0.62rem 0.78rem;
 }
 
-.category-options button.selected, .payment-options button.selected, .filter-bar button.selected, .summary-filter button.selected {
+.category-options button:hover,
+.payment-options button:hover,
+.filter-bar button:hover,
+.summary-filter button:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--card-background));
+}
+
+.category-options button.selected,
+.payment-options button.selected,
+.filter-bar button.selected,
+.summary-filter button.selected {
   border-color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, var(--card-background));
   color: var(--color-primary);
@@ -219,14 +425,21 @@ h2 {
   height: 1.4rem;
   margin-right: 0.25rem;
   place-items: center;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-  font-size: 0.7rem;
-  font-weight: 800;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+  font-size: 0.68rem;
+  font-weight: var(--font-extra-bold);
+}
+
+.pending-option.selected {
+  border-color: #a6402f !important;
+  background: #f6e4de !important;
+  color: #a6402f !important;
 }
 
 .quick-items {
-  margin-top: -0.15rem;
+  margin-top: -0.1rem;
 }
 
 .quick-item-grid {
@@ -237,58 +450,88 @@ h2 {
 
 .quick-item {
   min-height: 4.2rem;
-  padding: 0.65rem 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
-  border-radius: 0.55rem;
+  padding: 0.65rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 14%, transparent);
+  border-radius: 0.6rem;
   background: var(--card-background);
   color: var(--text-color);
   cursor: pointer;
   font: inherit;
-  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  text-align: left;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
 
 .quick-item:hover {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--card-background));
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--card-background));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 9%, transparent);
 }
 
 .quick-item:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
-.quick-item strong, .quick-item small {
+.quick-item strong,
+.quick-item small {
   display: block;
 }
 
 .quick-item strong {
-  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
 }
 
 .quick-item small {
   margin-top: 0.25rem;
   color: var(--color-primary);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: var(--font-bold);
 }
 
 .quick-item--free {
   border-style: dashed;
 }
 
+/* ---------- Inputs ---------- */
+
+input,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+  border-radius: 0.5rem;
+  outline: none;
+  background: var(--card-background);
+  color: var(--text-color);
+  font: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
 .free-item-editor {
   display: grid;
   grid-column: 1 / -1;
   gap: 0.7rem;
-  padding: 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
-  border-radius: 0.6rem;
-  background: color-mix(in srgb, var(--color-primary) 6%, var(--card-background));
+  padding: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--card-background));
 }
 
 .free-item-editor small {
   display: block;
   margin-top: 0.2rem;
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
 
 .free-item-fields {
@@ -304,12 +547,12 @@ h2 {
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--font-bold);
 }
 
 .free-item-confirm {
-  background: #3f6b4a;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
 }
 
 .free-item-cancel {
@@ -317,71 +560,23 @@ h2 {
   color: var(--text-color);
 }
 
-.pending-option.selected {
-  border-color: #a6402f;
-  background: #f6e4de;
-  color: #a6402f;
-}
-
-input, select {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 2.7rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent);
-  border-radius: 0.5rem;
-  background: var(--card-background);
-  color: var(--text-color);
-  padding: 0.6rem 0.7rem;
-  font: inherit;
-}
-
-input:focus, select:focus {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  outline-offset: 1px;
-}
-
-.money-input {
-  display: flex;
-  align-items: center;
-  border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent);
-  border-radius: 0.5rem;
-  background: var(--card-background);
-}
-
-.money-input span {
-  padding-left: 0.7rem;
-  opacity: 0.65;
-}
-
-.money-input input {
-  border: 0;
-}
-
 .register-button {
   grid-column: 1 / -1;
   min-height: 3.15rem;
-  margin-top: 0.35rem;
-  border: 0;
-  border-radius: 0.55rem;
+  margin-top: 0.25rem;
   background: var(--color-primary);
-  box-shadow: 0 3px 0 var(--color-primary-dark);
-  color: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--color-primary) 75%, #000);
 }
 
-.register-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
+/* ---------- Carrinho ---------- */
 
 .cart-panel {
   position: sticky;
   top: 1rem;
+  overflow: hidden;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
-  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 13%, transparent);
+  border-radius: 0.8rem;
   background: var(--card-background);
   box-shadow: 0 8px 24px color-mix(in srgb, var(--text-color) 8%, transparent);
 }
@@ -392,22 +587,22 @@ input:focus, select:focus {
   justify-content: space-between;
   gap: 0.7rem;
   padding-bottom: 0.8rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
 }
 
 .cart-heading h3 {
   margin: 0;
-  font-size: 1.1rem;
 }
 
 .cart-heading > span {
-  padding-top: 0.2rem;
-  color: color-mix(in srgb, var(--text-color) 65%, transparent);
-  font-size: 0.78rem;
+  padding-top: 0.15rem;
+  color: color-mix(in srgb, var(--text-color) 60%, transparent);
+  font-size: 0.72rem;
+  font-weight: var(--font-semibold);
 }
 
 .cart-items {
-  max-height: 330px;
+  max-height: 340px;
   overflow-y: auto;
 }
 
@@ -417,14 +612,15 @@ input:focus, select:focus {
   align-items: center;
   gap: 0.45rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
 }
 
 .cart-item-main {
   min-width: 0;
 }
 
-.cart-item-main strong, .cart-item-main small {
+.cart-item-main strong,
+.cart-item-main small {
   display: block;
 }
 
@@ -432,13 +628,13 @@ input:focus, select:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .cart-item-main small {
   margin-top: 0.15rem;
-  font-size: 0.7rem;
-  opacity: 0.65;
+  color: color-mix(in srgb, var(--text-color) 58%, transparent);
+  font-size: 0.68rem;
 }
 
 .cart-item-controls {
@@ -450,12 +646,17 @@ input:focus, select:focus {
 .cart-item-controls button {
   width: 1.55rem;
   height: 1.55rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
   border-radius: 0.35rem;
   background: color-mix(in srgb, var(--text-color) 5%, transparent);
   color: var(--text-color);
   cursor: pointer;
-  font-weight: 700;
+  font-weight: var(--font-bold);
+}
+
+.cart-item-controls button:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .cart-item-controls strong {
@@ -465,8 +666,8 @@ input:focus, select:focus {
 }
 
 .cart-item-total {
-  font-size: 0.78rem;
   white-space: nowrap;
+  font-size: 0.78rem;
 }
 
 .cart-remove {
@@ -483,51 +684,72 @@ input:focus, select:focus {
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.9rem 0 0.7rem;
-  font-size: 1.1rem;
-  font-weight: 700;
+  padding: 0.9rem 0 0.65rem;
+  font-weight: var(--font-bold);
+}
+
+.cart-total strong {
+  color: var(--color-primary);
+  font-size: 1.15rem;
 }
 
 .cart-clear {
   width: 100%;
   padding: 0.5rem;
   border: 0;
-  border-top: 1px dashed color-mix(in srgb, var(--text-color) 16%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--text-color) 14%, transparent);
   background: transparent;
-  color: color-mix(in srgb, var(--text-color) 65%, transparent);
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
 }
 
-.open-total {
+.cart-clear:hover {
   color: #a6402f;
-  font-size: 1.2rem;
 }
 
-.filter-bar, .summary-filter {
+/* ---------- Filtros ---------- */
+
+.filter-bar,
+.summary-filter {
   align-items: center;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.1rem;
+  padding: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--text-color) 3.5%, transparent);
 }
 
 .filter-label {
   margin-right: 0.2rem;
-  color: color-mix(in srgb, var(--text-color) 64%, transparent);
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
+
+.open-total {
+  color: #a6402f;
+  font-size: 1.15rem;
+  font-weight: var(--font-bold);
+}
+
+/* ---------- Fiado ---------- */
 
 .pending-groups {
   display: grid;
   gap: 0.8rem;
 }
 
-.pending-group, .sales-list {
+.pending-group,
+.sales-list {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--text-color) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
   border-radius: 0.7rem;
   background: var(--card-background);
 }
 
-.pending-heading, .pending-item, .sale-item {
+.pending-heading,
+.pending-item,
+.sale-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -536,16 +758,17 @@ input:focus, select:focus {
 }
 
 .pending-heading {
-  background: color-mix(in srgb, var(--text-color) 5%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
+  background: color-mix(in srgb, var(--text-color) 4%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
 }
 
-.pending-heading small {
+.pending-heading small,
+.pending-item small,
+.sale-main small {
   display: block;
   margin-top: 0.2rem;
-  font-size: 0.75rem;
-  font-weight: 400;
-  opacity: 0.65;
+  color: color-mix(in srgb, var(--text-color) 58%, transparent);
+  font-size: 0.72rem;
 }
 
 .pending-heading-actions {
@@ -555,7 +778,12 @@ input:focus, select:focus {
   white-space: nowrap;
 }
 
-.pending-heading-actions button {
+.pending-heading-actions > span {
+  font-weight: var(--font-bold);
+}
+
+.pending-heading-actions button,
+.pending-item-actions button {
   padding: 0.45rem 0.65rem;
   border: 0;
   border-radius: 0.4rem;
@@ -563,69 +791,64 @@ input:focus, select:focus {
   color: #fff;
   cursor: pointer;
   font: inherit;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: var(--font-bold);
 }
 
-.pending-heading span, .open-total {
-  font-weight: 700;
+.pending-item,
+.sale-item {
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
 }
 
-.pending-item, .sale-item {
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
-}
-
-.pending-item:last-child, .sale-item:last-child {
+.pending-item:last-child,
+.sale-item:last-child {
   border-bottom: 0;
 }
 
-.pending-item small, .sale-main small {
-  display: block;
-  margin-top: 0.2rem;
-  font-size: 0.78rem;
-  opacity: 0.65;
-}
-
-.pending-item-actions, .sale-side {
+.pending-item-actions,
+.sale-side {
   display: flex;
   align-items: flex-end;
-  gap: 0.55rem;
   flex-direction: column;
+  gap: 0.5rem;
   white-space: nowrap;
 }
 
-.pending-item-actions button, .delete-button {
+.delete-button {
   border: 0;
   border-radius: 0.4rem;
   background: transparent;
   color: var(--color-primary);
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: var(--font-bold);
 }
 
-.pending-item-actions button {
-  padding: 0.35rem 0.55rem;
-  background: #3f6b4a;
-  color: #fff;
+.delete-button:hover {
+  text-decoration: underline;
 }
 
 .empty-state {
   padding: 2rem 1rem;
+  border: 1px dashed color-mix(in srgb, var(--text-color) 16%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--text-color) 3%, transparent);
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
   text-align: center;
-  opacity: 0.7;
 }
+
+/* ---------- Resumo ---------- */
 
 .summary-cards {
   grid-template-columns: repeat(3, 1fr);
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.1rem;
 }
 
 .summary-card {
   min-width: 0;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
   border-radius: 0.7rem;
   background: var(--card-background);
 }
@@ -634,10 +857,17 @@ input:focus, select:focus {
   display: block;
   margin-top: 0.25rem;
   font-size: 1.25rem;
+  font-weight: var(--font-extra-bold);
 }
 
 .summary-card--highlight {
+  border-color: transparent;
   background: var(--active-background);
+  color: var(--color-primary-contrast);
+  box-shadow: 0 5px 16px color-mix(in srgb, var(--active-background) 18%, transparent);
+}
+
+.summary-card--highlight span {
   color: var(--color-primary-contrast);
 }
 
@@ -647,34 +877,13 @@ input:focus, select:focus {
 
 .summary-filter select {
   width: auto;
-  min-width: 160px;
-}
-
-.category-totals {
-  grid-template-columns: repeat(3, 1fr);
-  margin-bottom: 1.2rem;
-}
-
-.category-totals div {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 2px solid color-mix(in srgb, var(--text-color) 12%, transparent);
-}
-
-.category-totals span {
-  opacity: 0.7;
-}
-
-.category-totals strong {
-  white-space: nowrap;
+  min-width: 170px;
 }
 
 .payment-totals {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.1rem;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
   border-radius: 0.7rem;
   background: var(--card-background);
 }
@@ -686,37 +895,35 @@ input:focus, select:focus {
 .payment-total-list {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .payment-total-list div {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  padding: 0.65rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
 }
 
 .payment-total-list span {
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
 }
 
 .payment-total-list strong {
   white-space: nowrap;
 }
 
-.sale-main {
-  min-width: 0;
-  flex: 1;
-}
+/* ---------- Status ---------- */
 
 .status {
+  display: inline-block;
   padding: 0.2rem 0.45rem;
   border-radius: 99px;
   background: #e6f0e8;
   color: #2f6840;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: var(--font-bold);
 }
 
 .status--pending {
@@ -724,16 +931,53 @@ input:focus, select:focus {
   color: #8a5c08;
 }
 
-.refresh-button {
-  padding: 0.5rem 0.75rem;
-  border: 0;
-  border-radius: 0.45rem;
-  background: color-mix(in srgb, var(--text-color) 8%, transparent);
-  color: var(--text-color);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 600;
+/* ---------- Tela de caixa fechado ---------- */
+
+.caixa-gate {
+  display: grid;
+  min-height: 55vh;
+  place-items: center;
+  padding: 1rem;
 }
+
+.caixa-gate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  width: min(100%, 430px);
+  padding: 2.4rem 2rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
+  border-radius: 1rem;
+  background: var(--card-background);
+  text-align: center;
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--text-color) 8%, transparent);
+}
+
+.caixa-gate-card h2,
+.caixa-gate-card p {
+  margin: 0;
+}
+
+.caixa-gate-card > p:not(.eyebrow) {
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  font-size: 0.88rem;
+}
+
+.caixa-gate-icon {
+  display: grid;
+  width: 3.6rem;
+  height: 3.6rem;
+  margin-bottom: 0.4rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+  color: var(--color-primary);
+  font-size: 1.45rem;
+  font-weight: var(--font-extra-bold);
+}
+
+/* ---------- Modais ---------- */
 
 .payment-modal-backdrop {
   position: fixed;
@@ -744,14 +988,16 @@ input:focus, select:focus {
   justify-content: center;
   padding: 1rem;
   background: rgba(30, 25, 22, 0.55);
+  backdrop-filter: blur(3px);
 }
 
 .payment-modal {
-  width: min(100%, 460px);
+  width: min(100%, 470px);
   padding: 1.35rem;
-  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+  border-radius: 0.9rem;
   background: var(--card-background);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
 }
 
 .payment-modal-heading {
@@ -767,8 +1013,8 @@ input:focus, select:focus {
 
 .payment-modal-heading p:last-child {
   margin: 0.45rem 0 0;
-  font-size: 0.82rem;
-  opacity: 0.7;
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  font-size: 0.8rem;
 }
 
 .payment-modal-close {
@@ -790,13 +1036,13 @@ input:focus, select:focus {
 
 .payment-modal-options button {
   min-height: 3rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-color) 16%, transparent);
   border-radius: 0.5rem;
   background: var(--card-background);
   color: var(--text-color);
   cursor: pointer;
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--font-bold);
 }
 
 .payment-modal-options button.selected {
@@ -809,6 +1055,7 @@ input:focus, select:focus {
   display: flex;
   justify-content: flex-end;
   gap: 0.65rem;
+  margin-top: 1.2rem;
 }
 
 .payment-modal-actions button {
@@ -817,7 +1064,7 @@ input:focus, select:focus {
   border-radius: 0.45rem;
   cursor: pointer;
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--font-bold);
 }
 
 .payment-modal-cancel {
@@ -826,8 +1073,8 @@ input:focus, select:focus {
 }
 
 .payment-modal-confirm {
-  background: #3f6b4a;
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
 }
 
 .payment-modal-confirm:disabled {
@@ -835,20 +1082,29 @@ input:focus, select:focus {
   opacity: 0.6;
 }
 
-@media (max-width: 700px) {
-  .caixa-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+.fechamento-resumo {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--card-background));
+}
 
-  .header-total {
-    text-align: left;
-  }
+.fechamento-resumo span {
+  display: block;
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  font-size: 0.75rem;
+}
 
-  .register-form {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.fechamento-resumo strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-primary);
+  font-size: 1.35rem;
+}
 
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 1050px) {
   .register-layout--with-cart {
     grid-template-columns: 1fr;
   }
@@ -856,22 +1112,93 @@ input:focus, select:focus {
   .cart-panel {
     position: static;
   }
-}
 
-@media (max-width: 520px) {
-  .tabs button {
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.55rem 0.3rem;
-    font-size: 0.78rem;
+  .quick-item-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .register-form, .summary-cards, .category-totals {
+  .payment-total-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .caixa-header {
     grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .caixa-header > .caixa-badge,
+  .caixa-header > small,
+  .caixa-header > .caixa-fechar-button {
+    position: static;
+    transform: none;
+  }
+
+  .caixa-header > .caixa-badge {
+    width: fit-content;
+  }
+
+  .caixa-header > small {
+    margin-top: -0.65rem;
+  }
+
+  .caixa-header > .caixa-fechar-button {
+    width: fit-content;
+  }
+
+  .header-total {
+    width: 100%;
+    text-align: left;
+  }
+
+  .register-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .quick-item-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-total-list {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .view {
+    padding: 1rem;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tabs button {
+    flex-direction: column;
+    gap: 0.2rem;
+    min-height: 3rem;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .register-form,
+  .summary-cards,
+  .category-totals {
+    grid-template-columns: 1fr;
+  }
+
+  .field-wide {
+    grid-column: auto;
+  }
+
+  .quick-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .free-item-fields {
@@ -882,43 +1209,94 @@ input:focus, select:focus {
     min-height: 2.7rem;
   }
 
+  .category-options,
+  .payment-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .payment-total-list {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
-  .field-wide {
-    grid-column: auto;
-  }
-
-  .category-options button, .payment-options button {
-    flex: 1;
-  }
-
-  .filter-bar, .summary-filter {
+  .filter-bar,
+  .summary-filter {
     align-items: stretch;
   }
 
-  .filter-bar button, .summary-filter button, .summary-filter select {
+  .filter-bar button,
+  .summary-filter button,
+  .summary-filter select {
     flex: 1;
     min-width: 0;
   }
 
-  .pending-item, .sale-item {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .pending-item-actions, .sale-side {
-    align-items: flex-start;
-  }
-
-  .pending-heading {
+  .pending-heading,
+  .pending-item,
+  .sale-item {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  .pending-heading-actions,
+  .pending-item-actions,
+  .sale-side {
+    align-items: flex-start;
+    width: 100%;
+  }
+
   .pending-heading-actions {
     justify-content: space-between;
+  }
+
+  .cart-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .cart-item-controls {
+    grid-column: 1;
+  }
+
+  .cart-item-total {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .cart-remove {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .payment-modal-options {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .payment-modal-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .caixa-header {
+    padding: 1.1rem;
+  }
+
+  .quick-item-grid,
+  .category-options,
+  .payment-options {
+    grid-template-columns: 1fr;
+  }
+
+  .free-item-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-filter select {
     width: 100%;
   }
 }

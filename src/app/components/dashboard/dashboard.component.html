@@ -27,5 +27,74 @@
         @if (!ultimasAcoes.length) {<p class="empty-state">Nenhuma venda registrada.</p>}
       </div>
     </section>
+    <section class="dashboard-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Evolução mensal de caixas</h2>
+          <small>Total arrecadado por mês (vendas pagas)</small>
+        </div>
+      </div>
+      <div class="chart-box">
+        <canvas baseChart [type]="'bar'" [data]="evolucaoMensalData" [options]="barOptions"></canvas>
+      </div>
+      @if (!temEvolucaoMensal) {
+        <p class="empty-state">Ainda não há vendas pagas registradas.</p>
+      }
+    </section>
+
+    <section class="dashboard-panel dashboard-panel--caixa-dia">
+      <div class="panel-heading">
+        <div>
+          <h2>Caixas do dia</h2>
+          <small>Vendas de bazar, hamburgada e feijoada por caixa aberto</small>
+        </div>
+        <input type="date" class="day-input" name="diaCaixa" [(ngModel)]="diaCaixa" (change)="carregarCaixasDia()" aria-label="Selecionar o dia">
+      </div>
+      @if (carregandoCaixasDia) {
+        <p class="empty-state">Carregando caixas do dia...</p>
+      } @else if (!caixasDia.length) {
+        <p class="empty-state">Nenhum caixa aberto neste dia.</p>
+      } @else {
+        <div class="metric-grid metric-grid--3">
+          <div class="metric-card"><span>Arrecadado no dia</span><strong>{{ moeda(totalDia) }}</strong><small>vendas pagas</small></div>
+          <div class="metric-card metric-card--warning"><span>Fiado no dia</span><strong>{{ moeda(fiadoDia) }}</strong><small>aguardando pagamento</small></div>
+          <div class="metric-card"><span>Caixas no dia</span><strong>{{ caixasDia.length }}</strong><small>{{ caixasDia.length === 1 ? 'caixa aberto' : 'caixas abertos' }}</small></div>
+        </div>
+
+        <div class="bazar-charts">
+          <div class="chart-half">
+            <p class="eyebrow">Vendas por categoria</p>
+            <canvas baseChart [type]="'doughnut'" [data]="vendasCategoriaData" [options]="doughnutOptions"></canvas>
+          </div>
+          <div class="chart-half">
+            <p class="eyebrow">Vendas por forma de pagamento</p>
+            <canvas baseChart [type]="'doughnut'" [data]="vendasFormaData" [options]="doughnutOptions"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-full">
+          <p class="eyebrow">Valores por caixa</p>
+          <canvas baseChart [type]="'bar'" [data]="vendasCaixaData" [options]="barOptions"></canvas>
+        </div>
+
+        <div class="caixas-dia-list">
+          <div class="panel-heading"><h2>Valores de cada caixa</h2></div>
+          @for (caixa of caixasDia; track caixa.id; let indice = $index) {
+            <div class="caixa-dia-row">
+              <div class="caixa-dia-info">
+                <strong>Caixa {{ indice + 1 }}</strong>
+                <small>{{ caixa.aberto_em | date:'dd/MM/yyyy HH:mm' }}{{ caixa.fechado_em ? (' — fechado às ' + (caixa.fechado_em | date:'HH:mm')) : ' — ainda aberto' }}</small>
+              </div>
+              <div class="caixa-dia-valores">
+                <span>Bazar <strong>{{ moeda(caixa.totais.bazar) }}</strong></span>
+                <span>Hamburgada <strong>{{ moeda(caixa.totais.hamburgada) }}</strong></span>
+                <span>Feijoada <strong>{{ moeda(caixa.totais.feijoada) }}</strong></span>
+                <span class="caixa-dia-total">Total <strong>{{ moeda(caixa.total) }}</strong></span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
   }
 </div>

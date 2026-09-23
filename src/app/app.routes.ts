@@ -20,8 +20,10 @@ export const routes: Routes = [
     { path: 'membros/:id', loadComponent: () => import('./components/membros/detalhe-membro/detalhe-membro.component').then(c => c.DetalheMembroComponent), canActivate: [AuthGuard] },
     { path: 'agenda', loadComponent: () => import('./components/agenda/agenda.component').then(c => c.AgendaComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria'] } },
     { path: 'acoes', loadComponent: () => import('./components/arrecadacoes/arrecadacoes.component').then(c => c.ArrecadacoesComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'caixa'] } },
+    { path: 'relatorios-caixas', loadComponent: () => import('./components/relatorios-caixa/relatorios-caixa.component').then(c => c.RelatoriosCaixaComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'caixa'] } },
     { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(c => c.DashboardComponent), canActivate: [AuthGuard] },
     { path: 'livro', loadComponent: () => import('./components/livro-registro/livro-registro.component').then(c => c.LivroRegistroComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria'] }},
     { path: 'livro/batismo', loadComponent: () => import('./components/livro-registro/lista-batismo/lista-batismo.component').then(c => c.ListaBatismoComponent)},
-    { path: 'livro/batismo/cadastro', loadComponent: () => import('./components/livro-registro/registro-batismo/registro-batismo.component').then(c => c.RegistroBatismoComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria'] }}
+    { path: 'livro/batismo/cadastro', loadComponent: () => import('./components/livro-registro/registro-batismo/registro-batismo.component').then(c => c.RegistroBatismoComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria'] }},
+    
 ];

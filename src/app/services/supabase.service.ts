@@ -3,6 +3,7 @@ import { AuthChangeEvent, createClient, Session, SupabaseClient } from '@supabas
 import { environment } from '../../environments/environments.development';
 import { LoadingService } from './loading.service'; // Importando seu serviço de loading
 
+
 @Injectable({
   providedIn: 'root'
 })
@@ -282,6 +283,53 @@ async removerItemArrecadacao(itemId: string, vendaId: string, totalRestante: num
       atualizado_em: new Date().toISOString()
     })
     .eq('id', id);
+}
+
+async getCaixaAberto() {
+  return this.supabase
+    .from('caixas')
+    .select('*')
+    .eq('status', 'aberto')
+    .maybeSingle();
+}
+
+async getCaixasFechadas() {
+  return this.supabase
+    .from('caixas')
+    .select('*')
+    .eq('status', 'fechado')
+    .order('fechado_em', { ascending: false });
+}
+
+async getCaixas({ inicio, fim }: { inicio: string; fim: string }) {
+  return this.supabase
+    .from('caixas')
+    .select('*')
+    .gte('aberto_em', inicio)
+    .lt('aberto_em', fim)
+    .order('aberto_em', { ascending: true });
+}
+
+async getTodasCaixas() {
+  return this.supabase
+    .from('caixas')
+    .select('*')
+    .order('aberto_em', { ascending: true });
+}
+
+
+async abrirCaixa(valorAbertura: number, observacoes: string | null) {
+  return this.supabase.rpc('abrir_caixa', {
+    p_valor_abertura: valorAbertura,
+    p_observacoes: observacoes
+  });
+}
+
+async fecharCaixa(valorFechamento: number, observacoes: string | null) {
+  return this.supabase.rpc('fechar_caixa', {
+    p_valor_fechamento: valorFechamento,
+    p_observacoes: observacoes
+  });
 }
 
 }
