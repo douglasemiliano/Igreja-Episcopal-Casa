@@ -145,21 +145,22 @@ export class RelatoriosCaixaComponent implements OnInit {
     this.carregandoCaixasDia = false;
   }
 
+
   selecionarCaixa(): void {
-    this.linha = null;
-    this.totalArrecadado = 0;
-    this.totalFiado = 0;
-    this.totaisCategoria = [];
-    this.totaisForma = [];
+  this.linha = null;
+  this.totalArrecadado = 0;
+  this.totalFiado = 0;
+  this.totaisCategoria = [];
+  this.totaisForma = [];
 
-    if (!this.caixaSelecionadaId) {
-      this.montarGraficosDia();
-      return;
-    }
+  if (!this.caixaSelecionadaId) {
+    this.montarGraficosDia();
+    return;
+  }
 
-    const caixa = this.caixasTodas.find((item: any) => item.id === this.caixaSelecionadaId);
-    if (!caixa) return;
+  const caixa = this.caixasTodas.find((item: any) => item.id === this.caixaSelecionadaId);
 
+  if (caixa) {
     const vendasCaixa = this.vendasTodas.filter((venda: any) => venda.caixa_id === caixa.id);
     const pagas = vendasCaixa.filter((venda: any) => venda.status === 'pago');
     const pendentes = vendasCaixa.filter((venda: any) => venda.status === 'pendente');
@@ -192,9 +193,11 @@ export class RelatoriosCaixaComponent implements OnInit {
       forma.set(venda.forma_pagamento, (forma.get(venda.forma_pagamento) ?? 0) + Number(venda.total ?? 0))
     );
     this.totaisForma = [...forma.entries()].map(([nome, total]) => ({ nome: this.nomeForma(nome), total }));
-
-    this.montarGraficosDia();
   }
+  // se `caixa` não existe (ainda aberto), simplesmente não preenchemos `linha`,
+  // mas seguimos para atualizar os gráficos filtrados por esse caixa mesmo assim
+  this.montarGraficosDia();
+}
 
   selecionarCaixaPorId(id: string): void {
     if (this.caixaSelecionadaId === id) {

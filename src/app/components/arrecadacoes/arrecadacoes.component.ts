@@ -375,6 +375,7 @@ get totalArrecadadoCaixaAtual(): number {
     }));
     const total = itens.reduce((soma, item) => soma + item.quantidade * item.valor_unitario, 0);
     const venda = {
+      caixa_id: this.caixaAtual.id,
       membro_id: this.novoLancamento.membro_id || null,
       forma_pagamento: this.novoLancamento.forma_pagamento,
       status: this.novoLancamento.forma_pagamento === 'fiado' ? 'pendente' : 'pago',

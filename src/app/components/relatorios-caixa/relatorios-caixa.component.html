@@ -123,7 +123,7 @@
         <p class="empty-state">Nenhum caixa aberto neste dia.</p>
       } @else {
         <div class="metric-grid">
-          <div class="metric-card"><span>Arrecadado no dia</span><strong>{{ formatarMoeda(totalDia) }}</strong><small>vendas pagas</small></div>
+          <div class="metric-card"><span>Arrecadado no dia</span><strong>{{ formatarMoeda(totalArrecadado) }}</strong><small>vendas pagas</small></div>
           <div class="metric-card metric-card--warning"><span>Fiado no dia</span><strong>{{ formatarMoeda(fiadoDia) }}</strong><small>aguardando pagamento</small></div>
           <div class="metric-card"><span>Caixas no dia</span><strong>{{ caixasDia.length }}</strong><small>{{ caixasDia.length === 1 ? 'caixa aberto' : 'caixas abertos' }}</small></div>
         </div>
