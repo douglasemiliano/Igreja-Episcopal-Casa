@@ -10,6 +10,7 @@ import { NavbarComponent } from './components/utils/navbar/navbar.component';
 import { LoadingComponent } from './components/utils/loading/loading.component';
 import { SidebarComponent } from './components/utils/sidebar/sidebar.component';
 import { CoreService } from './services/core.service';
+import { CaixaService } from './services/caixa.service';
 
 @Component({
   selector: 'app-root',
@@ -28,7 +29,7 @@ export class App implements OnInit {
   private coreService = inject(CoreService);
 
 
-  constructor(private router: Router, private renderer: Renderer2, private supabase: SupabaseService){
+  constructor(private router: Router, private renderer: Renderer2, private supabase: SupabaseService, private caixaService: CaixaService){
     this.checkScreenSize();
   }
 
@@ -46,6 +47,8 @@ export class App implements OnInit {
     this.supabase.onAuthChange((_event, session) => {
       this.isLoggedIn = !!session;
     });
+
+    this.caixaService.carregarCaixa();
   }
 
   mudouData() { this.router.navigateByUrl("/lecionario") }

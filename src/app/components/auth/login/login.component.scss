@@ -1,65 +1,622 @@
-.login-container {
+/* =====================================================
+   LOGIN PAGE
+===================================================== */
+
+.login-page {
+  min-height: 100%;
+  width: 100%;
+
   display: flex;
   align-items: center;
-  padding-top: 40px;
-  padding-bottom: 40px;
+  justify-content: center;
 
-    & input {
-    font-weight: var(--font-regular);
-    background-color: var(--card-background);
-    border: 1px solid var(--active-background);
-    border-radius: 0.5rem;
-    padding: 0.5rem 1rem;
-    color: var(--text-color);
-    transition: border;
+  padding: 2rem;
 
-    &::placeholder {
-      color: var(--text-color);
-      opacity: 0.7;
-    }
-  }
+  background-color: var(--background-color);
 
+  font-family: "Montserrat", sans-serif;
+
+  box-sizing: border-box;
 }
 
 
-.form-signin {
+/* =====================================================
+   CONTAINER PRINCIPAL
+===================================================== */
+
+.login-wrapper {
+  position: relative;
+
   width: 100%;
-  max-width: 400px;
-  padding: 15px;
-  margin: auto;
+  max-width: 1050px;
+
+  min-height: 610px;
+
+  display: grid;
+
+  grid-template-columns: 1fr 1.15fr;
+
+  overflow: hidden;
+
   background-color: var(--card-background);
+
   border-radius: 16px;
-  padding: 2rem 2rem 0 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
-  & button {
-    background-color: var(--color-primary) !important;
-    color: white !important;
-  
-  }
-  
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.12);
 }
 
-.form-signin .checkbox {
-  font-weight: 400;
-}
 
-.form-signin .form-floating:focus-within {
+/* =====================================================
+   LADO DO LOGIN
+===================================================== */
+
+.login-section {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  padding: 3rem 4rem;
+
+  background-color: var(--card-background);
+
   z-index: 2;
 }
 
-.form-signin input[type="email"] {
-  margin-bottom: -1px;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
+
+/* =====================================================
+   CONTEÚDO
+===================================================== */
+
+.login-content {
+  width: 100%;
+  max-width: 320px;
+
+  margin: 0 auto;
 }
 
-.form-signin input[type="password"] {
-  margin-bottom: 10px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+
+/* =====================================================
+   LOGO
+===================================================== */
+
+.login-logo {
+  margin-bottom: 1.2rem;
+
+  img {
+    width: 58px;
+    height: 50px;
+
+    object-fit: contain;
+  }
 }
 
-.form-signin button.login-button {
-  background-color: var(--active-background) !important;
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.login-header {
+  margin-bottom: 1.8rem;
+
+  h1 {
+    margin: 0 0 0.6rem;
+
+    color: var(--text-color);
+
+    font-size: 1.45rem;
+    font-weight: 700;
+
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 0;
+
+    color: var(--text-color);
+
+    opacity: 0.65;
+
+    font-size: 0.76rem;
+
+    line-height: 1.7;
+  }
+}
+
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.login-form {
+  width: 100%;
+}
+
+
+/* =====================================================
+   INPUTS
+===================================================== */
+
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+
+    margin-bottom: 0.4rem;
+
+    color: var(--text-color);
+
+    font-size: 0.7rem;
+
+    font-weight: 500;
+  }
+
+
+  input {
+    width: 100%;
+    height: 42px;
+
+    box-sizing: border-box;
+
+    padding: 0 0.8rem;
+
+    color: var(--text-color);
+
+    background-color: var(--card-background);
+
+    border: 1px solid var(--active-background);
+
+    border-radius: 7px;
+
+    outline: none;
+
+    font-family: inherit;
+
+    font-size: 0.72rem;
+
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+
+    &::placeholder {
+      color: var(--text-color);
+
+      opacity: 0.4;
+    }
+
+
+    &:focus {
+      border-color: var(--color-primary);
+
+      box-shadow:
+        0 0 0 3px
+        color-mix(
+          in srgb,
+          var(--color-primary) 12%,
+          transparent
+        );
+    }
+  }
+}
+
+
+/* =====================================================
+   ESQUECI SENHA
+===================================================== */
+
+.forgot-password {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-top: -0.35rem;
+  margin-bottom: 1rem;
+
+
+  a {
+    color: var(--text-color);
+
+    font-size: 0.65rem;
+
+    font-weight: 600;
+
+    text-decoration: underline;
+
+    opacity: 0.8;
+
+    transition: color 0.2s ease;
+
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+}
+
+
+/* =====================================================
+   BOTÃO ENTRAR
+===================================================== */
+
+.login-button {
+  width: 100%;
+  height: 42px;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background-color: var(--color-primary) !important;
+
+  color: #fff !important;
+
+  font-family: inherit;
+
+  font-size: 0.75rem;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 5px 15px
+      color-mix(
+        in srgb,
+        var(--color-primary) 30%,
+        transparent
+      );
+  }
+
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+
+  &:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+  }
+}
+
+
+/* =====================================================
+   DIVISOR
+===================================================== */
+
+.divider {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.7rem;
+
+  margin: 1.6rem 0;
+
+
+  span {
+    flex: 1;
+
+    height: 1px;
+
+    background-color: var(--active-background);
+
+    opacity: 0.7;
+  }
+
+
+  small {
+    color: var(--text-color);
+
+    opacity: 0.55;
+
+    font-size: 0.65rem;
+  }
+}
+
+
+/* =====================================================
+   BOTÕES SOCIAIS
+===================================================== */
+
+.social-button {
+  width: 100%;
+  height: 38px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.6rem;
+
+  margin-bottom: 0.6rem;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background-color:
+    color-mix(
+      in srgb,
+      var(--active-background) 35%,
+      var(--card-background)
+    );
+
+  color: var(--text-color);
+
+  font-family: inherit;
+
+  font-size: 0.65rem;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+
+
+  &:hover {
+    background-color:
+      color-mix(
+        in srgb,
+        var(--active-background) 55%,
+        var(--card-background)
+      );
+
+    transform: translateY(-1px);
+  }
+}
+
+
+/* =====================================================
+   ÍCONES SOCIAIS
+===================================================== */
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.8rem;
+
+  font-weight: 700;
+
+  border-radius: 50%;
+}
+
+
+.google {
+  color: #4285f4;
+
+  background-color: transparent;
+}
+
+
+.facebook {
+  color: #1877f2;
+
+  background-color: transparent;
+
+  font-family: Arial, sans-serif;
+}
+
+
+/* =====================================================
+   CADASTRO
+===================================================== */
+
+.signup-text {
+  margin: 1.7rem 0 0;
+
+  text-align: center;
+
+  color: var(--text-color);
+
+  opacity: 0.75;
+
+  font-size: 0.65rem;
+
+
+  a {
+    color: var(--color-primary);
+
+    font-weight: 700;
+
+    text-decoration: none;
+
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+
+/* =====================================================
+   COPYRIGHT
+===================================================== */
+
+.copyright {
+  position: absolute;
+
+  left: 0;
+  bottom: 1.2rem;
+
+  width: 100%;
+
+  text-align: center;
+
+  color: var(--text-color);
+
+  opacity: 0.4;
+
+  font-size: 0.55rem;
+
+  font-weight: 500;
+}
+
+
+/* =====================================================
+   LADO DA IMAGEM
+===================================================== */
+
+.image-section {
+  position: relative;
+
+  overflow: hidden;
+
+  min-height: 100%;
+
+  background-color: var(--color-primary);
+}
+
+
+.login-image {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+}
+
+
+/* =====================================================
+   OVERLAY DA IMAGEM
+===================================================== */
+
+.image-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(
+        in srgb,
+        var(--color-primary) 15%,
+        transparent
+      ),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 900px) {
+
+  .login-page {
+    padding: 1.5rem;
+  }
+
+
+  .login-wrapper {
+    max-width: 800px;
+
+    grid-template-columns: 1fr 1fr;
+  }
+
+
+  .login-section {
+    padding: 2.5rem;
+  }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+  .login-page {
+    min-height: 100vh;
+
+    padding: 1rem;
+  }
+
+
+  .login-wrapper {
+    min-height: auto;
+
+    grid-template-columns: 1fr;
+
+    border-radius: 14px;
+  }
+
+
+  .login-section {
+    min-height: 650px;
+
+    padding: 2.5rem 2rem;
+  }
+
+
+  .image-section {
+    display: none;
+  }
+
+
+  .login-content {
+    max-width: 340px;
+  }
+}
+
+
+/* =====================================================
+   CELULAR PEQUENO
+===================================================== */
+
+@media (max-width: 400px) {
+
+  .login-page {
+    padding: 0.75rem;
+  }
+
+
+  .login-section {
+    padding: 2rem 1.25rem;
+  }
+
+
+  .login-header {
+
+    h1 {
+      font-size: 1.3rem;
+    }
+  }
 }
