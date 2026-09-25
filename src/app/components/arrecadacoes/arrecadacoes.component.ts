@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import { SupabaseService } from '../../services/supabase.service';
@@ -25,6 +25,18 @@ interface Arrecadacao {
 interface GrupoPendente {
   vendaId: string;
   membro: string;
+  total: number;
+  itens: Arrecadacao[];
+}
+
+interface VendaAgrupada {
+  vendaId: string;
+  membro: string;
+  categoria: 'bazar' | 'hamburgada' | 'feijoada';
+  forma_pagamento: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado';
+  status: 'pago' | 'pendente';
+  data_venda: string;
+  observacoes?: string | null;
   total: number;
   itens: Arrecadacao[];
 }
@@ -65,8 +77,10 @@ interface Caixa {
   templateUrl: './arrecadacoes.component.html',
   styleUrl: './arrecadacoes.component.scss'
 })
-export class ArrecadacoesComponent implements OnInit {
+export class ArrecadacoesComponent implements OnInit, OnDestroy {
   private readonly supabaseService = inject(SupabaseService);
+
+  readonly formasPagamento: NonNullable<Arrecadacao['forma_pagamento']>[] = ['pix', 'debito', 'credito', 'dinheiro', 'fiado'];
 
   arrecadacoes: Arrecadacao[] = [];
   membros: any[] = [];
@@ -79,6 +93,12 @@ export class ArrecadacoesComponent implements OnInit {
   filtroStatus = '';
   filtroBusca = '';
   carrinho: ItemCarrinho[] = [];
+  carrinhoAberto = false;
+  etapaCarrinho: 'itens' | 'pagamento' = 'itens';
+  pagamentoConfirmado = false;
+  toastVendaRegistrada = false;
+  vendasExpandidas = new Set<string>();
+  private toastTimer?: ReturnType<typeof setTimeout>;
   modalValorLivreAberto = false;
   itemLivreDescricao = '';
   itemLivreValor: number | null = null;
@@ -106,6 +126,12 @@ observacoesFechamentoCaixa = '';
   ngOnInit(): void {
     this.carregarDados();
     this.carregarCaixa();
+  }
+
+  ngOnDestroy(): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
   }
 
   async carregarCaixa(): Promise<void> {
@@ -199,8 +225,29 @@ get totalArrecadadoCaixaAtual(): number {
     return this.carrinho.reduce((total, item) => total + item.quantidade, 0);
   }
 
+  get totalGeral(): number {
+    return this.totalPago + this.totalPendente;
+  }
+
+  get totalRecebido(): number {
+    return this.totalPago;
+  }
+
+  get quantidadeVendas(): number {
+    return new Set(this.arrecadacoesCaixaAtual.map((item) => item.venda_id ?? item.id)).size;
+  }
+
+  get vendasResumo(): VendaAgrupada[] {
+    return this.agruparVendas(this.arrecadacoesFiltradas).slice(0, 8);
+  }
+
+  get vendasFiado(): VendaAgrupada[] {
+    return this.agruparVendas(this.pendenciasFiltradas);
+  }
+
   setAba(aba: 'registrar' | 'pendentes' | 'resumo'): void {
     this.abaAtiva = aba;
+    this.carrinhoAberto = false;
   }
 
   totalPorCategoria(categoria: 'bazar' | 'hamburgada' | 'feijoada'): number {
@@ -213,6 +260,14 @@ get totalArrecadadoCaixaAtual(): number {
     return this.arrecadacoesCaixaAtual
       .filter((arrecadacao) => (arrecadacao.forma_pagamento ?? 'dinheiro') === forma)
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
+  }
+
+  quantidadePorForma(forma: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado'): number {
+    return new Set(
+      this.arrecadacoesCaixaAtual
+        .filter((arrecadacao) => (arrecadacao.forma_pagamento ?? 'dinheiro') === forma)
+        .map((arrecadacao) => arrecadacao.venda_id ?? arrecadacao.id)
+    ).size;
   }
 
   nomeCategoria(categoria: Arrecadacao['categoria']): string {
@@ -317,6 +372,89 @@ get totalArrecadadoCaixaAtual(): number {
 
   limparCarrinho(): void {
     this.carrinho = [];
+    this.etapaCarrinho = 'itens';
+    this.pagamentoConfirmado = false;
+  }
+
+  abrirCarrinho(): void {
+    this.carrinhoAberto = true;
+    this.etapaCarrinho = 'itens';
+    this.pagamentoConfirmado = false;
+  }
+
+  fecharCarrinho(): void {
+    this.carrinhoAberto = false;
+    this.etapaCarrinho = 'itens';
+    this.pagamentoConfirmado = false;
+  }
+
+  abrirEtapaPagamento(): void {
+    if (!this.carrinho.length) {
+      return;
+    }
+    this.erro = '';
+    this.etapaCarrinho = 'pagamento';
+    this.pagamentoConfirmado = false;
+  }
+
+  voltarParaItens(): void {
+    this.etapaCarrinho = 'itens';
+    this.pagamentoConfirmado = false;
+  }
+
+  escolherFormaPagamentoNoCarrinho(forma: NonNullable<Arrecadacao['forma_pagamento']>): void {
+    this.selecionarFormaPagamento(forma);
+    this.pagamentoConfirmado = true;
+    this.erro = '';
+  }
+
+  alternarVendaExpandida(vendaId: string): void {
+    if (this.vendasExpandidas.has(vendaId)) {
+      this.vendasExpandidas.delete(vendaId);
+    } else {
+      this.vendasExpandidas.add(vendaId);
+    }
+  }
+
+  vendaExpandida(vendaId: string): boolean {
+    return this.vendasExpandidas.has(vendaId);
+  }
+
+  classePagamento(forma?: Arrecadacao['forma_pagamento']): string {
+    return `pag-pill--${forma ?? 'dinheiro'}`;
+  }
+
+  private mostrarToastVendaRegistrada(): void {
+    this.toastVendaRegistrada = true;
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    this.toastTimer = setTimeout(() => {
+      this.toastVendaRegistrada = false;
+    }, 2400);
+  }
+
+  private agruparVendas(lista: Arrecadacao[]): VendaAgrupada[] {
+    const grupos = new Map<string, Arrecadacao[]>();
+
+    for (const arrecadacao of lista) {
+      const vendaId = arrecadacao.venda_id ?? arrecadacao.id;
+      grupos.set(vendaId, [...(grupos.get(vendaId) ?? []), arrecadacao]);
+    }
+
+    return [...grupos.entries()]
+      .map(([vendaId, itens]) => ({
+        vendaId,
+        membro: itens[0].membro?.nome_completo || 'Membro não identificado',
+        categoria: itens[0].categoria,
+        forma_pagamento: itens[0].forma_pagamento ?? 'dinheiro',
+        status: itens.some((item) => item.status === 'pendente') ? 'pendente' as const : 'pago' as const,
+        data_venda: itens[0].data_venda,
+        observacoes: itens[0].observacoes,
+        total: itens.reduce((total, item) => total + Number(item.valor_total), 0),
+        itens
+      }))
+      .sort((a, b) => new Date(b.data_venda).getTime() - new Date(a.data_venda).getTime());
   }
 
   selecionarFormaPagamento(forma: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado'): void {
@@ -395,6 +533,10 @@ get totalArrecadadoCaixaAtual(): number {
 
     this.limparCarrinho();
     this.limparFormulario();
+    this.carrinhoAberto = false;
+    this.etapaCarrinho = 'itens';
+    this.pagamentoConfirmado = false;
+    this.mostrarToastVendaRegistrada();
     await this.carregarDados();
   }
 
