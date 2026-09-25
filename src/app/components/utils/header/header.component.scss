@@ -436,6 +436,8 @@
   .header-content {
     height: 52px;
 
+    gap: 0.4rem;
+
     padding: 0.5rem 0.75rem;
 
     border-radius: 15px;
@@ -443,6 +445,15 @@
 
   .search {
     display: none;
+  }
+
+  /*
+   * Com a busca oculta não existe mais o `margin-left: auto`
+   * dela, então o botão de tema passa a empurrar o grupo
+   * (tema + usuário) para o lado direito.
+   */
+  .icon-button {
+    margin-left: auto;
   }
 
   .user-info {
