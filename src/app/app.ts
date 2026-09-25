@@ -70,7 +70,6 @@ export class App implements OnInit {
   goToHome() { this.router.navigateByUrl("/mural") }
 
   toggleDarkMode() {
-    console.log('Trocando tema', );
     this.isDarkMode = !this.isDarkMode;
     
     const themeClass = 'dark-mode';
@@ -88,7 +87,6 @@ export class App implements OnInit {
   }
 
   toggleSidenav() {
-    console.log('Trocando sidebar', );
     this.isExpanded = !this.isExpanded;
   }
 

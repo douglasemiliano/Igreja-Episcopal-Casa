@@ -6,29 +6,118 @@
 
   <article class="profile-card">
     <header class="profile-header">
-      <img [src]="fotoUsuario || avatarPadrao" [alt]="nomeUsuario">
+      <div class="profile-avatar">
+        <img [src]="editando ? (previaFoto || avatarPadrao) : (fotoUsuario || avatarPadrao)" [alt]="nomeUsuario">
+        <button
+          type="button"
+          class="avatar-overlay"
+          [class.is-disabled]="salvandoFoto"
+          [attr.aria-label]="salvandoFoto ? 'Enviando foto' : 'Trocar foto'"
+          (click)="abrirSelecaoFoto()">
+          <mat-icon>{{ salvandoFoto ? 'hourglass_top' : 'photo_camera' }}</mat-icon>
+          <span>{{ salvandoFoto ? 'Enviando...' : 'Trocar foto' }}</span>
+        </button>
+        <input
+          #inputFoto
+          type="file"
+          class="visually-hidden"
+          accept="image/png,image/jpeg,image/webp"
+          (change)="selecionarArquivo($event)">
+      </div>
+
       <div class="profile-heading">
         <p class="eyebrow">Meu perfil</p>
-        <h1>{{ nomeUsuario }}</h1>
+        <h1>{{ editando ? (novoNome || nomeUsuario) : nomeUsuario }}</h1>
         <p>{{ emailUsuario }}</p>
       </div>
+
+      @if (!editando) {
+        <button type="button" class="edit-button" (click)="iniciarEdicao()">
+          <mat-icon>edit</mat-icon>
+          <span>Editar perfil</span>
+        </button>
+      }
     </header>
 
-    <div class="profile-grid">
-      <div class="profile-field">
-        <span>Nome</span>
-        <strong>{{ nomeUsuario }}</strong>
-      </div>
+    @if (!editando) {
+      <div class="profile-grid">
+        <div class="profile-field">
+          <span>Nome</span>
+          <strong>{{ nomeUsuario }}</strong>
+        </div>
 
-      <div class="profile-field">
-        <span>E-mail</span>
-        <strong>{{ emailUsuario }}</strong>
-      </div>
+        <div class="profile-field">
+          <span>E-mail</span>
+          <strong>{{ emailUsuario }}</strong>
+        </div>
 
-      <div class="profile-field">
-        <span>Função</span>
-        <strong>{{ labels.length ? labels.join(' · ') : 'Membro' }}</strong>
+        <div class="profile-field">
+          <span>Função</span>
+          <strong>{{ labels.length ? labels.join(' · ') : 'Membro' }}</strong>
+        </div>
       </div>
-    </div>
+    } @else {
+      <div class="profile-edit">
+        <!-- DADOS -->
+        <section class="edit-block">
+          <h2>Dados</h2>
+
+          <label class="edit-field">
+            <span>Nome</span>
+            <input type="text" name="nome" maxlength="80" [(ngModel)]="novoNome" placeholder="Como você quer ser chamado">
+          </label>
+
+          <div class="edit-field">
+            <span>E-mail</span>
+            <input type="email" [value]="emailUsuario" disabled>
+            <small>O e-mail é gerenciado pela autenticação e não pode ser alterado aqui.</small>
+          </div>
+
+          <p class="edit-hint">
+            <mat-icon>info</mat-icon>
+            Para trocar a foto, clique na sua imagem acima. JPG, PNG ou WEBP, até 10 MB — a imagem é reduzida para 512px antes de ser enviada.
+          </p>
+
+          <div class="edit-actions">
+            <button type="button" class="primary-button" [disabled]="salvando || !nomeAlterado" (click)="salvarNome()">
+              {{ salvando ? 'Salvando...' : 'Salvar nome' }}
+            </button>
+          </div>
+        </section>
+
+        <!-- SENHA -->
+        <section class="edit-block">
+          <h2>Senha</h2>
+
+          @if (podeAlterarSenha) {
+            <label class="edit-field">
+              <span>Nova senha</span>
+              <input type="password" name="novaSenha" autocomplete="new-password" [(ngModel)]="novaSenha" placeholder="Mínimo de 6 caracteres">
+            </label>
+
+            <label class="edit-field">
+              <span>Confirmar nova senha</span>
+              <input type="password" name="confirmarSenha" autocomplete="new-password" [(ngModel)]="confirmarSenha" placeholder="Repita a senha">
+            </label>
+
+            <div class="edit-actions">
+              <button type="button" class="primary-button" [disabled]="salvandoSenha || !novaSenha" (click)="salvarSenha()">
+                {{ salvandoSenha ? 'Alterando...' : 'Alterar senha' }}
+              </button>
+            </div>
+          } @else {
+            <p class="edit-hint">
+              <mat-icon>info</mat-icon>
+              Este login foi feito pelo Google, que gerencia a senha da conta.
+              Para definir uma senha própria, use "esqueci minha senha" na tela de login.
+            </p>
+          }
+        </section>
+
+        <div class="edit-footer">
+          <button type="button" class="ghost-button" (click)="cancelarEdicao()">Cancelar</button>
+        </div>
+      </div>
+    }
   </article>
 </section>

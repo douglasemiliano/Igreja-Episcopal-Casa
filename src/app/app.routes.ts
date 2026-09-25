@@ -23,7 +23,7 @@ export const routes: Routes = [
     { path: 'mural', loadComponent: () => import('./components/feed/feed.component').then(c => c.FeedComponent), canActivate: [AuthGuard] },
     { path: 'acoes', loadComponent: () => import('./components/arrecadacoes/arrecadacoes.component').then(c => c.ArrecadacoesComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'caixa', 'tesouraria', 'pastor'] } },
     { path: 'relatorios-caixas', loadComponent: () => import('./components/relatorios-caixa/relatorios-caixa.component').then(c => c.RelatoriosCaixaComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'caixa', 'tesouraria', 'pastor'] } },
-    { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(c => c.DashboardComponent), canActivate: [AuthGuard] },
+    { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(c => c.DashboardComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'pastor', 'secretaria', 'tesouraria'] } },
     { path: 'usuarios', loadComponent: () => import('./components/usuarios/gerenciar-usuarios/gerenciar-usuarios.component').then(c => c.GerenciarUsuariosComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'pastor'] } },
     { path: 'livro', loadComponent: () => import('./components/livro-registro/livro-registro.component').then(c => c.LivroRegistroComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'pastor'] }},
     { path: 'livro/batismo', loadComponent: () => import('./components/livro-registro/lista-batismo/lista-batismo.component').then(c => c.ListaBatismoComponent)},

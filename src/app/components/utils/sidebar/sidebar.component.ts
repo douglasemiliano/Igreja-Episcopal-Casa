@@ -55,22 +55,36 @@ export class SidebarComponent implements OnDestroy, OnInit {
   }
  
   ngOnInit(): void {
-    this.supabaseService
-      .getSession()
-      .then(({ data }) => {
-        const session = data?.session;
-        if (!session) return;
-        this.fotoUsuario = session.user.user_metadata['avatar_url'];
-        this.nomeUsuario = session.user.user_metadata['name'];
-      })
-      .catch((erro) => console.error('Não foi possível obter a sessão:', erro));
+    this.carregarUsuario();
 
-    this.supabaseService
-      .getRoles()
-      .then((roles) => {
-        this.roles = roles;
-      })
-      .catch(() => undefined);
+    this.coreService.usuario$.subscribe({
+      next: (usuario) => {
+        this.fotoUsuario = usuario.foto || this.avatarPadrao;
+        this.nomeUsuario = usuario.nome;
+        this.roles = usuario.roles;
+      }
+    });
+  }
+
+  private async carregarUsuario(): Promise<void> {
+    try {
+      const [session, roles] = await Promise.all([
+        this.supabaseService.getSession(),
+        this.supabaseService.getRoles()
+      ]);
+
+      const user = session.data?.session?.user;
+      if (!user) return;
+
+      const metadata = user.user_metadata ?? {};
+      this.coreService.setUsuario({
+        nome: metadata['name'] || metadata['full_name'] || 'Você',
+        foto: metadata['avatar_url'] || this.avatarPadrao,
+        roles
+      });
+    } catch (erro) {
+      console.error('Não foi possível obter a sessão:', erro);
+    }
   }
  
   ngOnDestroy(): void {

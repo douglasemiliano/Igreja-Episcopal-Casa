@@ -53,7 +53,6 @@ formulario: FormGroup;
         padrinhos: this.formulario.value.padrinhos ? 
                   this.formulario.value.padrinhos.split(',').map((s: string) => s.trim()) : []
       };
-      console.log(dados)
       try {
         const pdfBlob = await this.certificadoService.gerarCertificado(dados);
         const fileName = this.certificadoService.getNomeArquivo(dados.nomeCompleto);

@@ -41,7 +41,6 @@ export class ListaBatismoComponent implements OnInit {
   }
 
   async gerarFolha(dados: DadosBatismo){
-    console.log(dados)
     const blob = await this.livroBatismoService.gerarDocumento(dados);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

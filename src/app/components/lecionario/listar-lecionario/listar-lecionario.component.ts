@@ -118,21 +118,16 @@ export class ListarLecionarioComponent {
   async delete(id: string) {
 
     this.modalService.confirmar('Deseja realmente excluir este registro?').then(async (confirmado) => {
-      if (confirmado) {
-        // Usuário clicou em "Sim"
-        const { error } = await this.supabaseService.deleteLectionary(id);
-        if (error) {
-          this.toast.erro('Erro ao excluir o registro.');
-        } else {
-          this.toast.sucesso('Registro excluído com sucesso!');
+      if (!confirmado) return;
 
-          this.recuperarLecionario();
-        }
-
-      } else {
-        // Usuário clicou em "Não"
-        console.log('Exclusão cancelada.');
+      const { error } = await this.supabaseService.deleteLectionary(id);
+      if (error) {
+        this.toast.erro('Erro ao excluir o registro.');
+        return;
       }
+
+      this.toast.sucesso('Registro excluído com sucesso!');
+      this.recuperarLecionario();
     });
   }
 

@@ -89,6 +89,215 @@ export class SupabaseService {
     return this.supabase.auth.getSession();
   }
 
+  /**
+   * Provedor do login atual.
+   * Senha só pode ser alterada em login por senha: contas do Google
+   * não têm senha local e a troca falharia.
+   */
+  async getAuthProvider(): Promise<string | null> {
+    const user = await this.getUser();
+    return user?.app_metadata?.['provider'] ?? null;
+  }
+
+  async loginComSenha(): Promise<boolean> {
+    return (await this.getAuthProvider()) !== 'google';
+  }
+
+  // --- PERFIL / AVATAR ---
+
+  private get extensaoValida(): string[] {
+    return ['jpg', 'jpeg', 'png', 'webp'];
+  }
+
+  /**
+   * Redimensiona e recomprime a imagem no navegador antes do upload.
+   *
+   * Foto de celular costuma ter 3-8 MB; um avatar de 512px em JPEG fica
+   * na casa das dezenas de KB. Reduzir no cliente economiza banda do
+   * usuário e cota de egress, já que o bucket é público.
+   */
+  private async compactarImagem(
+    arquivo: File,
+    ladoMaximo = 512,
+    qualidade = 0.82
+  ): Promise<File> {
+    // SVG/animados não passam pelo canvas
+    if (!arquivo.type.startsWith('image/') || arquivo.type === 'image/svg+xml') {
+      throw new Error('Formato não suportado para compactação.');
+    }
+
+    const url = URL.createObjectURL(arquivo);
+
+    try {
+      const imagem = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+        img.src = url;
+      });
+
+      const escala = Math.min(1, ladoMaximo / Math.max(imagem.width, imagem.height));
+      const largura = Math.max(1, Math.round(imagem.width * escala));
+      const altura = Math.max(1, Math.round(imagem.height * escala));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = largura;
+      canvas.height = altura;
+
+      const contexto = canvas.getContext('2d');
+      if (!contexto) return arquivo;
+
+      contexto.imageSmoothingQuality = 'high';
+      // JPEG não tem alpha: fundo branco evita área preta em PNGs transparentes
+      contexto.fillStyle = '#ffffff';
+      contexto.fillRect(0, 0, largura, altura);
+      contexto.drawImage(imagem, 0, 0, largura, altura);
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/jpeg', qualidade)
+      );
+
+      if (!blob) return arquivo;
+
+      const compactado = new File([blob], 'avatar.jpg', {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+
+      // Se a compactação não ajudou (imagem já pequena), manda o original
+      return compactado.size < arquivo.size ? compactado : arquivo;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  /**
+   * Envia o avatar para `avatars/<user_id>/<arquivo>` e grava a URL em
+   * `user_metadata.avatar_url` (o header e o mural leem a metadata).
+   */
+  async uploadAvatar(arquivo: File): Promise<{ url: string } | { erro: string }> {
+    const user = await this.getUser();
+    if (!user) return { erro: 'Sessão expirada. Faça login novamente.' };
+
+    const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!this.extensaoValida.includes(extensao)) {
+      return { erro: 'Formato inválido. Use JPG, PNG ou WEBP.' };
+    }
+    if (arquivo.size > 10 * 1024 * 1024) {
+      return { erro: 'A imagem deve ter no máximo 10 MB.' };
+    }
+
+    let otimizado = arquivo;
+    try {
+      otimizado = await this.compactarImagem(arquivo);
+    } catch (erro) {
+      console.error(erro);
+      return { erro: 'Não foi possível preparar a imagem para envio.' };
+    }
+
+    const extensaoFinal = otimizado === arquivo ? extensao : 'jpg';
+    const caminho = `${user.id}/avatar.${extensaoFinal}`;
+
+    const { error: erroUpload } = await this.supabase.storage
+      .from('avatars')
+      .upload(caminho, otimizado, { upsert: true, contentType: otimizado.type });
+
+    if (erroUpload) {
+      console.error(erroUpload);
+      return { erro: 'Não foi possível enviar a imagem.' };
+    }
+
+    const { data: url } = this.supabase.storage.from('avatars').getPublicUrl(caminho);
+
+    // Apaga versões anteriores (ex.: avatar.png depois do avatar.jpg),
+    // senão cada troca de formato deixa lixo ocupando cota.
+    await this.removerAvataresAntigos(user.id, caminho);
+
+    // A policy de update em profiles só abre para admin/pastor, então o
+    // usuário comum vincula a foto pela metadata do auth.
+
+    const { error: erroMeta } = await this.supabase.auth.updateUser({
+      data: { avatar_url: url.publicUrl }
+    });
+
+    if (erroMeta) {
+      console.error(erroMeta);
+      return { erro: 'Imagem enviada, mas não foi possível vincular ao perfil.' };
+    }
+
+    return { url: url.publicUrl };
+  }
+
+  /**
+   * Remove arquivos de avatar do usuário que não sejam o caminho atual.
+   * Só considera a própria pasta, então não há risco de apagar a foto
+   * de outra pessoa. Falha silenciosa: é limpeza, não operação crítica.
+   */
+  private async removerAvataresAntigos(userId: string, caminhoAtual: string): Promise<void> {
+    try {
+      const { data: arquivos, error } = await this.supabase.storage
+        .from('avatars')
+        .list(userId, { limit: 100 });
+
+      if (error || !arquivos?.length) return;
+
+      const obsoletos = arquivos
+        .filter((arquivo) => arquivo.name !== caminhoAtual.split('/').pop())
+        .map((arquivo) => `${userId}/${arquivo.name}`);
+
+      if (!obsoletos.length) return;
+
+      await this.supabase.storage.from('avatars').remove(obsoletos);
+    } catch {
+      // limpeza best-effort
+    }
+  }
+
+  /**
+   * Nome de exibição: metadata (auth) + profiles.nome (listas e mural).
+   *
+   * A policy de `profiles` só abre update para admin/pastor, então o
+   * próprio usuário grava via função security definer.
+   */
+  async atualizarNome(nome: string): Promise<{ erro: string | null }> {
+    const user = await this.getUser();
+    if (!user) return { erro: 'Sessão expirada. Faça login novamente.' };
+
+    const { error: erroMeta } = await this.supabase.auth.updateUser({
+      data: { name: nome, full_name: nome }
+    });
+
+    if (erroMeta) {
+      console.error(erroMeta);
+      return { erro: 'Não foi possível atualizar o nome.' };
+    }
+
+    const { error: erroPerfil } = await this.supabase.rpc('atualizar_meu_nome', { novo_nome: nome });
+
+    if (erroPerfil) {
+      console.error(erroPerfil);
+      return { erro: 'Nome atualizado, mas o cadastro não foi sincronizado.' };
+    }
+
+    return { erro: null };
+  }
+
+  /** Troca de senha. `novaSenha` precisa ter no mínimo 6 caracteres. */
+  async atualizarSenha(novaSenha: string): Promise<{ erro: string | null }> {
+    if (novaSenha.length < 6) {
+      return { erro: 'A nova senha deve ter no mínimo 6 caracteres.' };
+    }
+
+    const { error } = await this.supabase.auth.updateUser({ password: novaSenha });
+
+    if (error) {
+      console.error(error);
+      return { erro: 'Não foi possível alterar a senha.' };
+    }
+
+    return { erro: null };
+  }
+
     // Login com Google
 signInWithGoogle() {
   return this.supabase.auth.signInWithOAuth({

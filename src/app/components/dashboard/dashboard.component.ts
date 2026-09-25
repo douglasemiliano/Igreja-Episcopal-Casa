@@ -97,8 +97,6 @@ export class DashboardComponent implements OnInit {
     return;
   }
   this.caixaAtual = data ?? null;
-
-  console.log("Data", data)
 }
 
   moeda(valor: number): string { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }

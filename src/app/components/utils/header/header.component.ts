@@ -52,32 +52,47 @@ export class HeaderComponent {
   ) {}
 
   ngOnInit(): void {
-    this.supabase
-      .getSession()
-      .then(({ data }) => {
-        const session = data?.session;
-        if (!session) return;
-        const user = session.user;
-        const metadata = user.user_metadata ?? {};
-        this.fotoUsuario = metadata['avatar_url'] || this.avatarPadrao;
-        this.nomeUsuario =
-          metadata['name'] || metadata['full_name'] || user.email?.split('@')[0] || 'Usuário';
-        this.emailUsuario = user.email || 'Email não informado';
-      })
-      .catch((erro) => console.error('Não foi possível obter a sessão:', erro));
+    this.carregarUsuario();
 
-    this.supabase
-      .getRoles()
-      .then((roles) => {
-        this.roles = roles;
-      })
-      .catch(() => undefined);
+    // Fonte única de verdade: qualquer tela que alterar nome/foto
+    // reflete aqui sem recarregar a página.
+    this.coreService.usuario$.subscribe({
+      next: (usuario) => {
+        this.fotoUsuario = usuario.foto || this.avatarPadrao;
+        this.nomeUsuario = usuario.nome;
+        this.emailUsuario = usuario.email;
+        this.roles = usuario.roles;
+      }
+    });
 
     this.coreService.isDarkMode$.subscribe({
       next: (data) => {
         this.isDarkMode = data === 'dark';
       }
     });
+  }
+
+  private async carregarUsuario(): Promise<void> {
+    try {
+      const [session, roles] = await Promise.all([
+        this.supabase.getSession(),
+        this.supabase.getRoles()
+      ]);
+
+      const user = session.data?.session?.user;
+      if (!user) return;
+
+      const metadata = user.user_metadata ?? {};
+      this.coreService.setUsuario({
+        nome:
+          metadata['name'] || metadata['full_name'] || user.email?.split('@')[0] || 'Usuário',
+        email: user.email || 'Email não informado',
+        foto: metadata['avatar_url'] || this.avatarPadrao,
+        roles
+      });
+    } catch (erro) {
+      console.error('Não foi possível obter a sessão:', erro);
+    }
   }
 
   onToggleSidebar(): void {

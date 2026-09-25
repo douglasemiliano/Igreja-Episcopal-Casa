@@ -38,8 +38,6 @@ export class ListarMembrosComponent implements OnInit {
       if (error) throw error;
       this.membros = data || [];
 
-      console.log('Membros carregados:', this.membros);
-
       this.pagina = 1;
 
       // Inicializa confirmacoes com arrays vazios para cada membro

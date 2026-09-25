@@ -81,8 +81,6 @@ traduzirTextoBiblico(textoIngles: string): string {
   }
 
   getConteudoLecionario(): void {
-    console.log("Data selecionada para busca: ", this.dataUnica);
-
     this.lecionarioService.fetchLecionado(this.dataUnica).subscribe({
       next: (respostaApi: any) => {
         if (!respostaApi || !respostaApi.daily) {

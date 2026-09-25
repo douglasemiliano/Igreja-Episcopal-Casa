@@ -141,7 +141,6 @@ export class RegistroBatismoComponent implements OnInit {
   }
 
   consultarCep(cep: any) {
-    console.log(cep.value)
     if(cep.value.length === 8)
     this.utilsService.consultarCep(cep.value).subscribe({
       next: (dados: any) => {
