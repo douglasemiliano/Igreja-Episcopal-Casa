@@ -1,19 +1,15 @@
-import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
-import { Router, RouterModule } from "@angular/router";
-import { MatIconModule } from "@angular/material/icon";
-import { SupabaseService } from "../../../services/supabase.service";
-import { LecionarioService } from "../../../services/lecionario.service";
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { Router, RouterModule } from '@angular/router';
 import { CoreService } from '../../../services/core.service';
+import { LecionarioService } from '../../../services/lecionario.service';
+import { SupabaseService } from '../../../services/supabase.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatIconModule
-  ],
+  imports: [CommonModule, RouterModule, MatIconModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -22,19 +18,16 @@ export class HeaderComponent {
   @Output() darkToggle = new EventEmitter<void>();
   @Output() sidenavToggle = new EventEmitter<void>();
   @Input() isExpanded = true;
-
-    @Input() collapsed = false;
-
+  @Input() collapsed = false;
   @Output() toggleSidebar = new EventEmitter<void>();
 
-  onToggleSidebar(): void {
-    this.toggleSidebar.emit();
-  }
-
   appsMenuOpen = false;
-  fotoUsuario: string;
-  nomeUsuario: string = 'Usuário';
-  role: string = 'leitor';
+  readonly avatarPadrao = 'casa.png';
+  fotoUsuario = this.avatarPadrao;
+  nomeUsuario = 'Usuário';
+  role = 'leitor';
+  isUserMenuOpen = false;
+  emailUsuario = 'Email não informado';
   readonly labelsRole: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
@@ -43,7 +36,6 @@ export class HeaderComponent {
     pastor: 'Pastor',
     leitor: 'Leitor'
   };
-  avatarPadrao: string = 'https://imgs.search.brave.com/CFBTYPNRel95sDw00APELv5D4Ghs73sYYcN0-tLpV5U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tYXJr/ZXRwbGFjZS5jYW52/YS5jb20vZ0pseTAv/TUFHRGtNZ0pseTAv/MS90bC9jYW52YS11/c2VyLXByb2ZpbGUt/aWNvbi12ZWN0b3Iu/LWF2YXRhci1vci1w/ZXJzb24taWNvbi4t/cHJvZmlsZS1waWN0/dXJlLC1wb3J0cmFp/dC1zeW1ib2wuLU1B/R0RrTWdKbHkwLnBu/Zw';
 
   constructor(
     private router: Router,
@@ -52,11 +44,15 @@ export class HeaderComponent {
     private coreService: CoreService
   ) {}
 
- ngOnInit(): void {
+  ngOnInit(): void {
     this.supabase.getSession().then(({ data: { session } }) => {
       if (session) {
-        this.fotoUsuario = session.user.user_metadata['avatar_url'];
-        this.nomeUsuario = session.user.user_metadata['name'] ?? 'Você';
+        const user = session.user;
+        const metadata = user.user_metadata ?? {};
+        this.fotoUsuario = metadata['avatar_url'] || this.avatarPadrao;
+        this.nomeUsuario =
+          metadata['name'] || metadata['full_name'] || user.email?.split('@')[0] || 'Usuário';
+        this.emailUsuario = user.email || 'Email não informado';
       }
     });
 
@@ -64,37 +60,59 @@ export class HeaderComponent {
       this.role = role;
     });
 
-        this.coreService.isDarkMode$.subscribe({
-      next: (data) => { this.isDarkMode = (data === 'dark'); }
+    this.coreService.isDarkMode$.subscribe({
+      next: (data) => {
+        this.isDarkMode = data === 'dark';
+      }
     });
   }
 
+  onToggleSidebar(): void {
+    this.toggleSidebar.emit();
+  }
 
-  onDarkToggle() {
+  toggleUserMenu(event: Event): void {
+    event.stopPropagation();
+    this.isUserMenuOpen = !this.isUserMenuOpen;
+  }
+
+  @HostListener('document:click')
+  closeUserMenu(): void {
+    this.isUserMenuOpen = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.isUserMenuOpen = false;
+  }
+
+  onDarkToggle(): void {
     this.coreService.toggleDarkMode();
     this.darkToggle.emit();
   }
 
-  async logout() {
+  async logout(): Promise<void> {
+    this.closeUserMenu();
     await this.supabase.signOut();
-    this.router.navigate(['/login']);
+    await this.router.navigate(['/login']);
   }
 
-  goToPerfil() {
-    this.router.navigate(['/perfil']); // 👈 rota do perfil
+  goToPerfil(): void {
+    this.closeUserMenu();
+    this.router.navigate(['/perfil']);
   }
 
-  goToCadastro() {
+  goToCadastro(): void {
     this.lecionarioService.setLecionarioSelecionado(null);
     this.router.navigateByUrl('/cadastro');
   }
 
-  onSidenavToggle() {
+  onSidenavToggle(): void {
     this.isExpanded = !this.isExpanded;
     this.sidenavToggle.emit();
   }
 
-    toggleAppsMenu(): void {
+  toggleAppsMenu(): void {
     this.appsMenuOpen = !this.appsMenuOpen;
   }
 }

@@ -7,6 +7,7 @@ import { LoginComponent } from './components/auth/login/login.component';
 
 export const routes: Routes = [
     { path: 'home', component: HomeComponent, data: { animation: 'home' }, canActivate: [AuthGuard] },
+    { path: 'perfil', loadComponent: () => import('./components/perfil/perfil.component').then(c => c.PerfilComponent), canActivate: [AuthGuard] },
     { path: 'lecionario', loadComponent: () => import('./components/lecionario/view-lecionario/view-lecionario.component').then(c => c.ViewLecionarioComponent), canActivate: [AuthGuard] }, 
     { path: 'lecionario/listar', loadComponent: () => import('./components/lecionario/listar-lecionario/listar-lecionario.component').then(c => c.ListarLecionarioComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'pastor'] } },
     { path: '', redirectTo: '/home', pathMatch: 'full' },

@@ -1,0 +1,34 @@
+<section class="profile-page">
+  <a class="back-link" routerLink="/home">
+    <mat-icon>arrow_back</mat-icon>
+    <span>Voltar para a central</span>
+  </a>
+
+  <article class="profile-card">
+    <header class="profile-header">
+      <img [src]="fotoUsuario || avatarPadrao" [alt]="nomeUsuario">
+      <div class="profile-heading">
+        <p class="eyebrow">Meu perfil</p>
+        <h1>{{ nomeUsuario }}</h1>
+        <p>{{ emailUsuario }}</p>
+      </div>
+    </header>
+
+    <div class="profile-grid">
+      <div class="profile-field">
+        <span>Nome</span>
+        <strong>{{ nomeUsuario }}</strong>
+      </div>
+
+      <div class="profile-field">
+        <span>E-mail</span>
+        <strong>{{ emailUsuario }}</strong>
+      </div>
+
+      <div class="profile-field">
+        <span>Função</span>
+        <strong>{{ labelsRole[role] || role }}</strong>
+      </div>
+    </div>
+  </article>
+</section>

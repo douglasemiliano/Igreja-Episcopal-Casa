@@ -6,8 +6,7 @@
     "start": "node -r dotenv/config mynode.js && ng serve",
     "build": "ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "prebuild": "ts-node set-env.ts"
+    "test": "ng test"
   },
   "prettier": {
     "printWidth": 100,
@@ -31,6 +30,7 @@
     "@angular/material": "^20.2.4",
     "@angular/platform-browser": "^20.2.0",
     "@angular/router": "^20.2.0",
+    "@angular/service-worker": "20.3.1",
     "@popperjs/core": "^2.11.8",
     "@supabase/supabase-js": "^2.57.4",
     "@types/jspdf": "^1.3.3",

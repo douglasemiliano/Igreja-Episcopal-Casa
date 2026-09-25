@@ -52,21 +52,59 @@
 
     <!-- USUÁRIO -->
     <div class="header-user">
+      <button
+        class="user-trigger"
+        type="button"
+        aria-label="Abrir menu do usuário"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="isUserMenuOpen"
+        aria-controls="user-menu"
+        (click)="toggleUserMenu($event)"
+      >
+        <img [src]="fotoUsuario || avatarPadrao" [alt]="nomeUsuario">
 
-      <img [src]="fotoUsuario" alt="Douglas Emiliano">
+        <span class="user-info">
+          <strong>
+            {{ nomeUsuario }}
+          </strong>
 
-      <div class="user-info">
+          <small>
+            {{ labelsRole[role] || role }}
+          </small>
+        </span>
 
-        <strong>
-          {{nomeUsuario}}
-        </strong>
+        <mat-icon class="user-menu-icon">expand_more</mat-icon>
+      </button>
 
-        <small>
-          {{ labelsRole[role] || role }}
-        </small>
+      @if (isUserMenuOpen) {
+        <div class="user-menu" id="user-menu" role="menu" (click)="$event.stopPropagation()">
+          <div class="user-menu-profile">
+            <img [src]="fotoUsuario || avatarPadrao" [alt]="nomeUsuario">
+            <div class="user-menu-details">
+              <strong>{{ nomeUsuario }}</strong>
+              <span>{{ emailUsuario }}</span>
+              <small>{{ labelsRole[role] || role }}</small>
+            </div>
+          </div>
 
-      </div>
+          <div class="user-menu-divider"></div>
 
+          <button class="user-menu-item" type="button" role="menuitem" (click)="goToPerfil()">
+            <mat-icon>person</mat-icon>
+            <span>Meu perfil</span>
+          </button>
+
+          <button
+            class="user-menu-item user-menu-item--logout"
+            type="button"
+            role="menuitem"
+            (click)="logout()"
+          >
+            <mat-icon>logout</mat-icon>
+            <span>Sair</span>
+          </button>
+        </div>
+      }
     </div>
 
   </div>
