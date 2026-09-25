@@ -21,7 +21,7 @@ export class App implements OnInit {
   protected readonly title = signal('episcopalcasa');
   dataUnica: Date = new Date();
   isDarkMode = false;
-  isLoggedIn: boolean;
+  isLoggedIn: boolean = false;
   isExpanded = true;
 
   private coreService = inject(CoreService);
@@ -39,11 +39,23 @@ export class App implements OnInit {
       this.renderer.addClass(document.body, 'dark-mode');
     }
 
-    const { data, error } = await this.supabase.getUserResult();
-    this.isLoggedIn = !!data.user;
+    /*
+     * A leitura da sessão pode falhar (ex.: NavigatorLockAcquireTimeoutError
+     * do Supabase quando outra aba segura o lock de auth). Isso não pode
+     * derrubar o app: em caso de erro seguimos sem sessão e o AuthGuard
+     * redireciona para o login normalmente.
+     */
+    try {
+      const { data, error } = await this.supabase.getUserResult();
 
-    if (error) {
-      await this.supabase.signOut();
+      if (error) {
+        await this.supabase.signOut().catch(() => undefined);
+        this.isLoggedIn = false;
+      } else {
+        this.isLoggedIn = !!data?.user;
+      }
+    } catch (erro) {
+      console.error('Não foi possível restaurar a sessão:', erro);
       this.isLoggedIn = false;
     }
 

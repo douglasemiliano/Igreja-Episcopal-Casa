@@ -16,14 +16,16 @@ export class GerenciarUsuariosComponent implements OnInit {
   private readonly supabase = inject(SupabaseService);
   private readonly toast = inject(ToastService);
 
-  readonly roles = ['administrador', 'secretaria', 'caixa', 'tesouraria', 'pastor', 'leitor'];
+  readonly roles = ['administrador', 'secretaria', 'caixa', 'tesouraria', 'pastor', 'lider', 'membro'];
   readonly labels: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
     caixa: 'Caixa',
     tesouraria: 'Tesouraria',
     pastor: 'Pastor',
-    leitor: 'Leitor'
+    lider: 'Líder',
+    membro: 'Membro',
+    leitor: 'Membro'
   };
 
   usuarios: any[] = [];

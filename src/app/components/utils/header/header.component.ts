@@ -25,7 +25,7 @@ export class HeaderComponent {
   readonly avatarPadrao = 'casa.png';
   fotoUsuario = this.avatarPadrao;
   nomeUsuario = 'Usuário';
-  role = 'leitor';
+  role = 'membro';
   isUserMenuOpen = false;
   emailUsuario = 'Email não informado';
   readonly labelsRole: Record<string, string> = {
@@ -34,7 +34,9 @@ export class HeaderComponent {
     caixa: 'Caixa',
     tesouraria: 'Tesouraria',
     pastor: 'Pastor',
-    leitor: 'Leitor'
+    lider: 'Líder',
+    membro: 'Membro',
+    leitor: 'Membro'
   };
 
   constructor(
@@ -45,20 +47,26 @@ export class HeaderComponent {
   ) {}
 
   ngOnInit(): void {
-    this.supabase.getSession().then(({ data: { session } }) => {
-      if (session) {
+    this.supabase
+      .getSession()
+      .then(({ data }) => {
+        const session = data?.session;
+        if (!session) return;
         const user = session.user;
         const metadata = user.user_metadata ?? {};
         this.fotoUsuario = metadata['avatar_url'] || this.avatarPadrao;
         this.nomeUsuario =
           metadata['name'] || metadata['full_name'] || user.email?.split('@')[0] || 'Usuário';
         this.emailUsuario = user.email || 'Email não informado';
-      }
-    });
+      })
+      .catch((erro) => console.error('Não foi possível obter a sessão:', erro));
 
-    this.supabase.getRole().then((role) => {
-      this.role = role;
-    });
+    this.supabase
+      .getRole()
+      .then((role) => {
+        this.role = role;
+      })
+      .catch(() => undefined);
 
     this.coreService.isDarkMode$.subscribe({
       next: (data) => {

@@ -32,7 +32,7 @@
         @for (categoria of categorias; track categoria.nome) {<div class="bar-row"><div><span>{{ categoria.nome }}</span><strong>{{ moeda(categoria.total) }}</strong></div><div class="bar"><i [style.width.%]="categoria.percentual"></i></div></div>}
         @if (!categorias.length) {<p class="empty-state">Ainda não há arrecadações.</p>}
       </div>
-      <div class="dashboard-panel"><div class="panel-heading"><h2>Próximos compromissos</h2>@if (temPermissao(['administrador', 'secretaria', 'pastor'])) {<a routerLink="/agenda">Ver agenda</a>}</div>
+      <div class="dashboard-panel"><div class="panel-heading"><h2>Próximos compromissos</h2><a routerLink="/agenda">Ver agenda</a></div>
         @for (evento of proximosEventos; track evento.id) {<div class="event-row"><span class="event-date">{{ evento.inicio | date:'dd/MM' }}</span><div><strong>{{ evento.titulo }}</strong><small>{{ evento.local || 'Local não informado' }} · {{ evento.inicio | date:'HH:mm' }}</small></div></div>}
         @if (!proximosEventos.length) {<p class="empty-state">Nenhum compromisso próximo.</p>}
       </div>

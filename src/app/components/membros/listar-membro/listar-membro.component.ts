@@ -15,7 +15,7 @@ export class ListarMembrosComponent implements OnInit {
   supabaseService = inject(SupabaseService);
   membros: any[] = [];
   confirmacoes: { [key: string]: any[] } = {};
-  role: string = 'leitor';
+  role: string = 'membro';
 
   filtro = '';
   pagina = 1;

@@ -19,7 +19,7 @@ export const routes: Routes = [
     { path: 'membros/cadastrar', loadComponent: () => import('./components/membros/cadastrar-membro/cadastrar-membro.component').then(c => c.CadastrarMembroComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'pastor'] } },
     { path: 'membros', loadComponent: () => import('./components/membros/listar-membro/listar-membro.component').then(c => c.ListarMembrosComponent), canActivate: [AuthGuard] },
     { path: 'membros/:id', loadComponent: () => import('./components/membros/detalhe-membro/detalhe-membro.component').then(c => c.DetalheMembroComponent), canActivate: [AuthGuard] },
-    { path: 'agenda', loadComponent: () => import('./components/agenda/agenda.component').then(c => c.AgendaComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'pastor'] } },
+    { path: 'agenda', loadComponent: () => import('./components/agenda/agenda.component').then(c => c.AgendaComponent), canActivate: [AuthGuard] },
     { path: 'acoes', loadComponent: () => import('./components/arrecadacoes/arrecadacoes.component').then(c => c.ArrecadacoesComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'caixa', 'tesouraria', 'pastor'] } },
     { path: 'relatorios-caixas', loadComponent: () => import('./components/relatorios-caixa/relatorios-caixa.component').then(c => c.RelatoriosCaixaComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: ['administrador', 'secretaria', 'caixa', 'tesouraria', 'pastor'] } },
     { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard.component').then(c => c.DashboardComponent), canActivate: [AuthGuard] },

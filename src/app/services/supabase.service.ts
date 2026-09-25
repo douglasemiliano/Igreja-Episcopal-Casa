@@ -212,9 +212,11 @@ deleteAgenda(id: string) {
 
 getRole() {
   return this.getUser().then(async (user) => {
-    if (!user) return 'leitor';
+    if (!user) return 'membro';
     const { data } = await this.supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    return data?.role ?? user.user_metadata?.['role'] ?? 'leitor';
+    const role = data?.role ?? user.user_metadata?.['role'] ?? 'membro';
+    // 'leitor' foi renomeado para 'membro'; normaliza registros antigos.
+    return role === 'leitor' ? 'membro' : role;
   });
 }
 

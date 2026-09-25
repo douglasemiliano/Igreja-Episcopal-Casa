@@ -12,7 +12,7 @@ import { SupabaseService } from '../../services/supabase.service';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
-  role: string = 'leitor';
+  role: string = 'membro';
 
   private readonly supabase = inject(SupabaseService);
 

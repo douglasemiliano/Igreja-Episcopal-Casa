@@ -26,14 +26,16 @@ export class SidebarComponent implements OnDestroy, OnInit {
  
   fotoUsuario: string;
   nomeUsuario: string = "Você";
-  role: string = 'leitor';
+  role: string = 'membro';
   readonly labelsRole: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
     caixa: 'Caixa',
     tesouraria: 'Tesouraria',
     pastor: 'Pastor',
-    leitor: 'Leitor'
+    lider: 'Líder',
+    membro: 'Membro',
+    leitor: 'Membro'
   };
   avatarPadrao: string = 'https://imgs.search.brave.com/CFBTYPNRel95sDw00APELv5D4Ghs73sYYcN0-tLpV5U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tYXJr/ZXRwbGFjZS5jYW52/YS5jb20vZ0pseTAv/TUFHRGtNZ0pseTAv/MS90bC9jYW52YS11/c2VyLXByb2ZpbGUt/aWNvbi12ZWN0b3Iu/LWF2YXRhci1vci1w/ZXJzb24taWNvbi4t/cHJvZmlsZS1waWN0/dXJlLC1wb3J0cmFp/dC1zeW1ib2wuLU1B/R0RrTWdKbHkwLnBu/Zw';
   isMobile: boolean;
@@ -49,16 +51,22 @@ export class SidebarComponent implements OnDestroy, OnInit {
   }
  
   ngOnInit(): void {
-    this.supabaseService.getSession().then(({ data: { session } }) => {
-      if (session) {
+    this.supabaseService
+      .getSession()
+      .then(({ data }) => {
+        const session = data?.session;
+        if (!session) return;
         this.fotoUsuario = session.user.user_metadata['avatar_url'];
-        this.nomeUsuario = session.user.user_metadata['name']
-      }
-    });
+        this.nomeUsuario = session.user.user_metadata['name'];
+      })
+      .catch((erro) => console.error('Não foi possível obter a sessão:', erro));
 
-    this.supabaseService.getRole().then((role) => {
-      this.role = role;
-    });
+    this.supabaseService
+      .getRole()
+      .then((role) => {
+        this.role = role;
+      })
+      .catch(() => undefined);
   }
  
   ngOnDestroy(): void {

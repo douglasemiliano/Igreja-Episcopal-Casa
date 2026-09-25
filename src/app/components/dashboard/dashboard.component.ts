@@ -28,7 +28,7 @@ export class DashboardComponent implements OnInit {
   caixaAtual: any = null;
   carregando = true;
   erro = '';
-  role: string = 'leitor';
+  role: string = 'membro';
   totalMembros = 0;
   totalLecionarios = 0;
   totalConfirmacoes = 0;

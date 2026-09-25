@@ -17,14 +17,16 @@ export class PerfilComponent implements OnInit {
   fotoUsuario = '';
   nomeUsuario = 'Usuário';
   emailUsuario = 'Email não informado';
-  role = 'leitor';
+  role = 'membro';
   readonly labelsRole: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
     caixa: 'Caixa',
     tesouraria: 'Tesouraria',
     pastor: 'Pastor',
-    leitor: 'Leitor'
+    lider: 'Líder',
+    membro: 'Membro',
+    leitor: 'Membro'
   };
   readonly avatarPadrao = 'casa.png';
 

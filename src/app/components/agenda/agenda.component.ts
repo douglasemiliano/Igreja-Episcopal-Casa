@@ -14,8 +14,21 @@ export class AgendaComponent implements OnInit {
   form = this.novoForm();
   editandoId = '';
   tipos = ['culto', 'reuniao', 'batismo', 'casamento', 'arrecadacao', 'escala', 'outro'];
+  // Somente pastor, secretaria e administrador podem criar/editar/excluir eventos.
+  readonly rolesPermitidos = ['administrador', 'secretaria', 'pastor'];
+  role = '';
+  podeEditar = false;
 
-  ngOnInit(): void { this.carregar(); }
+  async ngOnInit(): Promise<void> {
+    await this.carregar();
+    try {
+      this.role = await this.supabase.getRole();
+      this.podeEditar = this.rolesPermitidos.includes(this.role);
+    } catch (erro) {
+      console.error('Não foi possível carregar o perfil de acesso:', erro);
+      this.podeEditar = false;
+    }
+  }
   async carregar(): Promise<void> {
     this.carregando = true;
     const { data, error } = await this.supabase.getAgenda();
@@ -24,9 +37,14 @@ export class AgendaComponent implements OnInit {
     this.carregando = false;
   }
   get eventosFiltrados(): any[] { return this.filtroTipo ? this.eventos.filter((evento) => evento.tipo === this.filtroTipo) : this.eventos; }
-  iniciarEdicao(evento: any): void { this.editandoId = evento.id; this.form = { ...evento, inicio: this.toInputDate(evento.inicio), fim: evento.fim ? this.toInputDate(evento.fim) : '' }; }
+  iniciarEdicao(evento: any): void {
+    if (!this.podeEditar) return;
+    this.editandoId = evento.id;
+    this.form = { ...evento, inicio: this.toInputDate(evento.inicio), fim: evento.fim ? this.toInputDate(evento.fim) : '' };
+  }
   cancelar(): void { this.editandoId = ''; this.form = this.novoForm(); }
   async salvar(): Promise<void> {
+    if (!this.podeEditar) return;
     if (!this.form.titulo || !this.form.inicio) { this.erro = 'Informe título e data de início.'; return; }
     this.salvando = true;
     const payload = { ...this.form, inicio: new Date(this.form.inicio).toISOString(), fim: this.form.fim ? new Date(this.form.fim).toISOString() : null };
@@ -36,7 +54,12 @@ export class AgendaComponent implements OnInit {
     if (response.error) { this.erro = 'Não foi possível salvar o evento.'; return; }
     this.cancelar(); await this.carregar();
   }
-  async excluir(evento: any): Promise<void> { if (!confirm(`Excluir ${evento.titulo}?`)) return; await this.supabase.deleteAgenda(evento.id); await this.carregar(); }
+  async excluir(evento: any): Promise<void> {
+    if (!this.podeEditar) return;
+    if (!confirm(`Excluir ${evento.titulo}?`)) return;
+    await this.supabase.deleteAgenda(evento.id);
+    await this.carregar();
+  }
   private novoForm(): any { return { titulo: '', tipo: 'culto', inicio: '', fim: '', local: '', responsaveis: '', observacoes: '' }; }
   private toInputDate(data: string): string { return new Date(data).toISOString().slice(0, 16); }
 }

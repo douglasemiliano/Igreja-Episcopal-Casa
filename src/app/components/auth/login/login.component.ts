@@ -29,16 +29,23 @@ export class LoginComponent {
   }
 
   async onSubmit() {
-    if (this.loginForm.valid) {
-      const { email, password } = this.loginForm.value;
+    if (!this.loginForm.valid) return;
+
+    const { email, password } = this.loginForm.value;
+
+    try {
       const { error } = await this.supabase.signIn(email, password);
 
       if (error) {
         this.toast.erro('Erro ao fazer login');
-      } else {
-        this.router.navigateByUrl("/home")
-        this.toast.sucesso('Login realizado com sucesso');
+        return;
       }
+
+      await this.router.navigateByUrl('/home');
+      this.toast.sucesso('Login realizado com sucesso');
+    } catch (erro) {
+      console.error('Falha no login:', erro);
+      this.toast.erro('Não foi possível fazer login. Tente novamente.');
     }
   }
 
