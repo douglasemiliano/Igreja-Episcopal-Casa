@@ -81,21 +81,25 @@ export class SidebarComponent implements OnDestroy, OnInit {
     this.tooltips = [];
   }
  
-  onDarkToggle() {
+  onDarkToggle(): void {
     this.coreService.toggleDarkMode();
     this.darkToggle.emit();
   }
 
-onNavClick(event: Event): void {
-  const target = event.target as HTMLElement;
-
-  if (
-    this.isMobile &&
-    target.closest('a.nav-link')
-  ) {
-    this.sidenavToggle.emit();
+  onBrandClick(): void {
+    if (this.isMobile) {
+      this.sidenavToggle.emit();
+    }
   }
-}
+
+  onNavClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    if (this.isMobile && target.closest('a.nav-link')) {
+      this.sidenavToggle.emit();
+    }
+  }
+
 
   async logout() {
     await this.supabaseService.signOut();

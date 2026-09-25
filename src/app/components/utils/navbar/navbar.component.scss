@@ -1,10 +1,25 @@
 :host {
+  position: relative;
   display: flex;
   flex-direction: row;
   width: 100vw;
   height: 100vh;
   overflow: hidden; /* Trava a tela inteira para nada rolar por fora */
   background-color: var(--background-color);
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 9998;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--overlay);
+  cursor: pointer;
+  touch-action: none;
 }
 
 /* O contêiner da direita ocupa o espaço restante e fica travado na tela */
@@ -31,6 +46,10 @@ app-header {
 
 /* --- REGRAS PARA MOBILE (Telas até 768px) --- */
 @media (max-width: 768px) {
+  .sidebar-backdrop--visible {
+    display: block;
+  }
+
   /* No mobile, a sidebar ganha o 'position: fixed' (conforme configuramos antes) 
      e passa por cima de tudo sem afetar o grid abaixo */
   .main-container {

@@ -1,3 +1,11 @@
+<button
+  class="sidebar-backdrop"
+  [class.sidebar-backdrop--visible]="!sidebarCollapsed"
+  type="button"
+  aria-label="Fechar menu lateral"
+  (click)="closeSidebar()">
+</button>
+
 <app-sidebar
   [collapsed]="sidebarCollapsed"
   (sidenavToggle)="closeSidebar()">
