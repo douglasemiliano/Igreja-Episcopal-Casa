@@ -1,5 +1,5 @@
 <section class="profile-page">
-  <a class="back-link" routerLink="/home">
+  <a class="back-link" routerLink="/mural">
     <mat-icon>arrow_back</mat-icon>
     <span>Voltar para a central</span>
   </a>
@@ -27,7 +27,7 @@
 
       <div class="profile-field">
         <span>Função</span>
-        <strong>{{ labelsRole[role] || role }}</strong>
+        <strong>{{ labels.length ? labels.join(' · ') : 'Membro' }}</strong>
       </div>
     </div>
   </article>

@@ -67,7 +67,7 @@ export class App implements OnInit {
   }
 
   mudouData() { this.router.navigateByUrl("/lecionario") }
-  goToHome() { this.router.navigateByUrl("/home") }
+  goToHome() { this.router.navigateByUrl("/mural") }
 
   toggleDarkMode() {
     console.log('Trocando tema', );

@@ -39,7 +39,21 @@
       <ul class="nav">
 
         <li>
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+          <a routerLink="/mural" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              campaign
+            </mat-icon>
+
+            <span class="link-text">
+              Mural
+            </span>
+
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/home" routerLinkActive="active" class="nav-link">
 
             <mat-icon class="material-icons-outlined">
               home
@@ -273,7 +287,7 @@
         </span>
   
         <span class="user-role">
-          {{ labelsRole[role] || role }}
+          {{ labels.length ? labels.join(' · ') : 'Membro' }}
         </span>
       </div>
 

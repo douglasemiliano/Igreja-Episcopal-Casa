@@ -15,7 +15,7 @@ export class ListarMembrosComponent implements OnInit {
   supabaseService = inject(SupabaseService);
   membros: any[] = [];
   confirmacoes: { [key: string]: any[] } = {};
-  role: string = 'membro';
+  roles: string[] = ['membro'];
 
   filtro = '';
   pagina = 1;
@@ -23,12 +23,12 @@ export class ListarMembrosComponent implements OnInit {
   opcoesPagina = [5, 10, 20, 50];
 
   ngOnInit() {
-    this.supabaseService.getRole().then((role) => { this.role = role; });
+    this.supabaseService.getRoles().then((roles) => { this.roles = roles; });
     this.carregarMembros();
   }
 
   temPermissao(roles: string[]): boolean {
-    return roles.includes(this.role);
+    return roles.some((role) => this.roles.includes(role));
   }
 
 

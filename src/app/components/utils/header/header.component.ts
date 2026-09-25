@@ -25,7 +25,7 @@ export class HeaderComponent {
   readonly avatarPadrao = 'casa.png';
   fotoUsuario = this.avatarPadrao;
   nomeUsuario = 'Usuário';
-  role = 'membro';
+  roles: string[] = ['membro'];
   isUserMenuOpen = false;
   emailUsuario = 'Email não informado';
   readonly labelsRole: Record<string, string> = {
@@ -38,6 +38,11 @@ export class HeaderComponent {
     membro: 'Membro',
     leitor: 'Membro'
   };
+
+  /** Rótulos das roles do usuário, ex.: "Tesouraria · Líder". */
+  get roleLabel(): string {
+    return this.roles.map((role) => this.labelsRole[role] ?? role).join(' · ') || 'Membro';
+  }
 
   constructor(
     private router: Router,
@@ -62,9 +67,9 @@ export class HeaderComponent {
       .catch((erro) => console.error('Não foi possível obter a sessão:', erro));
 
     this.supabase
-      .getRole()
-      .then((role) => {
-        this.role = role;
+      .getRoles()
+      .then((roles) => {
+        this.roles = roles;
       })
       .catch(() => undefined);
 

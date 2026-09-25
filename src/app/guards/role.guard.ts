@@ -7,10 +7,13 @@ export class RoleGuard implements CanActivate {
   constructor(private readonly supabase: SupabaseService, private readonly router: Router) {}
 
   async canActivate(route: ActivatedRouteSnapshot): Promise<boolean> {
-    const role = await this.supabase.getRole();
     const allowed = route.data['roles'] as string[] | undefined;
-    if (!allowed || allowed.includes(role)) return true;
-    await this.router.navigate(['/home']);
+    if (!allowed || allowed.length === 0) return true;
+
+    const pode = await this.supabase.temAlgumaRole(allowed);
+    if (pode) return true;
+
+    await this.router.navigate(['/mural']);
     return false;
   }
 }

@@ -33,12 +33,14 @@ export class GerenciarUsuariosComponent implements OnInit {
   salvandoId: string | null = null;
   erro = '';
   usuarioAtualId: string | null = null;
-  roleAtual: string = '';
+  rolesAtual: string[] = [];
+  /** Cópia local das roles por usuário, para editar sem salvar a cada clique. */
+  selecao: Record<string, string[]> = {};
 
   async ngOnInit(): Promise<void> {
     const { data } = await this.supabase.getUserResult();
     this.usuarioAtualId = data.user?.id ?? null;
-    this.roleAtual = await this.supabase.getRole();
+    this.rolesAtual = await this.supabase.getRoles();
     await this.listar();
   }
 
@@ -47,14 +49,14 @@ export class GerenciarUsuariosComponent implements OnInit {
   }
 
   ehAdministrador(): boolean {
-    return this.roleAtual === 'administrador';
+    return this.rolesAtual.includes('administrador');
   }
 
   // Pastores não alteram o perfil próprio nem de administradores.
   podeGerenciar(usuario: any): boolean {
     if (this.ehUsuarioAtual(usuario.id)) return false;
     if (this.ehAdministrador()) return true;
-    return usuario.role !== 'administrador';
+    return !this.rolesDe(usuario).includes('administrador');
   }
 
   // Somente administradores podem conceder/alterar o perfil de administrador.
@@ -62,6 +64,33 @@ export class GerenciarUsuariosComponent implements OnInit {
     return this.ehAdministrador()
       ? this.roles
       : this.roles.filter((role) => role !== 'administrador');
+  }
+
+  rolesDe(usuario: any): string[] {
+    const saved = this.selecao[usuario.id];
+    if (saved) return saved;
+    const doBanco: string[] = Array.isArray(usuario.roles) ? usuario.roles : [];
+    return doBanco.length ? doBanco : ['membro'];
+  }
+
+  alternarRole(usuario: any, role: string): void {
+    if (!this.podeGerenciar(usuario) || this.salvandoId === usuario.id) return;
+    const atuais = this.rolesDe(usuario);
+    const proximas = atuais.includes(role)
+      ? atuais.filter((item) => item !== role)
+      : [...atuais, role];
+    // Não é possível remover a última role: o perfil 'membro' é o padrão.
+    this.selecao[usuario.id] = proximas.length ? proximas : ['membro'];
+  }
+
+  temRoleSelecionada(usuario: any, role: string): boolean {
+    return this.rolesDe(usuario).includes(role);
+  }
+
+  labelDe(usuario: any): string {
+    return this.rolesDe(usuario)
+      .map((role) => this.labels[role] ?? role)
+      .join(' · ');
   }
 
   async listar(): Promise<void> {
@@ -78,14 +107,29 @@ export class GerenciarUsuariosComponent implements OnInit {
 
   async mudarRole(usuario: any): Promise<void> {
     if (!this.podeGerenciar(usuario)) return;
+    const roles = this.rolesDe(usuario);
     this.salvandoId = usuario.id;
-    const { error } = await this.supabase.atualizarRoleUsuario(usuario.id, usuario.role);
+    const { data, error } = await this.supabase.atualizarRolesUsuario(usuario.id, roles);
     this.salvandoId = null;
     if (error) {
       console.error(error);
       this.toast.erro('Erro ao salvar o perfil do usuário');
       return;
     }
-    this.toast.sucesso(`Perfil de ${usuario.nome || usuario.email || 'usuário'} alterado para ${this.labels[usuario.role] ?? usuario.role}`);
+    if (data) usuario.roles = data.roles;
+    delete this.selecao[usuario.id];
+    this.toast.sucesso(
+      `Perfil de ${usuario.nome || usuario.email || 'usuário'} alterado para ${this.labelDe(usuario)}`
+    );
+  }
+
+  restaurar(usuario: any): void {
+    delete this.selecao[usuario.id];
+  }
+
+  selectionChanged(usuario: any): boolean {
+    const doBanco: string[] = Array.isArray(usuario.roles) && usuario.roles.length ? usuario.roles : ['membro'];
+    const Edited = this.rolesDe(usuario);
+    return Edited.length !== doBanco.length || Edited.some((role, i) => role !== doBanco[i]);
   }
 }

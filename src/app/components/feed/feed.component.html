@@ -1,0 +1,135 @@
+<div class="feed-page">
+  <header class="feed-heading">
+    <div>
+      <p class="eyebrow">Comunicação</p>
+      <h1>Mural</h1>
+      <p>Atualizações, avisos e os próximos eventos da igreja.</p>
+    </div>
+  </header>
+
+  @if (erro) { <div class="alert-custom">{{ erro }}</div> }
+
+  @if (podePublicar) {
+    <section class="composer">
+      @if (editandoId) {
+        <label for="feed-edicao">Editar atualização</label>
+        <textarea
+          id="feed-edicao"
+          name="edicao"
+          rows="3"
+          maxlength="1000"
+          [(ngModel)]="editandoConteudo"
+          placeholder="Escreva a atualização..."></textarea>
+        <div class="composer-actions">
+          <button class="ghost-button" type="button" [disabled]="enviando" (click)="cancelarEdicao()">
+            Cancelar
+          </button>
+          <button class="primary-button" type="button" [disabled]="enviando || !editandoConteudo.trim()" (click)="salvarEdicao()">
+            {{ enviando ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      } @else {
+        <label for="feed-novo">Nova atualização</label>
+        <textarea
+          id="feed-novo"
+          name="novo"
+          rows="3"
+          maxlength="1000"
+          [(ngModel)]="conteudo"
+          placeholder="O que você gostaria de avisar à igreja?"></textarea>
+        <div class="composer-actions">
+          <small class="composer-count">{{ conteudo.length }}/1000</small>
+          <button class="primary-button" type="button" [disabled]="enviando || !conteudo.trim()" (click)="publicar()">
+            {{ enviando ? 'Publicando...' : 'Publicar' }}
+          </button>
+        </div>
+      }
+    </section>
+  }
+
+  @if (carregando) {
+    <p class="empty-state">Carregando mural...</p>
+  } @else if (!itens.length) {
+    <p class="empty-state">Nenhuma atualização ou evento publicado ainda.</p>
+  } @else {
+    <section class="feed-list">
+      @for (item of itens; track item.tipo + item.id) {
+        @if (item.tipo === 'evento') {
+          <article class="post post-evento">
+            <div class="post-avatar">
+              <span class="avatar avatar-evento">
+                <mat-icon>event</mat-icon>
+              </span>
+            </div>
+
+            <div class="post-body">
+              <div class="post-head">
+                <div class="post-identity">
+                  <strong>{{ item.evento.titulo }}</strong>
+                  <small class="post-roles">{{ item.evento.tipo | titlecase }}</small>
+                </div>
+                <time [attr.datetime]="item.evento.inicio">
+                  {{ item.evento.inicio | date:'dd/MM/yyyy HH:mm' }}
+                </time>
+              </div>
+
+              <p class="post-content">
+                @if (item.evento.local) { {{ item.evento.local }} }
+              </p>
+
+              @if (item.evento.responsaveis || item.evento.observacoes) {
+                <p class="post-detalhes">
+                  @if (item.evento.responsaveis) {
+                    <small>Responsáveis: {{ item.evento.responsaveis }}</small>
+                  }
+                  @if (item.evento.observacoes) {
+                    <small>{{ item.evento.observacoes }}</small>
+                  }
+                </p>
+              }
+
+              <div class="post-actions">
+                <a class="text-button" routerLink="/agenda">
+                  <mat-icon>calendar_month</mat-icon> Ver agenda
+                </a>
+              </div>
+            </div>
+          </article>
+        } @else {
+          <article class="post">
+            <div class="post-avatar">
+              <span class="avatar">{{ iniciais(autorNome(item.publicacao)) }}</span>
+            </div>
+
+            <div class="post-body">
+              <div class="post-head">
+                <div class="post-identity">
+                  <strong>{{ autorNome(item.publicacao) }}</strong>
+                  @if (autorRoles(item.publicacao).length) {
+                    <small class="post-roles">{{ autorRoles(item.publicacao).join(' · ') }}</small>
+                  }
+                </div>
+                <time [attr.datetime]="item.publicacao.criado_em">
+                  {{ item.publicacao.criado_em | date:'dd/MM/yyyy HH:mm' }}
+                </time>
+              </div>
+
+              <p class="post-content">{{ item.publicacao.conteudo }}</p>
+
+              @if (podeEditar(item.publicacao)) {
+                <div class="post-actions">
+                  <button type="button" class="text-button" (click)="iniciarEdicao(item.publicacao)">
+                    <mat-icon>edit</mat-icon> Editar
+                  </button>
+                  <button type="button" class="text-button danger" (click)="excluir(item.publicacao)">
+                    <mat-icon>delete</mat-icon> Remover
+                  </button>
+                </div>
+              }
+            </div>
+          </article>
+        }
+      }
+    </section>
+  }
+</div>

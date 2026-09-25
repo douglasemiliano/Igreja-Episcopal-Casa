@@ -12,15 +12,15 @@ import { SupabaseService } from '../../services/supabase.service';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
-  role: string = 'membro';
+  roles: string[] = ['membro'];
 
   private readonly supabase = inject(SupabaseService);
 
   async ngOnInit(): Promise<void> {
-    this.role = await this.supabase.getRole();
+    this.roles = await this.supabase.getRoles();
   }
 
   temPermissao(roles: string[]): boolean {
-    return roles.includes(this.role);
+    return roles.some((role) => this.roles.includes(role));
   }
 }

@@ -26,7 +26,7 @@ export class SidebarComponent implements OnDestroy, OnInit {
  
   fotoUsuario: string;
   nomeUsuario: string = "Você";
-  role: string = 'membro';
+  roles: string[] = ['membro'];
   readonly labelsRole: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
@@ -37,6 +37,10 @@ export class SidebarComponent implements OnDestroy, OnInit {
     membro: 'Membro',
     leitor: 'Membro'
   };
+
+  get labels(): string[] {
+    return this.roles.map((role) => this.labelsRole[role] ?? role);
+  }
   avatarPadrao: string = 'https://imgs.search.brave.com/CFBTYPNRel95sDw00APELv5D4Ghs73sYYcN0-tLpV5U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tYXJr/ZXRwbGFjZS5jYW52/YS5jb20vZ0pseTAv/TUFHRGtNZ0pseTAv/MS90bC9jYW52YS11/c2VyLXByb2ZpbGUt/aWNvbi12ZWN0b3Iu/LWF2YXRhci1vci1w/ZXJzb24taWNvbi4t/cHJvZmlsZS1waWN0/dXJlLC1wb3J0cmFp/dC1zeW1ib2wuLU1B/R0RrTWdKbHkwLnBu/Zw';
   isMobile: boolean;
  
@@ -62,9 +66,9 @@ export class SidebarComponent implements OnDestroy, OnInit {
       .catch((erro) => console.error('Não foi possível obter a sessão:', erro));
 
     this.supabaseService
-      .getRole()
-      .then((role) => {
-        this.role = role;
+      .getRoles()
+      .then((roles) => {
+        this.roles = roles;
       })
       .catch(() => undefined);
   }
@@ -75,12 +79,12 @@ export class SidebarComponent implements OnDestroy, OnInit {
 
  
   goHome(): void {
-    this.router.navigateByUrl('/home');
+    this.router.navigateByUrl('/mural');
   }
 
   temPermissao(roles: string[] | null): boolean {
     if (!roles || roles.length === 0) return true;
-    return roles.includes(this.role);
+    return roles.some((role) => this.roles.includes(role));
   }
 
  

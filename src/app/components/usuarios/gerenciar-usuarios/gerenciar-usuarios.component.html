@@ -41,25 +41,33 @@
                     <td>
                       @if (!podeGerenciar(usuario)) {
                         <span class="role-badge">
-                          {{ labels[usuario.role] }}
+                          {{ labelDe(usuario) }}
                         </span>
                         <small class="self-hint">(somente admin)</small>
                       } @else {
-                        <select
-                          class="form-select"
-                          [ngModel]="usuario.role"
-                          [disabled]="salvandoId === usuario.id"
-                          (ngModelChange)="usuario.role = $event; mudarRole(usuario)">
+                        <div class="roles-picker" [class.is-disabled]="salvandoId === usuario.id">
                           @for (role of perfisDisponiveis(); track role) {
-                            <option [value]="role">{{ labels[role] }}</option>
+                            <button
+                              type="button"
+                              class="role-chip"
+                              [class.is-active]="temRoleSelecionada(usuario, role)"
+                              [disabled]="salvandoId === usuario.id"
+                              (click)="alternarRole(usuario, role)">
+                              {{ labels[role] }}
+                            </button>
                           }
-                        </select>
+                        </div>
                       }
                     </td>
                     <td class="text-end">
-                      @if (podeGerenciar(usuario)) {
-                        <button class="icon-button" [disabled]="salvandoId === usuario.id" (click)="mudarRole(usuario)" aria-label="Salvar perfil">
+                      @if (podeGerenciar(usuario) && selectionChanged(usuario)) {
+                        <button class="icon-button" [disabled]="salvandoId === usuario.id" (click)="mudarRole(usuario)" aria-label="Salvar perfis">
                           <mat-icon>save</mat-icon>
+                        </button>
+                      }
+                      @if (podeGerenciar(usuario) && selectionChanged(usuario)) {
+                        <button class="icon-button" [disabled]="salvandoId === usuario.id" (click)="restaurar(usuario)" aria-label="Descartar alterações">
+                          <mat-icon>close</mat-icon>
                         </button>
                       }
                     </td>

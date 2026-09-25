@@ -16,14 +16,13 @@ export class AgendaComponent implements OnInit {
   tipos = ['culto', 'reuniao', 'batismo', 'casamento', 'arrecadacao', 'escala', 'outro'];
   // Somente pastor, secretaria e administrador podem criar/editar/excluir eventos.
   readonly rolesPermitidos = ['administrador', 'secretaria', 'pastor'];
-  role = '';
   podeEditar = false;
 
   async ngOnInit(): Promise<void> {
     await this.carregar();
     try {
-      this.role = await this.supabase.getRole();
-      this.podeEditar = this.rolesPermitidos.includes(this.role);
+      const roles = await this.supabase.getRoles();
+      this.podeEditar = this.rolesPermitidos.some((role) => roles.includes(role));
     } catch (erro) {
       console.error('Não foi possível carregar o perfil de acesso:', erro);
       this.podeEditar = false;

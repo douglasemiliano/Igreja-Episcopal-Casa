@@ -41,7 +41,7 @@ export class LoginComponent {
         return;
       }
 
-      await this.router.navigateByUrl('/home');
+      await this.router.navigateByUrl('/mural');
       this.toast.sucesso('Login realizado com sucesso');
     } catch (erro) {
       console.error('Falha no login:', erro);

@@ -17,7 +17,7 @@ export class PerfilComponent implements OnInit {
   fotoUsuario = '';
   nomeUsuario = 'Usuário';
   emailUsuario = 'Email não informado';
-  role = 'membro';
+  roles: string[] = ['membro'];
   readonly labelsRole: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
@@ -30,12 +30,17 @@ export class PerfilComponent implements OnInit {
   };
   readonly avatarPadrao = 'casa.png';
 
+  get labels(): string[] {
+    return this.roles.map((role) => this.labelsRole[role] ?? role);
+  }
+
   async ngOnInit(): Promise<void> {
-    const [{ data: { session } }, role] = await Promise.all([
+    const [{ data }, roles] = await Promise.all([
       this.supabase.getSession(),
-      this.supabase.getRole()
+      this.supabase.getRoles()
     ]);
 
+    const session = data?.session;
     if (session) {
       const user = session.user;
       const metadata = user.user_metadata ?? {};
@@ -45,6 +50,6 @@ export class PerfilComponent implements OnInit {
       this.emailUsuario = user.email || 'Email não informado';
     }
 
-    this.role = role;
+    this.roles = roles;
   }
 }

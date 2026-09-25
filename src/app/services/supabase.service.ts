@@ -1,8 +1,13 @@
 import { inject, Injectable } from '@angular/core';
-import { AuthChangeEvent, createClient, Session, SupabaseClient } from '@supabase/supabase-js';
+import {
+  AuthChangeEvent,
+  createClient,
+  Session,
+  SupabaseClient,
+  User
+} from '@supabase/supabase-js';
 import { environment } from '../../environments/environments.development';
 import { LoadingService } from './loading.service'; // Importando seu serviço de loading
-
 
 @Injectable({
   providedIn: 'root'
@@ -103,8 +108,28 @@ signInWithGoogle() {
     });
   }
 
-  getUser() {
-    return this.supabase.auth.getUser().then(({ data }) => data.user);
+  /**
+   * Usuário logado, ou null.
+   *
+   * Nunca rejeita: o SDK usa `navigator.locks` para proteger o token de auth
+   * e, com múltiplas abas do app abertas, o lock pode falhar
+   * (NavigatorLockAcquireTimeoutError). Nesse caso caímos na sessão local,
+   * que é suficiente para checagens de UI, em vez de derrubar a tela.
+   */
+  async getUser(): Promise<User | null> {
+    try {
+      const { data, error } = await this.supabase.auth.getUser();
+      if (error || !data?.user) return null;
+      return data.user;
+    } catch (erro) {
+      console.warn('Falha ao consultar o usuário autenticado:', erro);
+      try {
+        const { data } = await this.supabase.auth.getSession();
+        return data?.session?.user ?? null;
+      } catch {
+        return null;
+      }
+    }
   }
 
   getUserResult() {
@@ -198,6 +223,16 @@ getAgenda(filtros: { inicio?: string; fim?: string } = {}) {
   return query;
 }
 
+/** Eventos que ainda não aconteceram, para exibir no mural. */
+getProximosEventos(limite = 5) {
+  return this.supabase
+    .from('agenda_igreja')
+    .select('id, titulo, tipo, inicio, local, responsaveis, observacoes')
+    .gte('inicio', new Date().toISOString())
+    .order('inicio', { ascending: true })
+    .limit(limite);
+}
+
 addAgenda(evento: any) {
   return this.supabase.from('agenda_igreja').insert([evento]).select().single();
 }
@@ -210,30 +245,102 @@ deleteAgenda(id: string) {
   return this.supabase.from('agenda_igreja').delete().eq('id', id);
 }
 
-getRole() {
-  return this.getUser().then(async (user) => {
-    if (!user) return 'membro';
-    const { data } = await this.supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    const role = data?.role ?? user.user_metadata?.['role'] ?? 'membro';
-    // 'leitor' foi renomeado para 'membro'; normaliza registros antigos.
-    return role === 'leitor' ? 'membro' : role;
-  });
+/** Todas as roles do usuário. Nunca retorna lista vazia (fallback: membro). */
+async getRoles(): Promise<string[]> {
+  const user = await this.getUser();
+  if (!user) return ['membro'];
+
+  const { data } = await this.supabase
+    .from('profiles')
+    .select('roles')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const fromPerfil: string[] = Array.isArray(data?.roles) ? data.roles : [];
+  const fromMetadata: string[] = Array.isArray(user.user_metadata?.['roles'])
+    ? user.user_metadata['roles']
+    : user.user_metadata?.['role']
+      ? [user.user_metadata['role']]
+      : [];
+
+  const roles = [...fromPerfil, ...fromMetadata]
+    .map((role) => (role === 'leitor' ? 'membro' : role)) // perfil antigo
+    .filter((role, indice, lista) => lista.indexOf(role) === indice);
+
+  return roles.length ? roles : ['membro'];
+}
+
+/** Roles conhecidas pelo sistema, em ordem de permissão. */
+readonly rolesDisponiveis = [
+  'administrador',
+  'secretaria',
+  'caixa',
+  'tesouraria',
+  'pastor',
+  'lider',
+  'membro'
+];
+
+/** Verifica se o usuário tem ao menos uma das roles informadas. */
+async temAlgumaRole(roles: string[]): Promise<boolean> {
+  if (!roles.length) return true;
+  const minhas = await this.getRoles();
+  return roles.some((role) => minhas.includes(role));
 }
 
 listUsuarios() {
   return this.supabase
     .from('profiles')
-    .select('id, role, nome, email, criado_em, atualizado_em')
+    .select('id, roles, nome, email, criado_em, atualizado_em')
     .order('nome', { ascending: true });
 }
 
-atualizarRoleUsuario(id: string, role: string) {
+atualizarRolesUsuario(id: string, roles: string[]) {
   return this.supabase
     .from('profiles')
-    .update({ role, atualizado_em: new Date().toISOString() })
+    .update({ roles, atualizado_em: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single();
+}
+
+// --- FEED / MURAL ---
+
+getFeed() {
+  return this.supabase
+    .from('feed_publicacoes')
+    .select(`
+      id,
+      conteudo,
+      criado_em,
+      atualizado_em,
+      autor_id,
+      autor:profiles!feed_publicacoes_autor_id_fkey(id, nome, roles, email)
+    `)
+    .order('criado_em', { ascending: false });
+}
+
+async publicarFeed(conteudo: string) {
+  const user = await this.getUser();
+  if (!user) return { data: null, error: { message: 'Sessão expirada.' } as any };
+  return this.supabase
+    .from('feed_publicacoes')
+    .insert({ conteudo: conteudo.trim(), autor_id: user.id })
+    .select()
+    .single();
+}
+
+editarFeed(id: string, conteudo: string) {
+  return this.supabase
+    .from('feed_publicacoes')
+    .update({ conteudo: conteudo.trim() })
+    .eq('id', id)
+    .select()
+    .single();
+}
+
+excluirFeed(id: string) {
+  return this.supabase.from('feed_publicacoes').delete().eq('id', id);
 }
 
 // --- ARRECADACOES ---

@@ -133,6 +133,45 @@ body.dark-mode .role-select {
   font-size: .85rem;
 }
 
+.roles-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  max-width: 320px;
+
+  &.is-disabled {
+    opacity: .5;
+    pointer-events: none;
+  }
+}
+
+.role-chip {
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent);
+  background: transparent;
+  color: var(--text-color);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+  }
+
+  &.is-active {
+    background: var(--active-background);
+    border-color: transparent;
+    color: var(--active-text);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
 .self-hint {
   margin-left: .4rem;
   opacity: .55;
@@ -177,5 +216,9 @@ body.dark-mode .role-select {
 
   .role-select {
     width: 100%;
+  }
+
+  .roles-picker {
+    max-width: 100%;
   }
 }
