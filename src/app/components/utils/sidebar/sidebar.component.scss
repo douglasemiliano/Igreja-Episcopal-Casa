@@ -91,6 +91,8 @@
     height: 100vh; /* Ocupa a altura toda da tela */
     z-index: 9999;  /* Fica por cima de absolutamente tudo */
     border-radius: 0; /* Remove bordas arredondadas no mobile se preferir */
+    overscroll-behavior: none;
+    touch-action: pan-y;
     
     /* Configuração inicial da animação */
     width: 280px !important; /* Força a largura total no mobile */
@@ -185,6 +187,9 @@
 
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
 }
 
