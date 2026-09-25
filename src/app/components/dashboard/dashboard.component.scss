@@ -86,11 +86,11 @@ h1 {
 }
 
 .metric-card--warning strong {
-    color: #a8651d
+    color: var(--color-warning)
 }
 
 .metric-card--success strong {
-    color: #2f6840
+    color: var(--color-success)
 }
 
 .dashboard-columns {
@@ -215,8 +215,8 @@ h1 {
     margin-bottom: 1rem;
     padding: .7rem 1rem;
     border-radius: .5rem;
-    background: #f6e4de;
-    color: #8b3024
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text)
 }
 
 @media(max-width:800px) {
@@ -260,11 +260,11 @@ h1 {
 }
 
 .caixa-badge--aberto {
-  color: #2f6840;
-  background: #e6f0e8;
+  color: var(--color-success);
+  background: var(--color-success-bg);
 }
 
 .caixa-badge--fechado {
-  color: #a6402f;
-  background: #f6e4de;
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
 }

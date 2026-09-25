@@ -41,6 +41,18 @@
   }
 }
 
+.btn .mat-icon {
+  font-size: 1.05rem;
+  height: auto;
+  width: auto;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
 
 /* Estilos gerais */
 .input-field {

@@ -1,0 +1,75 @@
+<div class="card-container">
+  <header class="usuarios-heading">
+    <div>
+      <p class="eyebrow">Gerenciamento</p>
+      <h1>Usuários</h1>
+      <p>Defina o perfil (permissão) de cada usuário do sistema.</p>
+    </div>
+  </header>
+
+  @if (erro) { <div class="alert-custom">{{ erro }}</div> }
+
+  @if (carregando) {
+    <div class="card-container"><p class="empty-state">Carregando usuários...</p></div>
+  } @else {
+    <div class="card-container">
+      @if (!usuarios.length) {
+        <p class="empty-state">Nenhum usuário encontrado.</p>
+      } @else {
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Perfil</th>
+                <th class="text-end">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of usuarios; track usuario.id) {
+                @if (!ehUsuarioAtual(usuario.id)) {
+                  <tr>
+                    <td>
+                      <div class="usuario-identidade">
+                        <span class="avatar">@if (usuario.nome) { {{ usuario.nome.charAt(0).toUpperCase() }} } @else { ? }</span>
+                        <div>
+                          <strong>{{ usuario.nome || 'Usuário sem nome' }}</strong>
+                          <small>{{ usuario.email || 'sem e-mail' }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      @if (!podeGerenciar(usuario)) {
+                        <span class="role-badge">
+                          {{ labels[usuario.role] }}
+                        </span>
+                        <small class="self-hint">(somente admin)</small>
+                      } @else {
+                        <select
+                          class="form-select"
+                          [ngModel]="usuario.role"
+                          [disabled]="salvandoId === usuario.id"
+                          (ngModelChange)="usuario.role = $event; mudarRole(usuario)">
+                          @for (role of perfisDisponiveis(); track role) {
+                            <option [value]="role">{{ labels[role] }}</option>
+                          }
+                        </select>
+                      }
+                    </td>
+                    <td class="text-end">
+                      @if (podeGerenciar(usuario)) {
+                        <button class="icon-button" [disabled]="salvandoId === usuario.id" (click)="mudarRole(usuario)" aria-label="Salvar perfil">
+                          <mat-icon>save</mat-icon>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

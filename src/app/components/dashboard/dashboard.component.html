@@ -1,5 +1,5 @@
-<div class="container mt-4">
-  <header class="dashboard-heading"><div><p class="eyebrow">Visão geral</p><h1>Dashboard</h1><p>Acompanhe a vida administrativa da igreja.</p></div><a routerLink="/acoes" class="dashboard-link"><mat-icon>volunteer_activism</mat-icon> Abrir caixa</a></header>
+<div class="card-container">
+  <header class="dashboard-heading"><div><p class="eyebrow">Visão geral</p><h1>Dashboard</h1><p>Acompanhe a vida administrativa da igreja.</p></div>@if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {<a routerLink="/acoes" class="dashboard-link"><mat-icon>volunteer_activism</mat-icon> Abrir caixa</a>}</header>
   @if (erro) { <div class="dashboard-alert">{{ erro }}</div> }
   @if (carregando) { <p class="empty-state">Carregando indicadores...</p> } @else {
     <section class="metric-grid">
@@ -28,11 +28,11 @@
       </div> -->
     </section>
     <section class="dashboard-columns">
-      <div class="dashboard-panel"><div class="panel-heading"><h2>Arrecadações por ação</h2><a routerLink="/acoes">Ver caixa</a></div>
+      <div class="dashboard-panel"><div class="panel-heading"><h2>Arrecadações por ação</h2>@if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {<a routerLink="/acoes">Ver caixa</a>}</div>
         @for (categoria of categorias; track categoria.nome) {<div class="bar-row"><div><span>{{ categoria.nome }}</span><strong>{{ moeda(categoria.total) }}</strong></div><div class="bar"><i [style.width.%]="categoria.percentual"></i></div></div>}
         @if (!categorias.length) {<p class="empty-state">Ainda não há arrecadações.</p>}
       </div>
-      <div class="dashboard-panel"><div class="panel-heading"><h2>Próximos compromissos</h2><a routerLink="/agenda">Ver agenda</a></div>
+      <div class="dashboard-panel"><div class="panel-heading"><h2>Próximos compromissos</h2>@if (temPermissao(['administrador', 'secretaria', 'pastor'])) {<a routerLink="/agenda">Ver agenda</a>}</div>
         @for (evento of proximosEventos; track evento.id) {<div class="event-row"><span class="event-date">{{ evento.inicio | date:'dd/MM' }}</span><div><strong>{{ evento.titulo }}</strong><small>{{ evento.local || 'Local não informado' }} · {{ evento.inicio | date:'HH:mm' }}</small></div></div>}
         @if (!proximosEventos.length) {<p class="empty-state">Nenhum compromisso próximo.</p>}
       </div>
@@ -41,7 +41,7 @@
       <div class="dashboard-panel"><div class="panel-heading"><h2>Membros cadastrados recentemente</h2><a routerLink="/membros">Ver membros</a></div>
         @for (membro of membrosRecentes; track membro.id) {<a class="member-row" [routerLink]="['/membros', membro.id]"><mat-icon>person</mat-icon><span><strong>{{ membro.nome_completo }}</strong><small>{{ membro.funcao || 'Membro' }}</small></span><mat-icon>arrow_forward</mat-icon></a>}
       </div>
-      <div class="dashboard-panel"><div class="panel-heading"><h2>Últimas ações</h2><a routerLink="/acoes">Ver resumo</a></div>
+      <div class="dashboard-panel"><div class="panel-heading"><h2>Últimas ações</h2>@if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {<a routerLink="/acoes">Ver resumo</a>}</div>
         @for (venda of ultimasAcoes; track venda.id) {<div class="action-row"><span>{{ venda.data_venda | date:'dd/MM' }}</span><div><strong>{{ moeda(venda.total) }}</strong><small>{{ venda.forma_pagamento }} · {{ venda.status === 'pago' ? 'Pago' : 'Pendente' }}</small></div></div>}
         @if (!ultimasAcoes.length) {<p class="empty-state">Nenhuma venda registrada.</p>}
       </div>

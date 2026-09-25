@@ -8,15 +8,17 @@ export class CoreService {
   private isMobileSubject = new BehaviorSubject<boolean>(this.checkScreen());
   isMobile$ = this.isMobileSubject.asObservable();
 
-  private isDarkModeSubject = new BehaviorSubject<string>("light");
+  private isDarkModeSubject = new BehaviorSubject<string>(this.getStoredTheme());
   isDarkMode$ = this.isDarkModeSubject.asObservable();
 
-
   constructor() {
-    // já dispara o valor inicial
     this.updateScreen();
-    // escuta resize do navegador
+    this.applyTheme(this.isDarkModeSubject.value);
     window.addEventListener('resize', () => this.updateScreen());
+  }
+
+  private getStoredTheme(): string {
+    return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
   }
 
   private checkScreen(): boolean {
@@ -27,9 +29,20 @@ export class CoreService {
     this.isMobileSubject.next(this.checkScreen());
   }
 
-  public toggleDarkMode(theme: string) {
-    this.isDarkModeSubject.next(theme);
+  public toggleDarkMode(theme?: string) {
+    const next = theme ?? (this.isDarkModeSubject.value === 'dark' ? 'light' : 'dark');
+    this.applyTheme(next);
+    this.isDarkModeSubject.next(next);
   }
 
-
+  private applyTheme(theme: string) {
+    const body = document.body;
+    if (theme === 'dark') {
+      body.classList.add('dark-mode');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      body.classList.remove('dark-mode');
+      localStorage.setItem('theme', 'light');
+    }
+  }
 }

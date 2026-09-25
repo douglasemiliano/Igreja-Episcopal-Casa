@@ -3,14 +3,13 @@
     top: 0; left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: var(--overlay);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
   }
-  
-  .purple-spinner .mat-progress-spinner {
-    color: purple;  // Cor roxa para o spinner
+
+  .spinner-border {
+    color: var(--color-primary);
   }
-  

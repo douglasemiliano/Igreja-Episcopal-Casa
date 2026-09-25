@@ -1,0 +1,26 @@
+.toast-container {
+  z-index: 1080;
+}
+
+.toast {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+.toast.success {
+  border-left: 4px solid var(--color-success-btn);
+}
+
+.toast.error {
+  border-left: 4px solid var(--color-danger);
+}
+
+body.dark-mode .toast .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.toast:not(.show) {
+  display: none;
+}

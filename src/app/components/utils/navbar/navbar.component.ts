@@ -1,60 +1,47 @@
-import { CommonModule } from "@angular/common";
-import { Component, EventEmitter, Input, Output } from "@angular/core";
-import { Router, RouterModule } from "@angular/router";
-import { MatToolbarModule } from "@angular/material/toolbar";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatMenuModule } from "@angular/material/menu"; // 👈 importante
-import { SupabaseService } from "../../../services/supabase.service";
-import { LecionarioService } from "../../../services/lecionario.service";
+import { Component, inject, OnDestroy } from '@angular/core';
+import { HeaderComponent } from '../header/header.component';
+import { SidebarComponent } from '../sidebar/sidebar.component';
+import { RouterOutlet } from '@angular/router';
+import { CoreService } from '../../../services/core.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule // 👈 importa aqui também
-  ],
+  imports: [HeaderComponent, SidebarComponent, RouterOutlet],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  styleUrl: './navbar.component.scss'
 })
-export class NavbarComponent {
-  @Input() isDarkMode = false;
-  @Output() darkToggle = new EventEmitter<void>();
-  @Output() sidenavToggle = new EventEmitter<void>();
+export class NavbarComponent implements OnDestroy {
 
-  isExpanded = true;
+  sidebarCollapsed = window.innerWidth <= 768;
+  isMobile = window.innerWidth <= 768;
 
-  constructor(
-    private router: Router,
-    private supabase: SupabaseService,
-    private lecionarioService: LecionarioService
-  ) {}
+  private coreService = inject(CoreService);
+  private mobileSub: Subscription;
 
-  onToggle() {
-    this.darkToggle.emit();
+  constructor() {
+    this.mobileSub = this.coreService.isMobile$.subscribe({
+      next: (isMobile) => {
+        this.isMobile = isMobile;
+        if (isMobile) {
+          this.sidebarCollapsed = true;
+        }
+      }
+    });
   }
 
-  async logout() {
-    await this.supabase.signOut();
-    this.router.navigate(['/login']);
+  ngOnDestroy(): void {
+    this.mobileSub?.unsubscribe();
   }
 
-  goToPerfil() {
-    this.router.navigate(['/perfil']); // 👈 rota do perfil
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  goToCadastro() {
-    this.lecionarioService.setLecionarioSelecionado(null);
-    this.router.navigateByUrl('/cadastro');
+  closeSidebar(): void {
+    if (this.isMobile) {
+      this.sidebarCollapsed = true;
+    }
   }
 
-  onSidenavToggle() {
-    this.isExpanded = !this.isExpanded;
-    this.sidenavToggle.emit();
-  }
 }

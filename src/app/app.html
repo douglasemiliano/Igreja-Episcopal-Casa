@@ -1,18 +1,10 @@
 <app-loading></app-loading>
+<app-toast-container></app-toast-container>
 <div class="app-container" [class.logged-in]="isLoggedIn">
 
   @if(isLoggedIn){
-  <app-navbar [isDarkMode]="isDarkMode" (darkToggle)="toggleDarkMode()" (sidenavToggle)="toggleSidenav()">
-  </app-navbar>
+    <app-navbar></app-navbar>
+  } @else {
+    <router-outlet></router-outlet>
   }
-
-  <div class="app-body d-flex" (click)="closeSidebar($event)">
-    @if(isLoggedIn){
-    <app-sidebar (darkToggle)="toggleDarkMode()" [isExpanded]="isExpanded" [class.collapsed]="!isExpanded"
-      [class.expanded]="isExpanded" (click)="$event.stopPropagation()" (sidenavToggle)="toggleSidenav()"></app-sidebar>
-    }
-    <main class="main-content flex-grow-1">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
 </div>

@@ -37,11 +37,11 @@
             <td>{{ reg.pagina }}</td>
             <td>{{ reg.cidade }}</td>
             <td>
-              <div class="d-flex justify-content-center align-items-center">
-                <button mat-icon-button (click)="gerarFolha(reg)" title="Baixar Página">
+              <div class="d-flex justify-content-center align-items-center gap-1">
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="gerarFolha(reg)" title="Baixar Página">
                   <mat-icon>picture_as_pdf</mat-icon>
                 </button>
-                       <button mat-icon-button color="warn" class="icon-button">
+                       <button type="button" class="btn btn-sm btn-outline-danger" (click)="deletar(reg.id!)" title="Excluir registro">
                         <mat-icon style="font-size: 14pt;">delete</mat-icon>
                       </button>
               </div>

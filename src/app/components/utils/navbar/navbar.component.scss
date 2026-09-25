@@ -1,34 +1,40 @@
-.navbar {
-  position: fixed;
-  top: 0;
+:host {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Trava a tela inteira para nada rolar por fora */
+  background-color: var(--background-color);
+}
+
+/* O contêiner da direita ocupa o espaço restante e fica travado na tela */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1; 
+  height: 100vh; /* Força a altura idêntica à tela */
+  overflow: hidden; /* Impede que o header role junto com a página */
+}
+
+/* O Header fica fixo no topo naturalmente por conta do layout do contêiner */
+app-header {
   width: 100%;
-  z-index: 1000;
-  background-color: var(--card-background) !important;
-  color: var(--text-color) !important;
+  flex-shrink: 0; /* Garante que o header nunca encolha ou suma */
 }
 
-.spacer {
-  flex: 1 1 auto;
+/* ESTE É O SEGREDO: Apenas a área das páginas (Dashboard, Membros, etc.) vai rolar */
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto; /* Cria a barra de rolagem apenas aqui dentro */
+  padding: 1rem;
 }
 
-button {
-  background: var(--backgound-color) !important;
-  border: none;
-  cursor: pointer;
-  color: var(--text-color) !important;
-  font-size: 1.5rem;
-
-  & mat-icon {
-    color: var(--text-color)
+/* --- REGRAS PARA MOBILE (Telas até 768px) --- */
+@media (max-width: 768px) {
+  /* No mobile, a sidebar ganha o 'position: fixed' (conforme configuramos antes) 
+     e passa por cima de tudo sem afetar o grid abaixo */
+  .main-container {
+    width: 100vw;
+    flex: none; 
   }
-}
-
-.expanded {
-  margin-left: 18rem;
-  transition: margin-left 0.3s ease, width 0.3s ease;
-}
-
-.collapsed {
-  margin-left: 0.5rem;
-  transition: margin-left 0.3s ease, width 0.3s ease;
 }

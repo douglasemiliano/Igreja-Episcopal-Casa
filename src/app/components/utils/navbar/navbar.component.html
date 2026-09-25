@@ -1,29 +1,16 @@
-<mat-toolbar class="navbar">
+<app-sidebar
+  [collapsed]="sidebarCollapsed"
+  (sidenavToggle)="closeSidebar()">
+</app-sidebar>
 
-  <button mat-icon-button (click)="onSidenavToggle()">
-    <mat-icon>menu</mat-icon>
-  </button>
-
-  <span class="spacer"></span>
-
-  <!-- Menu do usuário -->
-  <button mat-icon-button [matMenuTriggerFor]="userMenu">
-    <mat-icon>account_circle</mat-icon>
-  </button>
-
-  <mat-menu #userMenu="matMenu">
-    <button mat-menu-item (click)="goToPerfil()">
-      <mat-icon>person</mat-icon>
-      <span>Perfil</span>
-    </button>
-    <button mat-menu-item (click)="onToggle()">
-      <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
-      <span>Modo {{ isDarkMode ? 'Claro' : 'Escuro' }}</span>
-    </button>
-    <button mat-menu-item (click)="logout()">
-      <mat-icon>logout</mat-icon>
-      <span>Sair</span>
-    </button>
-  </mat-menu>
-
-</mat-toolbar>
+<!-- NOVO: Contêiner que agrupa a parte da direita -->
+<div class="main-container">
+  <app-header
+    [collapsed]="sidebarCollapsed"
+    (toggleSidebar)="toggleSidebar()">
+  </app-header>
+  
+  <main class="content-wrapper">
+    <router-outlet></router-outlet>
+  </main>
+</div>

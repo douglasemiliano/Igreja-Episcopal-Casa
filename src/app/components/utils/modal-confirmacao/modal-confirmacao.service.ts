@@ -1,20 +1,31 @@
-import { Injectable } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { ApplicationRef, createComponent, EnvironmentInjector, Injectable } from '@angular/core';
 import { ModalConfirmacaoComponent } from './modal-confirmacao.component';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ModalConfirmacaoService {
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private appRef: ApplicationRef,
+    private envInjector: EnvironmentInjector
+  ) {}
 
   confirmar(mensagem: string): Promise<boolean> {
-    const dialogRef = this.dialog.open(ModalConfirmacaoComponent, {
-      width: '300px',
-      data: { mensagem },
-      disableClose: true,
-    });
+    return new Promise<boolean>((resolve) => {
+      const ref = createComponent(ModalConfirmacaoComponent, {
+        environmentInjector: this.envInjector,
+        hostElement: document.body
+      });
 
-    return dialogRef.afterClosed().toPromise();
+      this.appRef.attachView(ref.hostView);
+      ref.setInput('mensagem', mensagem);
+      ref.changeDetectorRef.detectChanges();
+
+      const sub = ref.instance.fechado.subscribe((resultado: boolean) => {
+        sub.unsubscribe();
+        ref.destroy();
+        resolve(resultado);
+      });
+    });
   }
 }

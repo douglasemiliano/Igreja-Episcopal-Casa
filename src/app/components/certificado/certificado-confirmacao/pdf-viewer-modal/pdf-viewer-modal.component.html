@@ -1,10 +1,17 @@
-<div class="pdf-viewer-modal">
-  <h2 mat-dialog-title>Visualizar Certificado</h2>
-  <mat-dialog-content>
-    <iframe [src]="safePdfUrl" width="100%" height="300px" style="border: none;"></iframe>
-  </mat-dialog-content>
-  <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Fechar</button>
-    <button mat-raised-button color="primary" (click)="onDownload()">Download</button>
-  </mat-dialog-actions>
+<div class="modal fade" #modalElement tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5">Visualizar Certificado</h2>
+        <button type="button" class="btn-close" (click)="onCancel()" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <iframe [src]="safePdfUrl" width="100%" height="500px" style="border: none;"></iframe>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">Fechar</button>
+        <button type="button" class="btn btn-primary" (click)="onDownload()">Download</button>
+      </div>
+    </div>
+  </div>
 </div>

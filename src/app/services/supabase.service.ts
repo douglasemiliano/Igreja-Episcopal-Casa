@@ -85,14 +85,16 @@ export class SupabaseService {
   }
 
     // Login com Google
-  signInWithGoogle() {
-    return this.supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: environment.REDIRECT_URL+'dashboard' // para onde o usuário vai depois de logar
-      }
-    });
-  }
+signInWithGoogle() {
+  return this.supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      // Usando template string para garantir a rota /dashboard correta
+      redirectTo: `${environment.REDIRECT_URL}/dashboard` 
+    }
+  });
+}
+
 
 
   onAuthChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
@@ -103,6 +105,10 @@ export class SupabaseService {
 
   getUser() {
     return this.supabase.auth.getUser().then(({ data }) => data.user);
+  }
+
+  getUserResult() {
+    return this.supabase.auth.getUser();
   }
 
   updateLectionary(id: number, entry: any) {
@@ -210,6 +216,22 @@ getRole() {
     const { data } = await this.supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
     return data?.role ?? user.user_metadata?.['role'] ?? 'leitor';
   });
+}
+
+listUsuarios() {
+  return this.supabase
+    .from('profiles')
+    .select('id, role, nome, email, criado_em, atualizado_em')
+    .order('nome', { ascending: true });
+}
+
+atualizarRoleUsuario(id: string, role: string) {
+  return this.supabase
+    .from('profiles')
+    .update({ role, atualizado_em: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
 }
 
 // --- ARRECADACOES ---

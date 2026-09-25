@@ -1,16 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CertificadoBatismoService } from '../../../services/certificados/certificado-batismo.service';
 import { DadosCertificado } from '../../../model/certificado.model';
-import { PdfViewerModalComponent } from '../certificado-confirmacao/pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalService } from '../certificado-confirmacao/pdf-viewer-modal/pdf-viewer-modal.service';
 import { CommonModule } from '@angular/common';
 import { CoreService } from '../../../services/core.service';
 
 @Component({
   selector: 'app-certificado-batismo',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './certificado-batismo.component.html',
   styleUrl: './certificado-batismo.component.scss'
 })
@@ -31,7 +30,7 @@ export class CertificadoBatismoComponent {
   constructor(
     private fb: FormBuilder,
     private certificadoService: CertificadoBatismoService,
-    private dialog: MatDialog
+    private pdfViewer: PdfViewerModalService
   ) {
     this.formulario = this.fb.group({
       tipoPessoa: ['', Validators.required],
@@ -92,10 +91,7 @@ export class CertificadoBatismoComponent {
           link.click();
           URL.revokeObjectURL(link.href);
         } else {
-          this.dialog.open(PdfViewerModalComponent, {
-            width: '80vw',
-            data: { pdfBlob, fileName }
-          });
+          this.pdfViewer.abrir(pdfBlob, fileName);
         }
       } catch (error) {
         console.error('Erro ao gerar certificado:', error);

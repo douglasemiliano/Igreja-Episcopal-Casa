@@ -4,71 +4,60 @@
             <h3 class="text-center">Cadastrar Lecionario</h3>
         </div>
         <div class="card-body">
-    
+
             <form [formGroup]="form" class="p-4 max-w-xl mx-auto space-y-6">
                 <h4>
                     Período
                 </h4>
                 <br>
-    
-                <div class="row">
+
+                <div class="row g-3">
                     <div class="col-md-4 col-12">
-                        <mat-form-field appearance="outline">
-                            <mat-label>Ano Litúrgico</mat-label>
-                            <mat-select formControlName="ano_liturgico">
-                                <mat-option value="A">Ano A</mat-option>
-                                <mat-option value="B">Ano B</mat-option>
-                                <mat-option value="C">Ano C</mat-option>
-                            </mat-select>
-                        </mat-form-field>
+                        <label class="form-label" for="anoLiturgico">Ano Litúrgico</label>
+                        <select id="anoLiturgico" class="form-select" formControlName="ano_liturgico">
+                            <option value="A">Ano A</option>
+                            <option value="B">Ano B</option>
+                            <option value="C">Ano C</option>
+                        </select>
                     </div>
                 </div>
-    
-                <div class="row">
+
+                <div class="row g-3 mt-1">
                     <div class="col-md-4 col-12">
-                        <mat-form-field appearance="outline" class="w-full">
-                            <mat-label>Tempo Litúrgico</mat-label>
-                            <input matInput formControlName="tempo" placeholder="Ex: Páscoa" />
-                        </mat-form-field>
+                        <label class="form-label" for="tempo">Tempo Litúrgico</label>
+                        <input id="tempo" class="form-control" formControlName="tempo" placeholder="Ex: Páscoa" />
                     </div>
                     <div class="col-md-4 col-12">
-                        <mat-form-field appearance="outline">
-                            <mat-label>Dia</mat-label>
-                            <input matInput [matDatepicker]="picker" formControlName="dia" />
-                            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                            <mat-datepicker #picker></mat-datepicker>
-                        </mat-form-field>
+                        <label class="form-label" for="dia">Dia</label>
+                        <input id="dia" type="date" class="form-control" formControlName="dia" />
                     </div>
                     <div class="col-md-4 col-12">
-                        <mat-form-field appearance="outline" class="w-full">
-                            <mat-label>Nome do Dia</mat-label>
-                            <input matInput formControlName="nome" />
-                        </mat-form-field>
+                        <label class="form-label" for="nome">Nome do Dia</label>
+                        <input id="nome" class="form-control" formControlName="nome" />
                     </div>
                 </div>
-    
-    
+
+
                 <div class="oracoes" formArrayName="oracoes">
                     <h4>Orações</h4>
                     <br>
                     <div class="campo-oracao" *ngFor="let oracao of oracoes.controls; let i = index">
-                      <mat-form-field appearance="outline">
-                        <mat-label>Oração {{ i + 1 }}</mat-label>
-                        <textarea matInput [formControlName]="i" rows="3"></textarea>
-                      </mat-form-field>
-                      <button mat-icon-button color="warn" class="icon-button" (click)="removeOracao(i)" *ngIf="oracoes.length > 1">
-                        <mat-icon style="font-size: 14pt;">delete</mat-icon>
-                      </button>
+                        <div class="campo-oracao-input flex-grow-1">
+                            <label class="form-label">Oração {{ i + 1 }}</label>
+                            <textarea class="form-control" [formControlName]="i" rows="3"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger" (click)="removeOracao(i)"
+                            *ngIf="oracoes.length > 1" aria-label="Remover oração">
+                            <mat-icon style="font-size: 14pt;">delete</mat-icon>
+                        </button>
                     </div>
-                  
-                    <button mat-stroked-button color="primary" class="add" (click)="addOracao()" type="button">
-                      <mat-icon>add</mat-icon> Adicionar Oração
+
+                    <button type="button" class="btn add" (click)="addOracao()">
+                        <mat-icon>add</mat-icon> Adicionar Oração
                     </button>
-                  </div>
-                  
-                <!-- Orações -->
-    
-    
+                </div>
+
+
                 <!-- Leituras -->
                 <div formArrayName="leituras" class="leituras">
                     <h4>
@@ -77,46 +66,42 @@
                     <br>
                     <div class="campo-leituras" *ngFor="let leitura of leituras.controls; let i = index"
                         [formGroupName]="i">
-                        <div class="row">
+                        <div class="row g-3 align-items-start">
                             <div class="col-md-4 col-12">
-                                <mat-form-field appearance="outline">
-                                    <mat-label>Tipo</mat-label>
-                                    <mat-select formControlName="tipo">
-                                        <mat-option value="primeira">Primeira</mat-option>
-                                        <mat-option value="interlecional">Interlecional</mat-option>
-                                        <mat-option value="segunda">Segunda</mat-option>
-                                        <mat-option value="evangelho">Evangelho</mat-option>
-                                        <mat-option value="salmo">Salmo</mat-option>
-    
-                                    </mat-select>
-                                </mat-form-field>
+                                <label class="form-label">Tipo</label>
+                                <select class="form-select" formControlName="tipo">
+                                    <option value="primeira">Primeira</option>
+                                    <option value="interlecional">Interlecional</option>
+                                    <option value="segunda">Segunda</option>
+                                    <option value="evangelho">Evangelho</option>
+                                    <option value="salmo">Salmo</option>
+                                </select>
                             </div>
-    
-                            <div class="col-md-8 col-12">
-                                <mat-form-field appearance="outline">
-                                    <mat-label>Texto</mat-label>
-                                    <input matInput formControlName="texto" placeholder="Ex: Salmo 23" />
-                                </mat-form-field>
-                                <button mat-icon-button color="warn" class="icon-button" (click)="removeLeitura(i)" *ngIf="leituras.length > 1">
+                            <div class="col-md-7 col-12">
+                                <label class="form-label">Texto</label>
+                                <input class="form-control" formControlName="texto" placeholder="Ex: Salmo 23" />
+                            </div>
+                            <div class="col-md-1 col-12 d-flex justify-content-start pt-md-4">
+                                <button type="button" class="btn btn-outline-danger"
+                                    (click)="removeLeitura(i)" *ngIf="leituras.length > 1" aria-label="Remover leitura">
                                     <mat-icon style="font-size: 14pt;">delete</mat-icon>
                                 </button>
                             </div>
-    
                         </div>
                     </div>
-                    <button mat-stroked-button color="primary" class="add" (click)="addLeitura()" type="button">
+                    <button type="button" class="btn add" (click)="addLeitura()">
                         <mat-icon>add</mat-icon> Adicionar Leitura
                     </button>
-                    
+
                 </div>
                 <div class="text-right mt-5 d-flex justify-content-end">
-                    <button mat-stroked-button (click)="submit()" color="warn" type="submit" style="color: white; background-color: purple;">
+                    <button type="submit" class="btn add" (click)="submit()">
                         <mat-icon>save</mat-icon>
                         Salvar
                     </button>
                 </div>
             </form>
-    
+
         </div>
     </div>
 </div>

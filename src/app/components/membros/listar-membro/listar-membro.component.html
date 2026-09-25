@@ -1,81 +1,100 @@
-<div class="container mt-4">
+<div class="card-container">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Membros</h2>
   </div>
-    <div class="card px-5 py-4 mb-3">
+  <div class="card px-5 py-4 mb-3">
     <div class="d-flex justify-content-between align-items-center">
-      <input type="text" class="form-control w-25" placeholder="Pesquisar..." (keyup)="applyFilter($event)" placeholder="Pesquisar" #input>
-      <!-- Botão de cadastro apenas para telas grandes -->
+      <input type="text" class="form-control w-25" placeholder="Pesquisar..." (keyup)="applyFilter($event)" #input>
+      @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
       <button class="btn cadastro-btn" routerLink="/membros/cadastrar" type="button">
         <mat-icon>add</mat-icon> Cadastrar
       </button>
+      }
     </div>
 
   </div>
 
   <div class="card p-5">
     <div class="table-responsive">
-      <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Telefone</th>
+            <th>Função</th>
+            <th class="text-center">Confirmado</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (membro of membrosPaginados(); track membro.id) {
+          <tr>
+            <td>{{ membro.nome_completo }}</td>
+            <td>{{ membro.email }}</td>
+            <td>{{ membro.telefone }}</td>
+            <td>{{ membro.funcao }}</td>
+            <td class="text-center">
+              @if(membro.confirmacao) {
+              <span class="badge bg-success">Sim</span>
+              } @else {
+              <span class="badge bg-secondary">Não</span>
+              }
+            </td>
+            <td>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes">
+                  <mat-icon>visibility</mat-icon>
+                </button>
 
-        <!-- Nome Column -->
-        <ng-container matColumnDef="nome_completo">
-          <th mat-header-cell *matHeaderCellDef> Nome </th>
-          <td mat-cell *matCellDef="let membro"> {{ membro.nome_completo }} </td>
-        </ng-container>
-
-        <!-- Email Column -->
-        <ng-container matColumnDef="email">
-          <th mat-header-cell *matHeaderCellDef> Email </th>
-          <td mat-cell *matCellDef="let membro"> {{ membro.email }} </td>
-        </ng-container>
-
-        <!-- Telefone Column -->
-        <ng-container matColumnDef="telefone">
-          <th mat-header-cell *matHeaderCellDef> Telefone </th>
-          <td mat-cell *matCellDef="let membro"> {{ membro.telefone }} </td>
-        </ng-container>
-
-        <!-- Função Column -->
-        <ng-container matColumnDef="funcao">
-          <th mat-header-cell *matHeaderCellDef> Função </th>
-          <td mat-cell *matCellDef="let membro"> {{ membro.funcao }} </td>
-        </ng-container>
-
-        <!-- Confirmado Column -->
-        <ng-container matColumnDef="confirmacao">
-          <th mat-header-cell *matHeaderCellDef> Confirmado </th>
-          <td mat-cell *matCellDef="let membro" class="text-center">
-            @if(membro.confirmacao) {
-            <span class="badge bg-success">Sim</span>
-            } @else {
-            <span class="badge bg-secondary">Não</span>
-            }
-          </td>
-        </ng-container>
-
-        <!-- Ações Column -->
-        <ng-container matColumnDef="acoes">
-          <th mat-header-cell *matHeaderCellDef> Ações </th>
-          <td mat-cell *matCellDef="let membro" class="">
-            <div class="d-flex gap-2">
-
-              <button mat-icon-button [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes">
-                <mat-icon>visibility</mat-icon>
-              </button>
-
-              <button mat-icon-button (click)="confirmarMembro(membro)" [disabled]="membro.confirmacao"> <mat-icon>done</mat-icon>  </button>
-              <button mat-icon-button (click)="deletarMembro(membro)"> <mat-icon>delete</mat-icon>  </button>
-
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Header & Row Declarations -->
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
+                <button class="btn btn-sm btn-outline-success" (click)="confirmarMembro(membro)" [disabled]="membro.confirmacao" aria-label="Confirmar">
+                  <mat-icon>done</mat-icon>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deletarMembro(membro)" aria-label="Excluir">
+                  <mat-icon>delete</mat-icon>
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="text-center text-muted">Nenhum membro encontrado.</td>
+          </tr>
+          }
+        </tbody>
       </table>
     </div>
-  </div>
 
-  <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+    @if (membrosFiltrados().length > 0) {
+    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+      <select
+        class="form-select form-select-sm w-auto"
+        [ngModel]="itensPorPagina"
+        (ngModelChange)="itensPorPagina = $event; mudarTamanhoPagina()"
+        aria-label="Itens por página">
+        @for (opcao of opcoesPagina; track opcao) {
+        <option [value]="opcao">{{ opcao }} por página</option>
+        }
+      </select>
+
+      <nav aria-label="Paginação">
+        <ul class="pagination mb-0">
+          <li class="page-item" [class.disabled]="pagina === 1">
+            <button class="page-link" (click)="mudarPagina(pagina - 1)" [disabled]="pagina === 1">Anterior</button>
+          </li>
+          @for (p of numerosPaginas(); track p) {
+          <li class="page-item" [class.active]="p === pagina">
+            <button class="page-link" (click)="mudarPagina(p)">{{ p }}</button>
+          </li>
+          }
+          <li class="page-item" [class.disabled]="pagina === totalPaginas()">
+            <button class="page-link" (click)="mudarPagina(pagina + 1)" [disabled]="pagina === totalPaginas()">Próxima</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    }
+  </div>
 </div>

@@ -1,0 +1,18 @@
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  @for (toast of toastService.toasts(); track toast.id) {
+  <div
+    class="toast show align-items-center mb-2"
+    role="alert"
+    [class.success]="toast.tipo === 'success'"
+    [class.error]="toast.tipo === 'error'">
+    <div class="d-flex">
+      <div class="toast-body">{{ toast.mensagem }}</div>
+      <button
+        type="button"
+        class="btn-close me-2 m-auto"
+        (click)="toastService.fechar(toast.id)"
+        aria-label="Fechar"></button>
+    </div>
+  </div>
+  }
+</div>

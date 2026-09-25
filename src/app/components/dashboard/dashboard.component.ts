@@ -28,6 +28,7 @@ export class DashboardComponent implements OnInit {
   caixaAtual: any = null;
   carregando = true;
   erro = '';
+  role: string = 'leitor';
   totalMembros = 0;
   totalLecionarios = 0;
   totalConfirmacoes = 0;
@@ -60,6 +61,7 @@ export class DashboardComponent implements OnInit {
 
 
   async ngOnInit(): Promise<void> {
+    this.role = await this.supabase.getRole();
     this.caixaAtual = await this.caixaService.carregarCaixa();
     const [membros, lecionarios, confirmacoes, vendas, agenda, caixas] = await Promise.all([
       this.supabase.getMembrosComConfirmacao(), this.supabase.getTodosLectionary(),
@@ -100,6 +102,10 @@ export class DashboardComponent implements OnInit {
 }
 
   moeda(valor: number): string { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+  temPermissao(roles: string[]): boolean {
+    return roles.includes(this.role);
+  }
 
   private montarEvolucaoMensal(): void {
     const agora = new Date();

@@ -41,6 +41,18 @@
   }
 }
 
+.btn .mat-icon {
+  font-size: 1.05rem;
+  height: auto;
+  width: auto;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
 
 /* Estilos gerais */
 .input-field {
@@ -85,12 +97,15 @@
 
   /* Exibir o FAB em telas pequenas */
   .fab {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     position: fixed;
     bottom: 3rem;
     /* Distância do fundo da tela */
     right: 1rem;
     /* Distância da lateral direita da tela */
+    z-index: 1040;
   }
 
   /* Ajustar o campo de input para 100% da largura */

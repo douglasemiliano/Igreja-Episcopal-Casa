@@ -1,17 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { SupabaseService } from '../../../services/supabase.service';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatOptionModule } from '@angular/material/core';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { LecionarioService } from '../../../services/lecionario.service';
 import { Router } from '@angular/router';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-cadastro-lecionario',
@@ -19,18 +13,12 @@ import { Router } from '@angular/router';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatIconModule,
-    MatOptionModule,
-    MatDatepickerModule,
-    MatButtonModule,
-    MatInputModule
+    MatIconModule
   ],
   templateUrl: './cadastro-lecionario.component.html',
   styleUrl: './cadastro-lecionario.component.scss'
 })
-export class CadastroLecionarioComponent implements OnInit {
+export class CadastroLecionarioComponent implements OnInit, OnDestroy {
  lecionarioParaEditar: any = null;
   form: FormGroup;
   isEditMode = false;
@@ -38,7 +26,7 @@ export class CadastroLecionarioComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private supabaseService: SupabaseService,
-    private snackBar: MatSnackBar,
+    private toast: ToastService,
     private lecionarioService: LecionarioService,
     private router: Router
   ) {
@@ -71,7 +59,7 @@ export class CadastroLecionarioComponent implements OnInit {
       id: data.id,
       ano_liturgico: data.ano_liturgico,
       tempo: data.tempo,
-      dia: new Date(data.dia+ 'T00:00:00'),
+      dia: this.toISODate(data.dia),
       nome: data.nome
     });
 
@@ -122,31 +110,41 @@ export class CadastroLecionarioComponent implements OnInit {
     });
   }
 
+  private toISODate(valor: any): string {
+    if (!valor) return '';
+    if (valor instanceof Date) {
+      const y = valor.getFullYear();
+      const m = String(valor.getMonth() + 1).padStart(2, '0');
+      const d = String(valor.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return String(valor).slice(0, 10);
+  }
+
   async submit() {
     if (this.form.valid) {
-      const data = this.form.value;
+      const data = { ...this.form.value, dia: this.toISODate(this.form.value.dia) };
 
       if (this.isEditMode) {
         const { error } = await this.supabaseService.updateLectionary(data.id, data);
         if (error) {
-          this.snackBar.open('Erro ao atualizar registro.', 'Fechar', { duration: 3000, panelClass: ['snackbar-error'] });
+          this.toast.erro('Erro ao atualizar registro.');
         } else {
-          this.snackBar.open('Registro atualizado com sucesso!', 'Fechar', { duration: 3000, panelClass: ['snackbar-success'] });
+          this.toast.sucesso('Registro atualizado com sucesso!');
         }
       } else {
         const { error } = await this.supabaseService.insertLectionary(data);
         if (error && error.details?.includes("already exists")) {
-          this.snackBar.open('Já existe um registro para esse dia. Por favor, escolha outra data.', 'Fechar', {
-            duration: 3000,
-            panelClass: ['snackbar-error']
-          });
+          this.toast.erro('Já existe um registro para esse dia. Por favor, escolha outra data.');
           return;
         }
 
-        this.snackBar.open('Registro cadastrado com sucesso!', 'Fechar', {
-          duration: 3000,
-          panelClass: ['snackbar-success']
-        });
+        if (error) {
+          this.toast.erro('Erro ao cadastrar registro.');
+          return;
+        }
+
+        this.toast.sucesso('Registro cadastrado com sucesso!');
 
         this.form.reset();
         this.form.setControl('oracoes', this.fb.array([this.fb.control('')]));

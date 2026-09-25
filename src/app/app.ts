@@ -1,21 +1,19 @@
 import { CommonModule } from '@angular/common';
-import { Component, Renderer2, signal, OnInit, HostListener, inject } from '@angular/core';
+import { Component, HostListener, inject, OnInit, Renderer2, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterOutlet } from '@angular/router';
-import { environment } from '../environments/environments.development';
-import { SupabaseService } from './services/supabase.service';
-import { NavbarComponent } from './components/utils/navbar/navbar.component';
 import { LoadingComponent } from './components/utils/loading/loading.component';
-import { SidebarComponent } from './components/utils/sidebar/sidebar.component';
-import { CoreService } from './services/core.service';
+import { NavbarComponent } from './components/utils/navbar/navbar.component';
+import { ToastContainerComponent } from './components/utils/toast/toast.component';
 import { CaixaService } from './services/caixa.service';
+import { CoreService } from './services/core.service';
+import { SupabaseService } from './services/supabase.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterOutlet, MatCardModule, MatIconModule, NavbarComponent, LoadingComponent, SidebarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterOutlet, MatIconModule, LoadingComponent, NavbarComponent, ToastContainerComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
@@ -41,8 +39,13 @@ export class App implements OnInit {
       this.renderer.addClass(document.body, 'dark-mode');
     }
 
-    const { data } = await this.supabase.getSession();
-    this.isLoggedIn = !!data?.session;
+    const { data, error } = await this.supabase.getUserResult();
+    this.isLoggedIn = !!data.user;
+
+    if (error) {
+      await this.supabase.signOut();
+      this.isLoggedIn = false;
+    }
 
     this.supabase.onAuthChange((_event, session) => {
       this.isLoggedIn = !!session;

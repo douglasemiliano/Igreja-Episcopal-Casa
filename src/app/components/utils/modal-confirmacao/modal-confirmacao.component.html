@@ -1,10 +1,17 @@
-<h2 mat-dialog-title>Confirmação</h2>
-
-<mat-dialog-content>
-  <p>{{ data.mensagem }}</p>
-</mat-dialog-content>
-
-<mat-dialog-actions align="end">
-  <button mat-button (click)="responder(false)">Não</button>
-  <button mat-raised-button color="primary" (click)="responder(true)">Sim</button>
-</mat-dialog-actions>
+<div class="modal fade" #modalElement tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5">Confirmação</h2>
+        <button type="button" class="btn-close" (click)="cancelar()" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p>{{ mensagem }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">Não</button>
+        <button type="button" class="btn btn-primary" (click)="confirmar()">Sim</button>
+      </div>
+    </div>
+  </div>
+</div>

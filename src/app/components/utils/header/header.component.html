@@ -1,0 +1,73 @@
+<header class="header" [class.collapsed]="collapsed">
+  <div class="header-content">
+
+    <!-- MENU / SIDEBAR -->
+    <button class="menu-button" type="button" aria-label="Alternar menu" (click)="onToggleSidebar()">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+
+    <!-- LINKS -->
+    <nav class="header-nav">
+
+      <a href="#" class="nav-link">
+        Apps
+      </a>
+
+      <a href="#" class="nav-link">
+        Chat
+      </a>
+
+      <a href="#" class="nav-link">
+        Calendar
+      </a>
+
+      <a href="#" class="nav-link">
+        Email
+      </a>
+
+    </nav>
+
+
+    <!-- BUSCA -->
+    <div class="search">
+
+      <mat-icon>
+        search
+      </mat-icon>
+
+      <input type="text" placeholder="Try to Searching...">
+
+    </div>
+
+
+    <button class="icon-button" (click)="onDarkToggle()">
+
+      <mat-icon class="material-icons-outlined">
+        {{ isDarkMode ? 'light_mode' : 'dark_mode' }}
+      </mat-icon>
+
+    </button>
+
+
+    <!-- USUÁRIO -->
+    <div class="header-user">
+
+      <img [src]="fotoUsuario" alt="Douglas Emiliano">
+
+      <div class="user-info">
+
+        <strong>
+          {{nomeUsuario}}
+        </strong>
+
+        <small>
+          {{ labelsRole[role] || role }}
+        </small>
+
+      </div>
+
+    </div>
+
+  </div>
+</header>

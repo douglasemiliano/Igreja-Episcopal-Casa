@@ -57,10 +57,9 @@
       <mat-icon fontIcon="arrow_back_ios_new"></mat-icon>
     </button>
 
-    <button class="btn d-flex flex-column justify-content-center align-items-center" 
-            (click)="isOpen = !isOpen"
-            type="button" 
-            cdkOverlayOrigin #trigger="cdkOverlayOrigin">
+    <button class="btn d-flex flex-column justify-content-center align-items-center"
+            (click)="abrirCalendario()"
+            type="button">
       <strong style="font-size: 14pt;">{{dataUnica | date}}</strong>
     </button>
 
@@ -69,17 +68,27 @@
     </button>
   </nav>
 
-  <!-- Overlay do calendário -->
-  <ng-template cdkConnectedOverlay 
-               [cdkConnectedOverlayOrigin]="trigger"
-               [cdkConnectedOverlayOpen]="isOpen">
-    <mat-card class="calendario">
-      <mat-calendar [selected]="dataUnica" (selectedChange)="onSelect($event)"></mat-calendar>
-    </mat-card>
-  </ng-template>
+  <!-- Modal do calendário -->
+  <div class="modal fade" #dateModal tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Escolha a Data</h5>
+          <button type="button" class="btn-close" (click)="fecharCalendario()" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="date" class="form-control" [(ngModel)]="dataInput" (change)="onDataInputChange()" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="fecharCalendario()">Cancelar</button>
+          <button type="button" class="btn btn-primary" (click)="onDataInputChange()">Selecionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- FAB de copiar -->
-  <button mat-fab class="fab" (click)="formatarTexto()">
+  <button class="btn btn-primary fab" (click)="formatarTexto()">
     <mat-icon>content_copy</mat-icon>
   </button>
 

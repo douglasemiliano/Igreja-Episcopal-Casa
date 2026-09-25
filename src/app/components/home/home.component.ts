@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
+import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
   selector: 'app-home',
@@ -10,5 +11,16 @@ import { RouterModule } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
+  role: string = 'leitor';
+
+  private readonly supabase = inject(SupabaseService);
+
+  async ngOnInit(): Promise<void> {
+    this.role = await this.supabase.getRole();
+  }
+
+  temPermissao(roles: string[]): boolean {
+    return roles.includes(this.role);
+  }
 }

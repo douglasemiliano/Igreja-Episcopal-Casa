@@ -2,13 +2,12 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DadosCertificado } from '../../../model/certificado.model';
 import { CertificadoConfirmacaoService } from '../../../services/certificado-confirmacao.service';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { PdfViewerModalComponent } from './pdf-viewer-modal/pdf-viewer-modal.component';
+import { PdfViewerModalService } from './pdf-viewer-modal/pdf-viewer-modal.service';
 
 @Component({
   selector: 'app-certificado-confirmacao',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './certificado-confirmacao.component.html',
   styleUrl: './certificado-confirmacao.component.scss'
 })
@@ -18,7 +17,7 @@ formulario: FormGroup;
   constructor(
     private fb: FormBuilder,
     private certificadoService: CertificadoConfirmacaoService,
-    private dialog: MatDialog
+    private pdfViewer: PdfViewerModalService
   ) {
     this.formulario = this.fb.group({
       nomeCompleto: ['', Validators.required],
@@ -58,14 +57,8 @@ formulario: FormGroup;
       try {
         const pdfBlob = await this.certificadoService.gerarCertificado(dados);
         const fileName = this.certificadoService.getNomeArquivo(dados.nomeCompleto);
-        
-        this.dialog.open(PdfViewerModalComponent, {
-          width: '80vw',
-          data: {
-            pdfBlob,
-            fileName
-          }
-        });
+
+        this.pdfViewer.abrir(pdfBlob, fileName);
       } catch (error) {
         console.error('Erro ao gerar certificado:', error);
         alert('Erro ao gerar o certificado. Por favor, tente novamente.');

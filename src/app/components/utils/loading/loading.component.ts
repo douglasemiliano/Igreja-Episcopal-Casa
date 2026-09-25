@@ -1,11 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingService } from '../../../services/loading.service';
 
 @Component({
   selector: 'app-loading',
   standalone: true,
-  imports: [MatProgressSpinnerModule],
+  imports: [],
   templateUrl: './loading.component.html',  // Agora o template está no HTML
   styleUrls: ['./loading.component.scss']   // Agora os estilos estão no SCSS
 })

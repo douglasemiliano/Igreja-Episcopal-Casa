@@ -1,69 +1,77 @@
+:root {
+  --sidebar-width-expanded: 280px;
+  --sidebar-width-collapsed: 88px;
+  --collapse-duration: 0.32s;
+  --collapse-ease: cubic-bezier(.4, 0, .2, 1);
+}
+
 .app-container {
   .app-body {
     background-color: var(--background-color);
     display: flex;
+    position: relative;
 
     app-sidebar {
       position: fixed;
       z-index: 1050;
       top: 0;
       left: 0;
-      width: 280px;
       height: 100vh;
       background-color: var(--card-background);
-      transform: translateX(-100%); // começa escondido
-    }
-
-    .main-content {
-      flex-grow: 1;
-      padding: 5rem 1rem;
-      transition: margin-left 0.3s ease;
-
-      @media (max-width: 768px) {
-        margin: 0 auto;
-        max-width: 100vw;
-        padding-top: 5rem; /* Adiciona preenchimento no topo para não sobrepor o navbar */
-        margin-left: 0 !important; // no mobile sidebar sobrepõe
-      }
+      transition: width var(--collapse-duration) var(--collapse-ease),
+                  transform var(--collapse-duration) var(--collapse-ease);
     }
   }
 }
 
-/* Keyframes */
-@keyframes expandSidebar {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0%);
-  }
+app-navbar {
+  // position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1040;
+  transition: margin-left var(--collapse-duration) var(--collapse-ease);
 }
 
-@keyframes collapseSidebar {
-  from {
-    transform: translateX(0%);
-  }
-  to {
-    transform: translateX(-100%);
-  }
+.main-content {
+  transition: margin-left var(--collapse-duration) var(--collapse-ease);
 }
 
-/* Estados */
-app-sidebar.expanded {
-  animation: expandSidebar 0.3s forwards;
-}
-
-app-sidebar.collapsed {
-  animation: collapseSidebar 0.3s forwards;
-}
-
-/* Empurra o conteúdo no desktop */
+/* ===== DESKTOP ===== */
 @media (min-width: 769px) {
-  .app-body app-sidebar.expanded ~ .main-content {
-    margin-left: 280px;
+  .app-body app-sidebar {
+    width: var(--sidebar-width-expanded);
+    transform: translateX(0);
+  }
+  .app-body app-sidebar.collapsed {
+    width: var(--sidebar-width-collapsed);
   }
 
-  .app-body app-sidebar.collapsed ~ .main-content {
-    margin-left: 0;
+  app-navbar.expanded { margin-left: var(--sidebar-width-expanded); }
+  app-navbar.collapsed { margin-left: var(--sidebar-width-collapsed); }
+
+  .main-content.expanded { margin-left: var(--sidebar-width-expanded); }
+  .main-content.collapsed { margin-left: var(--sidebar-width-collapsed); }
+
+  .main-content {
+    padding: 6.5rem 1.75rem 2rem;
+  }
+}
+
+/* ===== MOBILE (sidebar off-canvas, sobrepõe o conteúdo) ===== */
+@media (max-width: 768px) {
+  .app-body app-sidebar {
+    width: var(--sidebar-width-expanded);
+    transform: translateX(-100%);
+  }
+  .app-body app-sidebar.expanded { transform: translateX(0%); }
+  .app-body app-sidebar.collapsed { transform: translateX(-100%); }
+
+  app-navbar { margin-left: 0 !important; }
+
+  .main-content {
+    margin: 0 auto !important;
+    max-width: 100vw;
+    padding: 6rem 1rem 1.5rem;
+    margin-left: 0 !important;
   }
 }

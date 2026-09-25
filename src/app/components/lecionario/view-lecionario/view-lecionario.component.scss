@@ -15,8 +15,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 1rem;
-    background-color: #f8f9fa;
-    border-top: 1px solid #ddd;
+    background-color: var(--surface-soft);
+    border-top: 1px solid var(--border-color);
     box-sizing: border-box;
     width: 50%;          // largura automática, só o necessário pelo conteúdo
     z-index: 1030;
@@ -32,6 +32,15 @@
   bottom: 7.5rem;  // acima da barra
   right: 1rem;
   border-radius: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab .mat-icon {
+  font-size: 1.2rem;
+  height: auto;
+  width: auto;
 }
 
 .empty-state {

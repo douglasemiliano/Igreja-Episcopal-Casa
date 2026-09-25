@@ -2,8 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { SupabaseService } from '../../../services/supabase.service';
 import { CommonModule } from '@angular/common';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-cadastrar-membro',
@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 export class CadastrarMembroComponent implements OnInit {
   supabaseService = inject(SupabaseService);
   fb = inject(FormBuilder);
-  snackBar = inject(MatSnackBar);
+  toast = inject(ToastService);
   router = inject(Router);
 
   membroForm: FormGroup;
@@ -43,7 +43,7 @@ export class CadastrarMembroComponent implements OnInit {
   nextStep() {
     if (this.currentStep === 1 && this.pessoais.invalid) {
       this.pessoais.markAllAsTouched();
-      this.snackBar.open('Por favor, preencha os campos obrigatórios.', 'Fechar', { duration: 3000 });
+      this.toast.mostrar('Por favor, preencha os campos obrigatórios.');
       return;
     }
     if (this.currentStep < 3) {
@@ -76,17 +76,17 @@ export class CadastrarMembroComponent implements OnInit {
         const membroData = { ...pessoais, ...adicionais, ...igreja };
 
         await this.supabaseService.addMembro(membroData);
-        this.snackBar.open('Membro criado com sucesso!', 'Fechar', { duration: 3000, panelClass: ['snackbar-success'] });
+        this.toast.sucesso('Membro criado com sucesso!');
         this.membroForm.reset();
         this.currentStep = 1;
         this.router.navigate(['/membros']);
       } catch (error) {
         console.error(error);
-        this.snackBar.open('Erro ao criar membro.', 'Fechar', { duration: 3000, panelClass: ['snackbar-error'] });
+        this.toast.erro('Erro ao criar membro.');
       }
     } else {
       this.membroForm.markAllAsTouched();
-      this.snackBar.open('Preencha todos os campos obrigatórios.', 'Fechar', { duration: 3000 });
+      this.toast.mostrar('Preencha todos os campos obrigatórios.');
     }
   }
 }

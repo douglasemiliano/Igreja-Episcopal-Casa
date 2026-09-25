@@ -1,16 +1,53 @@
 @use '@angular/material' as mat;
-/* 1️⃣ Importa a fonte Manrope com todos os pesos */
+
+/* 1️⃣ Importa as fontes */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url("https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined");
+
+@import "iconoir/css/iconoir.css";
+
+/* Base do Material necessária apenas para o mat-icon */
+@include mat.core();
 
 /* 2️⃣ Variáveis CSS para cores e design tokens */
 :root {
-  --color-primary: #6a1b9a;
-  /* purple */
-  --color-primary-contrast: #ffffff;
-  --background-color: #f4f7fb;
-  --text-color: #29343d;
-  --card-background: #ffffff;
-  --active-background: rgba(99, 91, 255, 1);
+  /* Paleta Harmonizada com o Novo Azul (#133E87) */
+  --color-primary: #133E87;               /* Seu novo azul principal */
+  --color-primary-hover: #0F316B;         /* Azul um pouco mais escuro para estados de Hover */
+  --color-primary-contrast: #ffffff;      /* Texto sobre o azul principal */
+  --color-light-primary: rgb(0, 133, 219, .15);
+
+  /* Alinha o primary do Bootstrap com o tema */
+  --bs-primary: var(--color-primary);
+  --bs-link-color: var(--color-primary);
+
+  --background-color: #F4F7FA;            /* Fundo sutilmente azulado/frio para combinar com o azul */
+  --text-color: #1E293B;                  /* Grafite escuro (Slate) mais moderno que o preto puro */
+  --card-background: #ffffff;             /* Fundo dos cards limpo */
+  --active-background: #E0E7FF;           /* Azul bem clarinho para itens ativos/selecionados */
+  --active-text: #133E87;                 /* Cor do texto para itens ativos */
+  --logo-color: #133E87;
+
+  /* Textos e superfícies auxiliares */
+  --text-muted: #6b7280;                  /* Texto secundário (ícones, links do header) */
+  --text-soft: #9ca3af;                   /* Texto bem suave (placeholders, disabled) */
+  --surface-hover: #f3f4f6;               /* Fundo de hover em superfícies claras */
+  --surface-soft: #f8f9fa;                /* Barra/áreas levemente destacadas */
+  --border-color: #ddd;                   /* Bordas de inputs e divisões */
+  --overlay: rgba(0, 0, 0, 0.3);          /* Fundo de overlays/modais */
+
+  /* Cores de status */
+  --color-success: #2f6840;               /* Texto de sucesso (verde) */
+  --color-success-bg: #e6f0e8;            /* Fundo leve de sucesso */
+  --color-success-btn: #3f6b4a;           /* Botão de sucesso (sólido) */
+  --color-warning: #a8651d;               /* Texto de alerta (âmbar) */
+  --color-warning-bg: #fff0cc;            /* Fundo leve de alerta */
+  --color-warning-text: #8a5c08;          /* Texto sobre fundo de alerta */
+  --color-danger: #a6402f;                /* Texto de erro/pendência (vermelho) */
+  --color-danger-text: #8b3024;           /* Texto sobre fundo de erro */
+  --color-danger-bg: #f6e4de;             /* Fundo leve de erro */
+  --color-danger-border: #efc9c2;         /* Borda leve de erro */
 
   /* Font family */
   --font-family-base: "Montserrat", sans-serif;
@@ -42,389 +79,237 @@
   --spacing-xl: 2rem;
 }
 
-/* Tema escuro */
-body.dark-mode {
-  --color-primary: #9c27b0;
-  --color-primary-contrast: #ffffff;
-  --background-color: #1f2a3d;
-  --text-color: #f5f5f5;
-  --card-background: #1a2537;
-  --active-background: rgba(99, 91, 255, 1);
-
-  @include mat.table-overrides((header-headline-color: var(--text-color),
-      row-item-label-text-color: var(--text-color),
-      row-item-outline-color: var(--text-color)));
-
-  @include mat.sort-overrides((arrow-color: var(--text-color),
-    ));
-
-  @include mat.select-overrides((enabled-trigger-text-color: var(--text-color),
-    ));
-
-  @include mat.menu-overrides((container-color: var(--card-background)));
-}
-
-/* 3️⃣ Reset e aplicação global da fonte */
-html,
+/* Fundo base do body, para o fundo branco do Bootstrap não vazar nas bordas */
 body {
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  font-family: var(--font-family-base) !important;
-  font-weight: var(--font-regular) !important;
-  background-color: var(--background-color) !important;
-  color: var(--text-color) !important;
-  line-height: 1.5 !important;
-  transition: background-color 0.32s ease, color 0.32s ease !important;
-
-  @include mat.menu-overrides((container-color: var(--background-color)));
-
-
-}
-
-/* 4️⃣ Botões e cores principais */
-
-
-/* 5️⃣ Tipografia global */
-h1 {
-  font-size: var(--font-size-h1);
-  font-weight: var(--font-extra-bold);
-  margin-bottom: var(--spacing-md);
-}
-
-h2 {
-  font-size: var(--font-size-h2);
-  font-weight: var(--font-semibold);
-  margin-bottom: var(--spacing-md);
-}
-
-h3 {
-  font-size: var(--font-size-h3);
-  font-weight: var(--font-medium);
-  margin-bottom: var(--spacing-sm);
-}
-
-h4 {
-  font-size: var(--font-size-h4);
-  font-weight: var(--font-regular);
-  margin-bottom: var(--spacing-sm);
-}
-
-h5 {
-  font-size: var(--font-size-h5);
-  font-weight: var(--font-regular);
-  margin-bottom: var(--spacing-xs);
-}
-
-h6 {
-  font-size: var(--font-size-h6);
-  font-weight: var(--font-medium);
-  margin-bottom: var(--spacing-xs);
-}
-
-p,
-span,
-li,
-a,
-button {
-  font-size: var(--font-size-body);
-}
-
-/* 5️⃣ Classes utilitárias para peso da fonte */
-.text-thin {
-  font-weight: var(--font-thin);
-}
-
-.text-light {
-  font-weight: var(--font-light);
-}
-
-.text-regular {
-  font-weight: var(--font-regular);
-}
-
-.text-medium {
-  font-weight: var(--font-medium);
-}
-
-.text-semibold {
-  font-weight: var(--font-semibold);
-}
-
-.text-bold {
-  font-weight: var(--font-bold);
-}
-
-.text-extra-bold {
-  font-weight: var(--font-extra-bold);
-}
-
-
-button:disabled,
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-
-/* Margens */
-.m-xs {
-  margin: var(--spacing-xs);
-}
-
-.m-sm {
-  margin: var(--spacing-sm);
-}
-
-.m-md {
-  margin: var(--spacing-md);
-}
-
-.m-lg {
-  margin: var(--spacing-lg);
-}
-
-.m-xl {
-  margin: var(--spacing-xl);
-}
-
-.mt-xs {
-  margin-top: var(--spacing-xs);
-}
-
-.mt-sm {
-  margin-top: var(--spacing-sm);
-}
-
-.mt-md {
-  margin-top: var(--spacing-md);
-}
-
-.mt-lg {
-  margin-top: var(--spacing-lg);
-}
-
-.mt-xl {
-  margin-top: var(--spacing-xl);
-}
-
-.mb-xs {
-  margin-bottom: var(--spacing-xs);
-}
-
-.mb-sm {
-  margin-bottom: var(--spacing-sm);
-}
-
-.mb-md {
-  margin-bottom: var(--spacing-md);
-}
-
-.mb-lg {
-  margin-bottom: var(--spacing-lg);
-}
-
-.mb-xl {
-  margin-bottom: var(--spacing-xl);
-}
-
-.ml-xs {
-  margin-left: var(--spacing-xs);
-}
-
-.ml-sm {
-  margin-left: var(--spacing-sm);
-}
-
-.ml-md {
-  margin-left: var(--spacing-md);
-}
-
-.ml-lg {
-  margin-left: var(--spacing-lg);
-}
-
-.ml-xl {
-  margin-left: var(--spacing-xl);
-}
-
-.mr-xs {
-  margin-right: var(--spacing-xs);
-}
-
-.mr-sm {
-  margin-right: var(--spacing-sm);
-}
-
-.mr-md {
-  margin-right: var(--spacing-md);
-}
-
-.mr-lg {
-  margin-right: var(--spacing-lg);
-}
-
-.mr-xl {
-  margin-right: var(--spacing-xl);
-}
-
-/* Paddings */
-.p-xs {
-  padding: var(--spacing-xs);
-}
-
-.p-sm {
-  padding: var(--spacing-sm);
-}
-
-.p-md {
-  padding: var(--spacing-md);
-}
-
-.p-lg {
-  padding: var(--spacing-lg);
-}
-
-.p-xl {
-  padding: var(--spacing-xl);
-}
-
-.pt-xs {
-  padding-top: var(--spacing-xs);
-}
-
-.pt-sm {
-  padding-top: var(--spacing-sm);
-}
-
-.pt-md {
-  padding-top: var(--spacing-md);
-}
-
-.pt-lg {
-  padding-top: var(--spacing-lg);
-}
-
-.pt-xl {
-  padding-top: var(--spacing-xl);
-}
-
-.pb-xs {
-  padding-bottom: var(--spacing-xs);
-}
-
-.pb-sm {
-  padding-bottom: var(--spacing-sm);
-}
-
-.pb-md {
-  padding-bottom: var(--spacing-md);
-}
-
-.pb-lg {
-  padding-bottom: var(--spacing-lg);
-}
-
-.pb-xl {
-  padding-bottom: var(--spacing-xl);
-}
-
-.pl-xs {
-  padding-left: var(--spacing-xs);
-}
-
-.pl-sm {
-  padding-left: var(--spacing-sm);
-}
-
-.pl-md {
-  padding-left: var(--spacing-md);
-}
-
-.pl-lg {
-  padding-left: var(--spacing-lg);
-}
-
-.pl-xl {
-  padding-left: var(--spacing-xl);
-}
-
-.pr-xs {
-  padding-right: var(--spacing-xs);
-}
-
-.pr-sm {
-  padding-right: var(--spacing-sm);
-}
-
-.pr-md {
-  padding-right: var(--spacing-md);
-}
-
-.pr-lg {
-  padding-right: var(--spacing-lg);
-}
-
-.pr-xl {
-  padding-right: var(--spacing-xl);
-}
-
-
-.table-responsive table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: var(--card-background);
-
-  th.mat-header-cell {
-    background-color: var(--background-color) !important;
-    color: var(--text-color) !important;
-    font-weight: var(--font-semibold) !important;
-  }
-
-  td.mat-cell {
-    color: var(--text-color) !important;
-    background-color: var(--card-background) !important;
-  }
-
-  tr.mat-row:hover {
-    background-color: var(--active-background) !important;
-  }
-}
-
-mat-paginator {
-  background-color: var(--card-background) !important;
-  color: var(--text-color) !important;
-
-  .mat-paginator-range-label,
-  .mat-icon-button {
-    color: var(--text-color) !important;
-  }
-}
-
-.card-chart-1 {
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #f8c20a1f 0, #f8c20a08);
-  border: none;
+  background-color: var(--background-color);
   color: var(--text-color);
 }
 
-.card-chart-2 {
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #16cdc71f 0, #16cdc708);
-  border: none;
-  color: var(--text-color);
+/* Tema escuro harmonizado (Estilo Midnight/Navy Blue) */
+body.dark-mode {
+  --color-primary: #3B82F6;               /* Um azul mais vivo para dar contraste no fundo escuro */
+  --color-primary-hover: #60A5FA;         /* Azul mais claro para o Hover no dark mode */
+  --color-primary-contrast: #ffffff;
+  --color-light-primary: rgb(0, 133, 219, .15);
+  --background-color: #15263A;            /* Fundo Slate escuro (combina perfeitamente com azul) */
+  --card-background: #111c2d;             /* Cards levemente mais claros que o fundo do app */
+  --text-color: #DCE3ED;                  /* Texto esbranquiçado de alto contraste */
+  --active-background: rgba(59, 130, 246, 0.15); /* Destaque sutil em azul transparente */
+  --active-text: #3B82F6;
+  --logo-color: #F3F3E0;
+
+  /* Textos e superfícies auxiliares */
+  --text-muted: #94a3b8;                  /* Texto secundário em tons claros */
+  --text-soft: #64748b;                   /* Texto suave com menos contraste */
+  --surface-hover: rgba(255, 255, 255, 0.06); /* Hover translúcido no escuro */
+  --surface-soft: #1d2c44;                /* Áreas levemente mais claras que o fundo */
+  --border-color: rgba(255, 255, 255, 0.15); /* Bordas suaves no escuro */
+  --overlay: rgba(0, 0, 0, 0.55);         /* Overlay mais denso no escuro */
+
+  /* Cores de status */
+  --color-success: #4ade80;
+  --color-success-bg: rgba(74, 222, 128, 0.15);
+  --color-success-btn: #14532d;
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.15);
+  --color-warning-text: #fde68a;
+  --color-danger: #f87171;
+  --color-danger-text: #fca5a5;
+  --color-danger-bg: rgba(248, 113, 113, 0.15);
+  --color-danger-border: rgba(248, 113, 113, 0.4);
 }
 
-.card-chart-3 {
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #0a71f81f 0, #f8c20a08);
-  border: none;
-  color: var(--text-color);
+/* =========================================
+   OVERRIDES BOOTSTRAP NO TEMA ESCURO
+========================================= */
+body.dark-mode {
+  --bs-body-bg: var(--card-background);
+  --bs-body-bg-rgb: 17, 28, 45;
+  --bs-body-color: var(--text-color);
+  --bs-body-color-rgb: 220, 227, 237;
+  --bs-secondary-color: var(--text-muted);
+  --bs-danger-text-emphasis: var(--color-danger);
+  --bs-warning-text-emphasis: var(--color-warning);
+  --bs-success-text-emphasis: var(--color-success);
+  --bs-border-color: var(--border-color);
+  --bs-primary: var(--color-primary);
+  --bs-link-color: var(--color-primary);
+
+  .text-muted {
+    color: var(--text-muted) !important;
+  }
+
+  .card {
+    background-color: var(--card-background);
+    border-color: var(--border-color);
+    color: var(--text-color);
+  }
+
+  .card-header {
+    background-color: var(--surface-soft);
+    border-bottom-color: var(--border-color);
+  }
+
+  .card-footer {
+    background-color: var(--surface-soft);
+    border-top-color: var(--border-color);
+  }
+
+  .form-control {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border-color: var(--border-color);
+  }
+
+  .form-control::placeholder {
+    color: var(--text-soft);
+  }
+
+  .form-control:focus {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  .form-select {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23DCE3ED' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  }
+
+  .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  .form-check-input {
+    background-color: var(--card-background);
+    border-color: var(--border-color);
+  }
+
+  .form-check-input:checked {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  .form-check-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
+  }
+
+  .btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--color-primary);
+    --bs-btn-border-color: var(--color-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--color-primary-hover);
+    --bs-btn-hover-border-color: var(--color-primary-hover);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--color-primary-hover);
+    --bs-btn-active-border-color: var(--color-primary-hover);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: var(--color-primary);
+    --bs-btn-disabled-border-color: var(--color-primary);
+  }
+
+  .table {
+    --bs-table-color: var(--text-color);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--border-color);
+  }
+
+  .table-hover > tbody > tr:hover > * {
+    --bs-table-color-state: var(--text-color);
+    --bs-table-bg-state: var(--surface-hover);
+  }
+
+  .modal-content {
+    background-color: var(--card-background);
+    color: var(--text-color);
+    border-color: var(--border-color);
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: var(--border-color);
+  }
+
+  .modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+  }
+
+  .pagination {
+    --bs-pagination-bg: var(--card-background);
+    --bs-pagination-border-color: var(--border-color);
+    --bs-pagination-color: var(--color-primary);
+    --bs-pagination-hover-bg: var(--surface-hover);
+    --bs-pagination-hover-border-color: var(--border-color);
+    --bs-pagination-hover-color: var(--color-primary-hover);
+    --bs-pagination-focus-bg: var(--surface-hover);
+    --bs-pagination-focus-color: var(--color-primary);
+    --bs-pagination-active-bg: var(--color-primary);
+    --bs-pagination-active-border-color: var(--color-primary);
+    --bs-pagination-active-color: var(--color-primary-contrast);
+    --bs-pagination-disabled-bg: transparent;
+    --bs-pagination-disabled-border-color: var(--border-color);
+    --bs-pagination-disabled-color: var(--text-soft);
+  }
 }
 
-.card-chart-4 {
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #f80abd1f 0, #f8c20a08);
+
+.card-container {
+    height: auto;
+    padding: 1rem 1rem;
+    background: var(--card-background);
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================
+   ICON BUTTON (Atualizado com as Variáveis)
+========================================= */
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  
   border: none;
-  color: var(--text-color);
+  outline: none;
+  cursor: pointer;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* 🌟 AGORA CONECTADO AO TEMA DINÂMICO */
+  background-color: transparent; 
+  color: var(--color-primary);            
+  
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  flex-shrink: 0; 
+}
+
+/* Efeitos de interação usando a variável de hover */
+.icon-button:hover {
+  background-color: var(--color-light-primary);
+  color: var(--color-primary)
+}
+
+.icon-button:active {
+  transform: scale(0.95); 
+}
+
+/* Ajuste fino do mat-icon interno */
+.icon-button .mat-icon {
+  font-size: 18px; 
+  width: 18px;
+  height: 18px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
 }

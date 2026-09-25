@@ -3,12 +3,11 @@ import { DadosBatismo, LivroBatismoService } from '../../../services/livro/livro
 import { RegistroBatismoService } from '../../../services/livros-registro/registro-batismo.service';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
 
 
 @Component({
   selector: 'app-lista-batismo',
-  imports: [MatIconModule, RouterLink, MatButtonModule],
+  imports: [MatIconModule, RouterLink],
   templateUrl: './lista-batismo.component.html',
   styleUrl: './lista-batismo.component.scss'
 })

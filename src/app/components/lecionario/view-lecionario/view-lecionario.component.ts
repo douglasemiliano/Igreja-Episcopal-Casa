@@ -1,14 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { OverlayModule } from '@angular/cdk/overlay';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatCardModule } from '@angular/material/card';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatRippleModule } from '@angular/material/core';
+import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { HttpClient } from '@angular/common/http';
 import { SupabaseService } from '../../../services/supabase.service';
 import { LecionarioService } from '../../../services/lecionario.service';
@@ -16,7 +9,7 @@ import { Conteudo } from '../../../model/Lecionario.model';
 
 @Component({
   selector: 'app-lecionario',
-  imports: [FormsModule, CommonModule, DatePipe, MatButtonModule, MatIconModule, MatRippleModule, MatCardModule, ReactiveFormsModule, MatDatepickerModule, MatFormFieldModule, MatInputModule, OverlayModule],
+  imports: [FormsModule, CommonModule, DatePipe, MatIconModule],
   templateUrl: './view-lecionario.component.html',
   styleUrl: './view-lecionario.component.scss',
   standalone: true
@@ -30,7 +23,10 @@ export class ViewLecionarioComponent {
 
   conteudoLecionario: Conteudo | null = null;
 
-  isOpen = false;
+  @ViewChild('dateModal') dateModal!: ElementRef<HTMLDivElement>;
+
+  private modal: any;
+  dataInput = '';
 
   descricaoLecionario: string = "Esta ferramenta é organizada para nos conduzir a uma vida de disciplina espiritual e desfrutar do livre acesso proporcionado pela obra de Cristo. Não se trata apenas de interpretar textos, mas de aprender a ouvir Deus falar diretamente com você através da oração e leitura bíblica."
   liturgiaDiariaTitulo: string = "Liturgia Diária"
@@ -184,7 +180,32 @@ traduzirTextoBiblico(textoIngles: string): string {
     this.dataUnica = event;
     this.lecionarioService.dataUnica.set(this.dataUnica);
     this.getConteudoLecionario();
-    this.isOpen = false;
+    this.fecharCalendario();
+  }
+
+  private toISODate(data: Date): string {
+    const y = data.getFullYear();
+    const m = String(data.getMonth() + 1).padStart(2, '0');
+    const d = String(data.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  abrirCalendario(): void {
+    this.dataInput = this.toISODate(this.dataUnica);
+    const Bootstrap = (window as any).bootstrap;
+    if (!Bootstrap) return;
+    this.modal = new Bootstrap.Modal(this.dateModal.nativeElement);
+    this.modal.show();
+  }
+
+  fecharCalendario(): void {
+    this.modal?.hide();
+  }
+
+  onDataInputChange(): void {
+    const valor = this.dataInput;
+    if (!valor) return;
+    this.onSelect(new Date(valor + 'T00:00:00'));
   }
 
   formatarTexto() {

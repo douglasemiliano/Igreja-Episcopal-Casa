@@ -1,46 +1,66 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-pdf-viewer-modal',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule
-  ],
+  imports: [CommonModule],
   templateUrl: './pdf-viewer-modal.component.html',
   styleUrls: ['./pdf-viewer-modal.component.scss']
 })
-export class PdfViewerModalComponent implements OnInit {
-  safePdfUrl: SafeResourceUrl | null = null;
-  private pdfBlob: Blob;
-  private fileName: string;
+export class PdfViewerModalComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input() pdfBlob: Blob | null = null;
+  @Input() fileName = '';
 
-  constructor(
-    public dialogRef: MatDialogRef<PdfViewerModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { pdfBlob: Blob, fileName: string },
-    private sanitizer: DomSanitizer
-  ) {
-    this.pdfBlob = data.pdfBlob;
-    this.fileName = data.fileName;
-  }
+  @Output() fechado = new EventEmitter<void>();
+
+  @ViewChild('modalElement') modalElement!: ElementRef<HTMLDivElement>;
+
+  safePdfUrl: SafeResourceUrl | null = null;
+  private objectUrl: string | null = null;
+  private modal: any;
+
+  constructor(private sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {
-    const unsafeUrl = URL.createObjectURL(this.pdfBlob);
-    this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(unsafeUrl);
+    if (this.pdfBlob) {
+      this.objectUrl = URL.createObjectURL(this.pdfBlob);
+      this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.objectUrl);
+    }
   }
 
-  onCancel(): void { this.dialogRef.close(); }
+  ngAfterViewInit(): void {
+    const Bootstrap = (window as any).bootstrap;
+    if (!Bootstrap) return;
+
+    this.modal = new Bootstrap.Modal(this.modalElement.nativeElement, {
+      backdrop: 'static'
+    });
+
+    this.modalElement.nativeElement.addEventListener('hidden.bs.modal', () => {
+      this.fechado.emit();
+    });
+
+    this.modal.show();
+  }
+
+  onCancel(): void {
+    this.modal?.hide();
+  }
 
   onDownload(): void {
+    if (!this.pdfBlob) return;
+    const url = URL.createObjectURL(this.pdfBlob);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(this.pdfBlob);
+    link.href = url;
     link.download = this.fileName;
     link.click();
-    URL.revokeObjectURL(link.href);
+    URL.revokeObjectURL(url);
+  }
+
+  ngOnDestroy(): void {
+    if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
+    if (this.modal?.dispose) this.modal.dispose();
   }
 }

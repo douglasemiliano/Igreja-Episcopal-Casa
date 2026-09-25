@@ -1,0 +1,325 @@
+:host{
+  display: flex;
+  width: 100%;
+}
+
+.header {
+  width: 100%;
+  padding: 1rem;
+}
+
+
+/* =========================================
+   CONTAINER
+========================================= */
+
+.header-content {
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 1rem;
+
+  padding: 0.5rem 1rem;
+
+  background: var(--card-background);
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.06);
+
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   MENU
+========================================= */
+
+.menu-button {
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  border-radius: 50%;
+
+  color: var(--text-muted);
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background-color: var(--surface-hover);
+    color: var(--text-color);
+  }
+
+  .mat-icon {
+    width: 20px;
+    height: 20px;
+
+    font-size: 20px;
+
+    transition:
+      transform var(--layout-transition);
+  }
+}
+
+
+/*
+ * Quando o layout estiver collapsed,
+ * gira o ícone.
+ */
+:host-context(.navbar-layout.collapsed) {
+
+  .menu-button .mat-icon {
+    transform: rotate(180deg);
+  }
+}
+
+
+/* =========================================
+   LINKS
+========================================= */
+
+.header-nav {
+  display: flex;
+  align-items: center;
+
+  gap: 1.5rem;
+
+  flex-shrink: 0;
+}
+
+.nav-link {
+  position: relative;
+
+  color: var(--text-muted);
+
+  font-size: 14px;
+  font-weight: 500;
+
+  text-decoration: none;
+
+  white-space: nowrap;
+
+  transition:
+    color 0.2s ease;
+
+  &:hover {
+    color: var(--text-color);
+  }
+
+  /*
+   * Link ativo
+   */
+  &.active {
+    color: var(--text-color);
+  }
+}
+
+
+/* =========================================
+   BUSCA
+========================================= */
+
+.search {
+  flex: 1;
+
+  max-width: 320px;
+
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 0.5rem;
+
+  margin-left: auto;
+
+  padding: 0 0.9rem;
+
+  background-color: var(--surface-hover);
+
+  border-radius: 999px;
+
+  box-sizing: border-box;
+
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:focus-within {
+    background-color: var(--card-background);
+
+    box-shadow:
+      0 0 0 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .mat-icon {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
+
+    font-size: 18px;
+
+    color: var(--text-soft);
+  }
+
+  input {
+    width: 100%;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: var(--text-color);
+
+    font-family: inherit;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--text-soft);
+    }
+  }
+}
+
+
+/* =========================================
+   USUÁRIO
+========================================= */
+
+.header-user {
+  display: flex;
+  align-items: center;
+
+  gap: 0.65rem;
+
+  flex-shrink: 0;
+
+  cursor: pointer;
+
+  padding: 0.2rem 0.35rem;
+
+  border-radius: 10px;
+
+  transition:
+    background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--surface-hover);
+  }
+
+  img {
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    flex-shrink: 0;
+  }
+}
+
+
+/* =========================================
+   TEXTO DO USUÁRIO
+========================================= */
+
+.user-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+  line-height: 1.1;
+
+  strong {
+    color: var(--text-color);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--text-soft);
+
+    font-size: 11px;
+
+    white-space: nowrap;
+  }
+}
+
+
+/* =========================================
+   RESPONSIVO
+========================================= */
+
+@media (max-width: 1000px) {
+
+  .header-nav {
+    gap: 1rem;
+  }
+
+  .search {
+    max-width: 240px;
+  }
+}
+
+
+@media (max-width: 850px) {
+
+  .header-nav {
+    display: none;
+  }
+
+  .search {
+    max-width: none;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .header {
+    top: 6px;
+
+    left: 8px;
+    right: 8px;
+  }
+
+  .header-content {
+    height: 52px;
+
+    padding: 0.5rem 0.75rem;
+
+    border-radius: 15px;
+  }
+
+  .search {
+    display: none;
+  }
+
+  .user-info {
+    display: none;
+  }
+}

@@ -116,7 +116,7 @@ table {
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  color: white;
+  color: var(--color-primary-contrast);
   text-decoration: none;
   border-radius: 12px;
   font-size: 14px;
@@ -125,6 +125,6 @@ table {
 
   .mat-icon {
     margin-right: 0.5rem;
-    color: white
+    color: var(--color-primary-contrast)
   }
 }

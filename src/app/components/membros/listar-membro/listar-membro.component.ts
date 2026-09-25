@@ -1,17 +1,13 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { SupabaseService } from '../../../services/supabase.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-listar-membro',
-  imports: [CommonModule, FormsModule, RouterModule, MatIconModule, MatTableModule, MatSortModule, MatPaginatorModule,MatButtonModule],
+  imports: [CommonModule, FormsModule, RouterModule, MatIconModule],
   templateUrl: './listar-membro.component.html',
   styleUrl: './listar-membro.component.scss'
 })
@@ -19,14 +15,20 @@ export class ListarMembrosComponent implements OnInit {
   supabaseService = inject(SupabaseService);
   membros: any[] = [];
   confirmacoes: { [key: string]: any[] } = {};
+  role: string = 'leitor';
 
-  displayedColumns: string[] = ['nome_completo', 'email', 'telefone', 'funcao', 'confirmacao', 'acoes'];
-  dataSource = new MatTableDataSource<any>([]);
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  filtro = '';
+  pagina = 1;
+  itensPorPagina = 10;
+  opcoesPagina = [5, 10, 20, 50];
 
   ngOnInit() {
+    this.supabaseService.getRole().then((role) => { this.role = role; });
     this.carregarMembros();
+  }
+
+  temPermissao(roles: string[]): boolean {
+    return roles.includes(this.role);
   }
 
 
@@ -38,11 +40,7 @@ export class ListarMembrosComponent implements OnInit {
 
       console.log('Membros carregados:', this.membros);
 
-      this.dataSource = new MatTableDataSource(this.membros);
-      this.dataSource.filterPredicate = (membro, filtro) =>
-        [membro.nome_completo, membro.email, membro.telefone, membro.funcao]
-          .filter(Boolean).join(' ').toLowerCase().includes(filtro);
-      this.dataSource.data;
+      this.pagina = 1;
 
       // Inicializa confirmacoes com arrays vazios para cada membro
       for (let membro of this.membros) {
@@ -56,13 +54,40 @@ export class ListarMembrosComponent implements OnInit {
     }
   }
 
-    applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  applyFilter(event: Event) {
+    this.filtro = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.pagina = 1;
+  }
 
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+  membrosFiltrados(): any[] {
+    const termo = this.filtro;
+    if (!termo) return this.membros;
+    return this.membros.filter(m =>
+      [m.nome_completo, m.email, m.telefone, m.funcao]
+        .filter(Boolean).join(' ').toLowerCase().includes(termo)
+    );
+  }
+
+  totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.membrosFiltrados().length / this.itensPorPagina));
+  }
+
+  numerosPaginas(): number[] {
+    return Array.from({ length: this.totalPaginas() }, (_, i) => i + 1);
+  }
+
+  membrosPaginados(): any[] {
+    const inicio = (this.pagina - 1) * this.itensPorPagina;
+    return this.membrosFiltrados().slice(inicio, inicio + this.itensPorPagina);
+  }
+
+  mudarPagina(pag: number) {
+    if (pag < 1 || pag > this.totalPaginas()) return;
+    this.pagina = pag;
+  }
+
+  mudarTamanhoPagina() {
+    this.pagina = 1;
   }
 
   async confirmarMembro(membro: any) {

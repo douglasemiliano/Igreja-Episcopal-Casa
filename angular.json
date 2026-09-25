@@ -36,7 +36,6 @@
             ],
             "styles": [
               "node_modules/ngx-simple-datatable/src/ngx-simple-datatable.css",
-              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss",
               "node_modules/bootstrap/dist/css/bootstrap.min.css"
             ],
@@ -49,12 +48,12 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2mb",
-                  "maximumError": "4MB"
+                  "maximumWarning": "4.5mb",
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
+                  "maximumWarning": "24kB",
                   "maximumError": "40kB"
                 }
               ],

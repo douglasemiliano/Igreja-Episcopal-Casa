@@ -1,85 +1,292 @@
-<div class="sidebar">
-  
-  <!-- botão X no topo -->
-  <div class="sidebar-header">
-    @if(isExpanded && isMobile){
-      <button class="close-btn" (click)="toggleSidebar()">
-        <mat-icon>close</mat-icon>
-      </button>
+<aside class="sidebar" [class.collapsed]="collapsed">
+
+  <!-- LOGO -->
+  <a class="sidebar-brand">
+
+    <svg xmlns="http://www.w3.org/2000/svg" class="logo-casa" xml:space="preserve" version="1.1"
+      shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality"
+      fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 15437.14 15437.14" xmlns:xlink="http://www.w3.org/1999/xlink"
+      xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
+      <g id="Camada_x0020_1">
+        <metadata id="CorelCorpID_0Corel-Layer" />
+        <path fill="currentColor"
+          d="M7718.57 0c4262.84,0 7718.57,3455.73 7718.57,7718.57 0,4262.84 -3455.73,7718.57 -7718.57,7718.57 -4262.84,0 -7718.57,-3455.73 -7718.57,-7718.57 0,-4262.84 3455.73,-7718.57 7718.57,-7718.57zm2259.76 7838.75c-70.93,0 -128.41,-57.52 -128.41,-128.41 0,-70.88 57.48,-128.33 128.41,-128.33l139.33 0 0 -255.05c0,-70.9 57.47,-128.38 128.35,-128.38 70.96,0 128.4,57.48 128.4,128.38l0 255.05 139.38 0c70.86,0 128.36,57.45 128.36,128.33 0,70.89 -57.5,128.41 -128.36,128.41l-139.38 0 0 545.92c0,70.91 -57.44,128.4 -128.4,128.4 -70.88,0 -128.35,-57.49 -128.35,-128.4l0 -545.92 -139.33 0zm-251.19 2511.34l1019.17 0c-14.68,-92.18 -31.57,-179.09 -50.08,-260.69 -21.7,-95.29 -45.61,-183 -71.05,-263.05 -63.27,-198.61 -133.38,-350.57 -200.27,-456.21 -73.8,-116.49 -140.96,-174.52 -188.19,-174.52 -47.17,0 -114.38,58.03 -188.14,174.55 -66.93,105.61 -137.02,257.57 -200.32,456.18 -25.43,80.05 -49.35,167.76 -71.02,263.05 -18.53,81.6 -35.38,168.51 -50.1,260.69zm-2026 776.45c-121.71,-110.15 -204.2,-263.24 -205.77,-448.6 -0.3,-30.68 10.93,-58.53 29.27,-78.77 18.37,-20.31 43.93,-32.92 72.27,-33.25l0.89 0 0.14 -0.12c27.8,0 53.21,12.15 71.72,31.78 18.54,19.73 30.21,47.04 30.54,77.39l0 1.14c0.94,119.73 58.57,217.47 141.74,288.28 100.16,85.42 236.89,131.99 357.66,131.99 108.8,0 238.04,-35.74 337.94,-107.49 80.13,-57.63 141.06,-138.46 155.81,-242.38 15.86,-111.39 -32.3,-203.01 -107.91,-276.33 -114.97,-111.55 -292.44,-181.49 -412.21,-216.29 -175.02,-50.83 -387.57,-147.8 -526.43,-299.84 -105.35,-115.3 -168.63,-261.58 -143.1,-442.61 22.82,-162.78 110.78,-290.92 228.42,-381.42 134.65,-103.62 308.5,-157.77 467.48,-157.77 175.68,0 361.93,69.55 498.45,193.32 121.71,110.24 204.22,263.45 205.74,448.97 0.31,30.68 -10.93,58.51 -29.27,78.77 -18.37,20.27 -43.93,32.95 -72.31,33.23l-0.14 0.17c-28.25,0 -54.06,-12.45 -72.78,-32.48 -18.77,-20.13 -30.42,-47.84 -30.42,-78.52l0.09 0c-1,-119.74 -58.62,-217.42 -141.67,-288.23 -100.13,-85.34 -236.75,-131.86 -357.69,-131.86 -109.09,0 -238.15,35.33 -337.63,106.78 -79.68,57.31 -140.12,137.92 -154.68,242.03 -15.77,112.31 32.22,204.39 107.69,277.94 114.29,111.27 290.72,181.24 411.35,216.27 174.99,50.76 388.15,147.31 527.34,299.33 105.22,114.9 168.42,260.97 142.7,442.19l-0.07 0c-23.28,162.92 -111.43,291.2 -229.26,381.79 -134.65,103.59 -308.35,157.79 -467.44,157.79 -175.69,0 -361.89,-69.52 -498.46,-193.2zm-805.28 -701.38c35.28,262.14 49.63,528.45 49.63,783.12 0,30.68 -11.61,58.57 -30.26,78.77 -18.6,20.22 -44.27,32.69 -72.52,32.69 -28.43,0 -54.15,-12.47 -72.87,-32.62 -18.72,-20.17 -30.33,-48.11 -30.33,-78.84 0,-117.87 -3.09,-230.1 -8.87,-336.55 -5.61,-103.79 -13.8,-203.27 -24.22,-298.28l-1078.93 0c-10.39,94.97 -18.58,194.49 -24.24,298.23 -5.76,106.5 -8.87,218.73 -8.87,336.6 0,30.73 -11.59,58.67 -30.31,78.84 -18.7,20.15 -44.44,32.62 -72.85,32.62 -28.31,0 -53.94,-12.47 -72.52,-32.69 -18.69,-20.2 -30.23,-48.09 -30.23,-78.77 0,-254.67 14.3,-520.98 49.59,-783.12 30.93,-230.29 78.2,-457.54 146.23,-671 76.29,-240.26 169.75,-424.55 264.04,-553.16 111.97,-152.72 227.03,-228.75 318.6,-228.75 91.62,0 206.66,76.03 318.63,228.75 94.33,128.61 187.77,312.9 264.01,553.16 68.06,213.46 115.35,440.71 146.29,671zm-1238.46 -75.07l1019.12 0c-14.68,-92.18 -31.53,-179.09 -50.08,-260.69 -21.65,-95.29 -45.56,-183 -71.02,-263.05 -63.31,-198.61 -133.41,-350.57 -200.3,-456.21 -73.76,-116.49 -141.01,-174.52 -188.19,-174.52 -47.13,0 -114.36,58.03 -188.14,174.55 -66.91,105.61 -137.04,257.57 -200.27,456.18 -25.48,80.05 -49.38,167.76 -71.05,263.05 -18.55,81.6 -35.4,168.51 -50.07,260.69zm-2083.76 629.3c-183.09,-223.92 -290.18,-530.95 -291.86,-833.01l-0.14 -0.14c0,-297.33 109.12,-604.33 293.17,-829.57 168.67,-206.37 400.3,-344.42 668.94,-344.42 101.61,0 199.69,20.43 292.1,58.18 95.38,39.03 184.61,96.62 264.88,169.26 21.9,19.59 34.35,46.87 36.76,75.21 2.46,28.27 -5.13,57.61 -23.19,81.23l-0.14 0.11c-1.99,2.53 -3.82,4.75 -5.52,6.7 -17.53,19.3 -40.47,30.42 -64.01,32.83 -23.63,2.34 -47.95,-4.05 -68.38,-19.85 -1.87,-1.47 -3.93,-3.23 -6.17,-5.24 -62.11,-56.21 -130.65,-100.65 -203.92,-130.74 -70.11,-28.78 -144.64,-44.32 -222.41,-44.32 -210.04,0 -389.46,110.73 -520.67,274.87 -147.87,184.94 -234.83,437.04 -236.47,675.75 1.64,241.64 86.94,493.58 234.13,677.61 130.55,163.17 309.99,272.53 523.01,272.53 77.7,0 152.18,-15.54 222.22,-44.14 73.25,-30.02 141.81,-74.39 204.11,-130.48 2.22,-1.95 4.44,-3.82 6.78,-5.6 20.27,-15.51 44.37,-21.92 67.77,-19.61 23.45,2.34 46.15,13.32 63.68,32.58 2.22,2.53 4.28,4.91 5.99,7.21 18.06,23.44 25.65,52.77 23.19,81.08 -2.41,28.39 -14.86,55.77 -36.76,75.4 -80.15,72.57 -169.31,129.97 -264.74,168.86 -92.41,37.7 -190.63,58.06 -292.24,58.06 -271.92,0 -502.72,-135.63 -670.11,-340.35zm2147.5 -2604.34l2551.38 0 1682.64 -4025.6 -2681.31 0 -1552.71 4025.6zm-1425.95 0c70.91,0 128.4,57.52 128.4,128.41 0,70.86 -57.49,128.35 -128.4,128.35l-453.96 0c-70.88,0 -128.35,-57.49 -128.35,-128.35 0,-18.26 3.76,-35.6 10.6,-51.32l1577.35 -4275.21c18.98,-51.92 68.1,-84.1 120.33,-84.15l0 -0.14 4726.54 0c70.91,0 128.38,57.5 128.38,128.4 0,20.41 -4.77,39.67 -13.24,56.82l-1.48 3.56 1885.3 5101.52 -0.26 0.14c5.82,15.8 9.1,33.21 9.1,51.53l-0.02 1781.98c0,70.65 -48.09,127.91 -107.41,127.91l-1128.9 -0.14c-52.37,0 -96.04,-44.72 -105.52,-103.86 -2.85,-10.2 -4.37,-21.03 -4.37,-32.22 0,-117.87 -3.09,-230.06 -8.85,-336.53 -5.61,-103.79 -13.83,-203.24 -24.17,-298.3l-1079.03 0c-10.39,94.97 -18.58,194.49 -24.19,298.23 -5.76,106.5 -8.83,218.73 -8.83,336.6 0,30.73 -11.63,58.67 -30.35,78.84 -18.7,20.15 -44.44,32.62 -72.85,32.62 -28.26,0 -53.94,-12.47 -72.59,-32.69 -18.62,-20.2 -30.18,-48.09 -30.18,-78.77 0,-254.67 14.34,-520.98 49.56,-783.12 30.98,-230.29 78.23,-457.54 146.28,-671 76.33,-240.26 169.68,-424.55 264.01,-553.16 111.98,-152.72 227.09,-228.75 318.63,-228.75 91.62,0 206.63,76.03 318.63,228.75 94.33,128.61 187.73,312.9 264.01,553.16 68.1,213.46 115.3,440.71 146.29,671 29.81,221.33 44.62,445.65 48.48,663.42l926.45 0.12 0.03 -1626.33 -1804.16 -4882.14 -1660.31 3972.32c-20.48,49.26 -68.17,79.05 -118.37,79.08l0 0.18 -2788.76 0c-70.88,0 -128.4,-57.49 -128.4,-128.35 0,-15.99 2.97,-31.31 8.3,-45.42 -10.34,-28.18 -10.92,-60.1 0.73,-90.31l1549.86 -4018.28 -1489.09 0 -1485.15 4025.6 269.93 0z" />
+      </g>
+    </svg>
+
+
+    <div class="brand-text">
+      <span>Igreja</span>
+      <span> Episcopal Casa</span>
+    </div>
+
+
+  </a>
+
+
+  <!-- MENU -->
+  <div class="nav-scroll" (click)="onNavClick($event)">
+
+    <!-- HOME -->
+    <section class="nav-section">
+
+      @if(!collapsed){
+      <span class="nav-section-label">
+        Home
+      </span>
+      }
+
+      <ul class="nav">
+
+        <li>
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              home
+            </mat-icon>
+
+            <span class="link-text">
+              Central
+            </span>
+
+          </a>
+        </li>
+
+
+        <li>
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              dashboard
+            </mat-icon>
+
+            <span class="link-text">
+              Dashboard
+            </span>
+
+          </a>
+        </li>
+
+      </ul>
+
+    </section>
+
+
+    <!-- GESTÃO -->
+    <section class="nav-section">
+
+      <span class="nav-section-label">
+        Gestão
+      </span>
+
+      <ul class="nav">
+
+        <li>
+          <a routerLink="/membros" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              groups
+            </mat-icon>
+
+            <span class="link-text">
+              Membros
+            </span>
+
+          </a>
+        </li>
+
+
+        @if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {
+        <li>
+          <a routerLink="/acoes" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              payments
+            </mat-icon>
+
+            <span class="link-text">
+              Caixa
+            </span>
+
+          </a>
+        </li>
+        }
+
+
+        @if (temPermissao(['administrador', 'secretaria', 'caixa', 'tesouraria', 'pastor'])) {
+        <li>
+          <a routerLink="/relatorios-caixas" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              bar_chart
+            </mat-icon>
+
+            <span class="link-text">
+              Relatórios de Caixas
+            </span>
+
+          </a>
+        </li>
+        }
+
+
+        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
+        <li>
+          <a routerLink="/agenda" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              calendar_month
+            </mat-icon>
+
+            <span class="link-text">
+              Agenda
+            </span>
+
+          </a>
+        </li>
+        }
+
+      </ul>
+
+    </section>
+
+
+    <!-- OUTROS -->
+    <section class="nav-section">
+
+      <span class="nav-section-label">
+        Outros
+      </span>
+
+      <ul class="nav">
+
+        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
+        <li>
+          <a routerLink="/certificado" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              workspace_premium
+            </mat-icon>
+
+            <span class="link-text">
+              Certificados
+            </span>
+
+          </a>
+        </li>
+        }
+
+
+        <li>
+          <a routerLink="/lecionario" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              menu_book
+            </mat-icon>
+
+            <span class="link-text">
+              Lecionário
+            </span>
+
+          </a>
+        </li>
+
+
+        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
+        <li>
+          <a routerLink="/lecionario/listar" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              bookmarks
+            </mat-icon>
+
+            <span class="link-text">
+              Gerenciar lecionários
+            </span>
+
+          </a>
+        </li>
+        }
+
+
+        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
+        <li>
+          <a routerLink="/livro" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              auto_stories
+            </mat-icon>
+
+            <span class="link-text">
+              Livros de Registro
+            </span>
+
+          </a>
+        </li>
+        }
+
+      </ul>
+
+    </section>
+
+
+    <!-- ADMINISTRAÇÃO -->
+    @if (temPermissao(['administrador', 'pastor'])) {
+    <section class="nav-section">
+
+      <span class="nav-section-label">
+        Administração
+      </span>
+
+      <ul class="nav">
+
+        <li>
+          <a routerLink="/usuarios" routerLinkActive="active" class="nav-link">
+
+            <mat-icon class="material-icons-outlined">
+              manage_accounts
+            </mat-icon>
+
+            <span class="link-text">
+              Usuários
+            </span>
+
+          </a>
+        </li>
+
+      </ul>
+
+    </section>
     }
+
   </div>
 
-  <a class="sidebar-brand" (click)="toggleSidebar()">
-    <img [src]="isDarkMode ? 'casa2.png' : 'casa.png'" alt="" width="65" height="60">
-  </a>
-  <hr>
-  <ul class="nav nav-pills flex-column mb-auto">
-    <li>
-      <a class="nav-link m-sm" routerLink="/home" routerLinkActive="active">
-        <mat-icon>home</mat-icon>
-        Central
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/dashboard" routerLinkActive="active">
-        <mat-icon>dashboard</mat-icon>
-        Dashboard
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/membros" routerLinkActive="active">
-        <mat-icon>people</mat-icon>
-        Membros
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/acoes" routerLinkActive="active">
-        <mat-icon>volunteer_activism</mat-icon>
-        Caixa
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/relatorios-caixas" routerLinkActive="active">
-        <mat-icon>bar_chart</mat-icon>
-        Relatórios de Caixas
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/agenda" routerLinkActive="active">
-        <mat-icon>event</mat-icon>
-        Agenda
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/certificado" routerLinkActive="active">
-        <mat-icon>inventory_2</mat-icon>
-        Certificados
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/lecionario" routerLinkActive="active">
-        <mat-icon>menu_book</mat-icon>
-        Lecionário
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/lecionario/listar" routerLinkActive="active">
-        <mat-icon>bookmarks</mat-icon>
-        Gerenciar lecionários
-      </a>
-    </li>
-    <li>
-      <a class="nav-link m-sm" routerLink="/livro" routerLinkActive="active">
-        <mat-icon>auto_stories</mat-icon>
-        Livros de Registro
-      </a>
-    </li>
-  </ul>
-  <hr>
-  <div class="dropdown">
-    <button (click)="onToggle()">
-      <mat-icon>{{ isDarkMode ? 'dark_mode' : 'light_mode' }}</mat-icon>
-    </button>
-    <img [src]="fotoUsuario ? fotoUsuario : avatarPadrao " alt="" width="32" height="32" class="rounded-circle">
+
+  <!-- FOOTER -->
+  <div class="sidebar-footer">
+
+    <div class="user-card">
+
+      <img [src]="fotoUsuario" alt="">
+
+      <div class="d-flex flex-column">
+        <span class="user-name">
+          {{nomeUsuario}}
+        </span>
+  
+        <span class="user-role">
+          {{ labelsRole[role] || role }}
+        </span>
+      </div>
+
+      <button class="icon-button" aria-label="Ação" (click)="logout()">
+        <mat-icon class="material-icons-outlined"> power_settings_new
+        </mat-icon>
+      </button>
+
+
+    </div>
+
   </div>
-</div>
+
+</aside>
