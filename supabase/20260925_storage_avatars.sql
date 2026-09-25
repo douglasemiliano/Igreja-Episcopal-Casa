@@ -73,4 +73,34 @@ $$;
 revoke all on function public.atualizar_meu_nome(text) from public;
 grant execute on function public.atualizar_meu_nome(text) to authenticated;
 
+-- =====================================================
+-- Avatar em `profiles.foto`
+-- O mural e as listas leem o autor via join em profiles, e a metadata
+-- do auth não é acessível nesse join. Então a URL também fica em profiles.
+-- =====================================================
+alter table public.profiles add column if not exists foto text;
+
+-- Preenche quem já tinha avatar salvo na metadata
+update public.profiles p
+set foto = u.raw_user_meta_data->>'avatar_url'
+from auth.users u
+where p.id = u.id
+  and p.foto is null
+  and u.raw_user_meta_data ? 'avatar_url';
+
+create or replace function public.atualizar_meu_foto(nova_foto text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.profiles
+  set foto = nova_foto,
+      atualizado_em = now()
+  where id = auth.uid();
+$$;
+
+revoke all on function public.atualizar_meu_foto(text) from public;
+grant execute on function public.atualizar_meu_foto(text) to authenticated;
+
 notify pgrst, 'reload schema';

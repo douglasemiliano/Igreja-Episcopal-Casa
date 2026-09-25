@@ -141,7 +141,8 @@
 .post-avatar {
   flex-shrink: 0;
 
-  .avatar {
+  .avatar,
+  .avatar-img {
     width: 38px;
     height: 38px;
     display: flex;
@@ -152,6 +153,10 @@
     color: var(--active-text);
     font-weight: 700;
     font-size: .9rem;
+  }
+
+  .avatar-img {
+    object-fit: cover;
   }
 }
 
@@ -250,7 +255,8 @@ a.text-button {
     padding: .85rem;
   }
 
-  .post-avatar .avatar {
+  .post-avatar .avatar,
+  .post-avatar .avatar-img {
     width: 34px;
     height: 34px;
     font-size: .8rem;

@@ -214,8 +214,8 @@ export class SupabaseService {
     await this.removerAvataresAntigos(user.id, caminho);
 
     // A policy de update em profiles só abre para admin/pastor, então o
-    // usuário comum vincula a foto pela metadata do auth.
-
+    // usuário comum vincula a foto pela metadata do auth e pela função
+    // security definer que escreve em profiles.foto (lido no mural).
     const { error: erroMeta } = await this.supabase.auth.updateUser({
       data: { avatar_url: url.publicUrl }
     });
@@ -223,6 +223,15 @@ export class SupabaseService {
     if (erroMeta) {
       console.error(erroMeta);
       return { erro: 'Imagem enviada, mas não foi possível vincular ao perfil.' };
+    }
+
+    const { error: erroPerfil } = await this.supabase.rpc('atualizar_meu_foto', {
+      nova_foto: url.publicUrl
+    });
+
+    if (erroPerfil) {
+      console.error(erroPerfil);
+      return { erro: 'Foto atualizada, mas não foi possível sincronizar o perfil.' };
     }
 
     return { url: url.publicUrl };
@@ -524,7 +533,7 @@ getFeed() {
       criado_em,
       atualizado_em,
       autor_id,
-      autor:profiles!feed_publicacoes_autor_id_fkey(id, nome, roles, email)
+      autor:profiles!feed_publicacoes_autor_id_fkey(id, nome, roles, email, foto)
     `)
     .order('criado_em', { ascending: false });
 }

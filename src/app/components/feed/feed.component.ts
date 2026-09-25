@@ -208,6 +208,11 @@ export class FeedComponent implements OnInit {
     return publicacao.autor?.nome || publicacao.autor?.email || 'Usuário';
   }
 
+  /** Avatar do autor; vazio quando não há foto, caindo nas iniciais. */
+  autorFoto(publicacao: any): string {
+    return publicacao.autor?.foto || '';
+  }
+
   autorRoles(publicacao: any): string[] {
     const roles: string[] = Array.isArray(publicacao.autor?.roles) ? publicacao.autor.roles : [];
     return roles.map((role) => this.labelsRole[role] ?? role);

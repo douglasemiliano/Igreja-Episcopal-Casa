@@ -98,7 +98,11 @@
         } @else {
           <article class="post">
             <div class="post-avatar">
-              <span class="avatar">{{ iniciais(autorNome(item.publicacao)) }}</span>
+              @if (autorFoto(item.publicacao)) {
+                <img class="avatar-img" [src]="autorFoto(item.publicacao)" [alt]="autorNome(item.publicacao)">
+              } @else {
+                <span class="avatar">{{ iniciais(autorNome(item.publicacao)) }}</span>
+              }
             </div>
 
             <div class="post-body">
