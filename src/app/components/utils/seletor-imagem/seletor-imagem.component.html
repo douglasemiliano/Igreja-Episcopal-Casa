@@ -1,0 +1,26 @@
+<div class="seletor-imagem">
+  @if (temImagem) {
+    <img class="seletor-previa" [src]="urlExibida" alt="Pré-visualização da foto">
+  }
+
+  <div class="seletor-acoes">
+    <button type="button" class="seletor-botao" (click)="abrirSelecao()">
+      <mat-icon>{{ temImagem ? 'swap_horiz' : 'add_photo_alternate' }}</mat-icon>
+      {{ temImagem ? 'Trocar foto' : 'Adicionar foto' }}
+    </button>
+
+    @if (temImagem) {
+      <button type="button" class="seletor-botao seletor-botao--perigo" (click)="remover()">
+        <mat-icon>delete</mat-icon>
+        Remover
+      </button>
+    }
+  </div>
+
+  <input
+    #input
+    type="file"
+    class="visually-hidden"
+    accept="image/png,image/jpeg,image/webp"
+    (change)="selecionarArquivo($event)">
+</div>

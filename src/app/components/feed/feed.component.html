@@ -31,6 +31,11 @@
             {{ enviando ? 'Publicando...' : 'Publicar' }}
           </button>
         </div>
+
+        <app-seletor-imagem
+          #seletorImagem
+          (arquivo)="imagemArquivo = $event"
+          (removido)="imagemArquivo = null" />
       </div>
     </section>
   }

@@ -110,6 +110,29 @@
 }
 
 /* =========================================
+   FOTO DA PUBLICAÇÃO
+   ========================================= */
+
+/*
+ * `contain` + `height: auto`: a foto aparece inteira, na proporção original.
+ * Com `cover` ela era preenchida na caixa e cortava as bordas. O `max-height`
+ * continua existindo só como rede de segurança para proporção absurda
+ * (panorâmica vertical), onde a imagem é reduzida e aparece com tarja nas
+ * laterais em vez de esticar o card para milhares de pixels.
+ */
+.post-imagem {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 90vh;
+  object-fit: contain;
+  margin-top: .6rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  border-radius: .6rem;
+  background: var(--background-color);
+}
+
+/* =========================================
    MODO DE EDIÇÃO
    ========================================= */
 .post-edit textarea {

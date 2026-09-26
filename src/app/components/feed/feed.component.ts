@@ -1,11 +1,12 @@
 import { CommonModule, TitleCasePipe } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 import { CoreService } from '../../services/core.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { ToastService } from '../../services/toast.service';
+import { SeletorImagemComponent } from '../utils/seletor-imagem/seletor-imagem.component';
 import { PostagemComponent } from './postagem/postagem.component';
 
 /** Item unificado do feed: evento da agenda ou publicação. */
@@ -20,7 +21,15 @@ interface ItemFeed {
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [CommonModule, FormsModule, TitleCasePipe, MatIconModule, RouterModule, PostagemComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TitleCasePipe,
+    MatIconModule,
+    RouterModule,
+    PostagemComponent,
+    SeletorImagemComponent
+  ],
   templateUrl: './feed.component.html',
   styleUrl: './feed.component.scss'
 })
@@ -43,6 +52,10 @@ export class FeedComponent implements OnInit {
   erro = '';
 
   conteudo = '';
+
+  /** Foto escolhida no composer; só sobe para o storage ao publicar. */
+  imagemArquivo: File | null = null;
+  @ViewChild('seletorImagem') seletorImagem?: SeletorImagemComponent;
 
   /** URL que já falhou ao carregar; o Google às vezes responde 429. */
   private fotoQueFalhou = '';
@@ -153,16 +166,39 @@ export class FeedComponent implements OnInit {
     if (!texto || this.enviando) return;
 
     this.enviando = true;
-    const { error } = await this.supabase.publicarFeed(texto);
-    this.enviando = false;
+
+    // A foto vai primeiro: se o insert falhar, o arquivo que subiu é removido
+    // para não ficar ocupando cota no bucket.
+    let imagemUrl: string | null = null;
+    if (this.imagemArquivo) {
+      const resultado = await this.supabase.enviarImagemPostagem(this.imagemArquivo);
+      if ('erro' in resultado) {
+        this.enviando = false;
+        console.error(resultado.erro);
+        this.toast.erro(resultado.erro);
+        return;
+      }
+      imagemUrl = resultado.url;
+    }
+
+    const { error } = await this.supabase.publicarFeed(texto, imagemUrl);
 
     if (error) {
       console.error(error);
+      if (imagemUrl) {
+        void this.supabase.removerImagemPostagem(imagemUrl);
+      }
+      this.enviando = false;
       this.toast.erro('Não foi possível publicar a atualização');
       return;
     }
 
     this.conteudo = '';
+    this.imagemArquivo = null;
+    // O seletor do composer não é destruído ao publicar, então a prévia é
+    // liberada por aqui; sem isso a foto antiga continuava na tela.
+    this.seletorImagem?.limpar();
+    this.enviando = false;
     this.toast.sucesso('Atualização publicada');
     await this.carregar();
   }

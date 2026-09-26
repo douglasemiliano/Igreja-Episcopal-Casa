@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { SupabaseService } from '../../../services/supabase.service';
 import { ToastService } from '../../../services/toast.service';
+import { SeletorImagemComponent } from '../../utils/seletor-imagem/seletor-imagem.component';
 
 /**
  * Card de publicação do feed, com dois modos: visualização e edição.
@@ -23,7 +24,7 @@ import { ToastService } from '../../../services/toast.service';
 @Component({
   selector: 'app-postagem',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, SeletorImagemComponent],
   templateUrl: './postagem.component.html',
   styleUrl: './postagem.component.scss'
 })
@@ -43,6 +44,13 @@ export class PostagemComponent {
   rascunho = '';
   salvando = false;
   menuAberto = false;
+
+  /** Foto escolhida no modo de edição; só sobe para o storage ao salvar. */
+  imagemArquivo: File | null = null;
+  /** Foto atual foi removida de propósito: a coluna deve ser limpa. */
+  imagemRemovida = false;
+  /** A URL existia mas não carregou (429 do Storage, 404); some com a imagem. */
+  imagemFalhou = false;
 
   /**
    * URL que já falhou ao carregar. O Google responde 429 quando o volume de
@@ -141,6 +149,8 @@ export class PostagemComponent {
     if (!this.podeEditar || this.salvando) return;
     this.menuAberto = false;
     this.rascunho = this.publicacao.conteudo ?? '';
+    this.imagemArquivo = null;
+    this.imagemRemovida = false;
     this.editando = true;
     // O textarea só existe depois que `editando` vira true e o Angular renderiza.
     setTimeout(() => this.campo?.nativeElement.focus());
@@ -149,6 +159,8 @@ export class PostagemComponent {
   cancelar(): void {
     this.editando = false;
     this.rascunho = '';
+    this.imagemArquivo = null;
+    this.imagemRemovida = false;
   }
 
   async salvar(): Promise<void> {
@@ -156,17 +168,49 @@ export class PostagemComponent {
     if (!texto || this.salvando) return;
 
     this.salvando = true;
-    const { error } = await this.supabase.editarFeed(this.publicacao.id, texto);
-    this.salvando = false;
+
+    let imagemUrl: string | null | undefined;
+    const fotoAntiga = this.publicacao.imagem_url || null;
+
+    if (this.imagemArquivo) {
+      const resultado = await this.supabase.enviarImagemPostagem(this.imagemArquivo);
+      if ('erro' in resultado) {
+        this.salvando = false;
+        console.error(resultado.erro);
+        this.toast.erro(resultado.erro);
+        return;
+      }
+      imagemUrl = resultado.url;
+    } else if (this.imagemRemovida) {
+      imagemUrl = null;
+    }
+
+    const { error } = await this.supabase.editarFeed(this.publicacao.id, texto, imagemUrl);
 
     if (error) {
       console.error(error);
+      if (typeof imagemUrl === 'string') {
+        void this.supabase.removerImagemPostagem(imagemUrl);
+      }
+      this.salvando = false;
       this.toast.erro('Não foi possível salvar a alteração');
       return;
     }
 
+    this.salvando = false;
     this.editando = false;
     this.rascunho = '';
+    this.imagemArquivo = null;
+    this.imagemRemovida = false;
+    this.imagemFalhou = false;
+
+    // A foto trocada só pode ir embora depois que o post apontou para a nova.
+    // `imagemUrl` só é string quando houve upload; se ficou undefined, a
+    // coluna não foi tocada e apagar a foto atual quebraria a publicação.
+    if (fotoAntiga && typeof imagemUrl === 'string') {
+      void this.supabase.removerImagemPostagem(fotoAntiga);
+    }
+
     this.toast.sucesso('Atualização editada');
     this.alterado.emit();
   }
@@ -181,6 +225,10 @@ export class PostagemComponent {
       console.error(error);
       this.toast.erro('Não foi possível remover a atualização');
       return;
+    }
+
+    if (this.publicacao.imagem_url) {
+      void this.supabase.removerImagemPostagem(this.publicacao.imagem_url);
     }
 
     this.toast.sucesso('Atualização removida');

@@ -9,6 +9,17 @@ import {
 import { environment } from '../../environments/environments.development';
 import { LoadingService } from './loading.service'; // Importando seu serviço de loading
 
+/**
+ * Teto do arquivo escolhido pelo usuário, antes da compactação.
+ *
+ * Não é o tamanho que chega ao bucket: a foto da publicação é sempre
+ * reencodeada para 1280px, então o enviado costuma ficar abaixo de 500 KB.
+ * Esse teto existe só para não tentar decodificar um arquivo absurdo, e é
+ * Generoso de propósito — foto de celular moderno passa fácil de 10 MB, e
+ * recusar no front só faria o usuário trocar de foto à toa.
+ */
+export const TAMANHO_MAXIMO_IMAGEM_MB = 60;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -115,11 +126,17 @@ export class SupabaseService {
    * Foto de celular costuma ter 3-8 MB; um avatar de 512px em JPEG fica
    * na casa das dezenas de KB. Reduzir no cliente economiza banda do
    * usuário e cota de egress, já que o bucket é público.
+   *
+   * `sempreCompactar` inverte a escolha do fim: em vez de devolver o
+   * original quando a reencode não ajudou, devolve o JPEG e falha se não
+   * conseguir. É o que a foto da publicação usa, para que o bucket nunca
+   * receba um arquivo que não passou pelo canvas.
    */
   private async compactarImagem(
     arquivo: File,
     ladoMaximo = 512,
-    qualidade = 0.82
+    qualidade = 0.82,
+    sempreCompactar = false
   ): Promise<File> {
     // SVG/animados não passam pelo canvas
     if (!arquivo.type.startsWith('image/') || arquivo.type === 'image/svg+xml') {
@@ -145,7 +162,10 @@ export class SupabaseService {
       canvas.height = altura;
 
       const contexto = canvas.getContext('2d');
-      if (!contexto) return arquivo;
+      if (!contexto) {
+        if (sempreCompactar) throw new Error('Canvas 2D indisponível.');
+        return arquivo;
+      }
 
       contexto.imageSmoothingQuality = 'high';
       // JPEG não tem alpha: fundo branco evita área preta em PNGs transparentes
@@ -157,12 +177,17 @@ export class SupabaseService {
         canvas.toBlob(resolve, 'image/jpeg', qualidade)
       );
 
-      if (!blob) return arquivo;
+      if (!blob) {
+        if (sempreCompactar) throw new Error('Não foi possível codificar a imagem.');
+        return arquivo;
+      }
 
-      const compactado = new File([blob], 'avatar.jpg', {
+      const compactado = new File([blob], 'imagem.jpg', {
         type: 'image/jpeg',
         lastModified: Date.now()
       });
+
+      if (sempreCompactar) return compactado;
 
       // Se a compactação não ajudou (imagem já pequena), manda o original
       return compactado.size < arquivo.size ? compactado : arquivo;
@@ -530,6 +555,7 @@ getFeed() {
     .select(`
       id,
       conteudo,
+      imagem_url,
       criado_em,
       atualizado_em,
       autor_id,
@@ -538,28 +564,121 @@ getFeed() {
     .order('criado_em', { ascending: false });
 }
 
-async publicarFeed(conteudo: string) {
+async publicarFeed(conteudo: string, imagemUrl?: string | null) {
   const user = await this.getUser();
   if (!user) return { data: null, error: { message: 'Sessão expirada.' } as any };
   return this.supabase
     .from('feed_publicacoes')
-    .insert({ conteudo: conteudo.trim(), autor_id: user.id })
+    .insert({
+      conteudo: conteudo.trim(),
+      autor_id: user.id,
+      imagem_url: imagemUrl ?? null
+    })
     .select()
     .single();
 }
 
-editarFeed(id: string, conteudo: string) {
-  return this.supabase
-    .from('feed_publicacoes')
-    .update({ conteudo: conteudo.trim() })
-    .eq('id', id)
-    .select()
-    .single();
+/**
+ * `imagemUrl` undefined não mexe na coluna; null limpa a foto.
+ * Quem chama decide, porque trocar (null) e manter (undefined) são operações
+ * diferentes quando o post já tinha imagem.
+ */
+editarFeed(id: string, conteudo: string, imagemUrl?: string | null) {
+  const mudancas: Record<string, unknown> = { conteudo: conteudo.trim() };
+  if (imagemUrl !== undefined) {
+    mudancas['imagem_url'] = imagemUrl;
+  }
+  return this.supabase.from('feed_publicacoes').update(mudancas).eq('id', id).select().single();
 }
 
 excluirFeed(id: string) {
   return this.supabase.from('feed_publicacoes').delete().eq('id', id);
 }
+
+// --- FOTO DA PUBLICAÇÃO ---
+
+  /**
+   * Envia a foto para `postagens/<user_id>/<aleatorio>.<ext>` e devolve a URL
+   * pública. O nome tem sufixo aleatório porque o post pode trocar de imagem
+   * várias vezes e sobrescrever a anterior quebraria o cache do navegador.
+   *
+   * O teto de tamanho vale para o arquivo escolhido; o que sobe é sempre o
+   * JPEG reduzido pelo canvas, então a imagem nunca chega ao bucket no
+   * tamanho original.
+   */
+  async enviarImagemPostagem(arquivo: File): Promise<{ url: string } | { erro: string }> {
+    const user = await this.getUser();
+    if (!user) return { erro: 'Sessão expirada. Faça login novamente.' };
+
+    const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? '';
+    if (!this.extensaoValida.includes(extensao)) {
+      return { erro: 'Formato inválido. Use JPG, PNG ou WEBP.' };
+    }
+    if (arquivo.size > TAMANHO_MAXIMO_IMAGEM_MB * 1024 * 1024) {
+      return { erro: `A imagem deve ter no máximo ${TAMANHO_MAXIMO_IMAGEM_MB} MB.` };
+    }
+
+    let otimizado: File;
+    try {
+      // 1280px: largura suficiente para celular e desktop sem estourar a cota.
+      otimizado = await this.compactarImagem(arquivo, 1280, 0.85, true);
+    } catch (erro) {
+      console.error(erro);
+      return { erro: 'Não foi possível preparar a imagem para envio.' };
+    }
+
+    const caminho = `${user.id}/${this.idAleatorio()}.jpg`;
+
+    const { error: erroUpload } = await this.supabase.storage
+      .from('postagens')
+      .upload(caminho, otimizado, { upsert: false, contentType: otimizado.type });
+
+    if (erroUpload) {
+      console.error(erroUpload);
+      return { erro: 'Não foi possível enviar a imagem.' };
+    }
+
+    const { data: url } = this.supabase.storage.from('postagens').getPublicUrl(caminho);
+    return { url: url.publicUrl };
+  }
+
+/**
+ * Apaga a foto no storage a partir da URL pública.
+ * Falha silenciosa: é limpeza, e o chamador já Gravou o dado do post.
+ */
+async removerImagemPostagem(url: string): Promise<void> {
+  try {
+    const caminho = this.caminhoDaUrlPostagem(url);
+    if (!caminho) return;
+
+    const user = await this.getUser();
+    // Guarda contra URL adulterada apontando para a pasta de outro usuário.
+    if (!user || !caminho.startsWith(`${user.id}/`)) return;
+
+    await this.supabase.storage.from('postagens').remove([caminho]);
+  } catch {
+    // limpeza best-effort
+  }
+}
+
+  /** Extrai o caminho do objeto de uma URL pública do bucket `postagens`. */
+  private caminhoDaUrlPostagem(url: string): string {
+    const marcador = '/object/public/postagens/';
+    const indice = url.indexOf(marcador);
+    if (indice === -1) return '';
+    return decodeURIComponent(url.slice(indice + marcador.length));
+  }
+
+  /**
+   * `crypto.randomUUID` só existe em contexto seguro. Se a aplicação for
+   * servida em http sem TLS ele some, e um throw aqui travaria o botão de
+   * publicar em "Publicando..." para sempre.
+   */
+  private idAleatorio(): string {
+    return (
+      crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+    );
+  }
 
 // --- ARRECADACOES ---
 
