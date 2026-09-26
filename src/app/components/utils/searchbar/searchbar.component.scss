@@ -1,0 +1,146 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.searchbar {
+  position: relative;
+}
+
+.searchbar-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 36px;
+  padding: 0 0.9rem;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background-color: var(--surface-hover);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus-within {
+    background-color: var(--card-background);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.searchbar-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 18px;
+  color: var(--text-soft);
+}
+
+.searchbar-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 13px;
+
+  &::placeholder {
+    color: var(--text-soft);
+  }
+}
+
+.searchbar-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-color) 12%, transparent);
+  color: var(--text-color);
+  cursor: pointer;
+
+  mat-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+  }
+}
+
+/* =========================================
+   PAINEL DE RESULTADOS
+   ========================================= */
+
+.searchbar-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1300;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.35rem;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--card-background);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+.searchbar-result {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  color: var(--text-color);
+  font-size: 0.88rem;
+  text-decoration: none;
+  cursor: pointer;
+
+  mat-icon {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    font-size: 19px;
+    color: var(--text-muted);
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover,
+  &.ativo {
+    background: var(--surface-hover);
+  }
+}
+
+.searchbar-vazio {
+  margin: 0;
+  padding: 0.7rem;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* No sidebar o painel entra no fluxo: o menu já some enquanto a busca
+   está ativa, então não há lista empilhando embaixo. */
+.searchbar--inline .searchbar-panel {
+  position: static;
+  margin-top: 0.35rem;
+  max-height: none;
+  padding: 0.25rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  .searchbar-panel {
+    max-height: 260px;
+  }
+}

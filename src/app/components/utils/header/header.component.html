@@ -30,15 +30,10 @@
 
 
     <!-- BUSCA -->
-    <div class="search">
-
-      <mat-icon>
-        search
-      </mat-icon>
-
-      <input type="text" placeholder="Try to Searching...">
-
-    </div>
+    <app-searchbar
+      class="header-search"
+      placeholder="Buscar no menu...">
+    </app-searchbar>
 
 
     <button class="icon-button" (click)="onDarkToggle()">
@@ -61,7 +56,11 @@
         aria-controls="user-menu"
         (click)="toggleUserMenu($event)"
       >
-        <img [src]="fotoUsuario || avatarPadrao" [alt]="nomeUsuario">
+        @if (semFoto) {
+          <mat-icon class="avatar-fallback" aria-hidden="true">person</mat-icon>
+        } @else {
+          <img [src]="fotoUsuario" [alt]="nomeUsuario" (error)="registrarErroFoto(fotoUsuario)">
+        }
 
         <span class="user-info">
           <strong>
@@ -79,7 +78,11 @@
       @if (isUserMenuOpen) {
         <div class="user-menu" id="user-menu" role="menu" (click)="$event.stopPropagation()">
           <div class="user-menu-profile">
-            <img [src]="fotoUsuario || avatarPadrao" [alt]="nomeUsuario">
+            @if (semFoto) {
+              <mat-icon class="avatar-fallback" aria-hidden="true">person</mat-icon>
+            } @else {
+              <img [src]="fotoUsuario" [alt]="nomeUsuario" (error)="registrarErroFoto(fotoUsuario)">
+            }
             <div class="user-menu-details">
               <strong>{{ nomeUsuario }}</strong>
               <span>{{ emailUsuario }}</span>

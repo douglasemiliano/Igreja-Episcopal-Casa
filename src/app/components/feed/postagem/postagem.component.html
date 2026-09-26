@@ -1,0 +1,94 @@
+<article class="post" [class.post--editando]="editando">
+  <div class="post-avatar">
+    @if (semFoto) {
+      <span class="avatar">{{ iniciais }}</span>
+    } @else {
+      <img
+        class="avatar-img"
+        [src]="autorFoto"
+        [alt]="autorNome"
+        (error)="registrarErroFoto(autorFoto)">
+    }
+  </div>
+
+  <div class="post-body">
+    <header class="post-head">
+      <div class="post-identity">
+        <strong>{{ autorNome }}</strong>
+        @if (autorRoles.length) {
+          <small class="post-roles">{{ autorRoles.join(' · ') }}</small>
+        }
+      </div>
+
+      <div class="post-head-right">
+        <time [attr.datetime]="publicacao.criado_em" [attr.title]="dataCompleta">
+          {{ tempoRelativo }}
+        </time>
+
+        @if (podeEditar && !editando) {
+          <div class="post-menu">
+            <button
+              type="button"
+              class="post-menu-trigger"
+              aria-label="Ações da publicação"
+              [attr.aria-expanded]="menuAberto"
+              (click)="alternarMenu($event)">
+              <mat-icon>more_horiz</mat-icon>
+            </button>
+
+            @if (menuAberto) {
+              <div class="post-menu-dropdown" role="menu" (click)="$event.stopPropagation()">
+                <button type="button" role="menuitem" (click)="iniciarEdicao()">
+                  <mat-icon>edit</mat-icon> Editar
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  class="post-menu-item--perigo"
+                  (click)="remover()">
+                  <mat-icon>delete</mat-icon> Remover
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </header>
+
+    @if (editando) {
+      <div class="post-edit">
+        <textarea
+          #campo
+          name="edicao"
+          rows="3"
+          maxlength="1000"
+          [(ngModel)]="rascunho"
+          placeholder="Escreva a atualização..."></textarea>
+
+        <div class="post-edit-acoes">
+          <small class="post-edit-contagem">{{ rascunho.length }}/1000</small>
+          <button class="ghost-button" type="button" [disabled]="salvando" (click)="cancelar()">
+            Cancelar
+          </button>
+          <button
+            class="primary-button"
+            type="button"
+            [disabled]="salvando || !rascunho.trim()"
+            (click)="salvar()">
+            {{ salvando ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      </div>
+    } @else {
+      <p class="post-content">{{ publicacao.conteudo }}</p>
+
+      <footer class="post-foot">
+        <span>{{ dataCompleta }}</span>
+        @if (publicacao.atualizado_em !== publicacao.criado_em) {
+          <span>editado</span>
+        }
+      </footer>
+    }
+  </div>
+</article>

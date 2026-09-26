@@ -1,5 +1,5 @@
 <section class="profile-page">
-  <a class="back-link" routerLink="/mural">
+  <a class="back-link" routerLink="/home">
     <mat-icon>arrow_back</mat-icon>
     <span>Voltar para a central</span>
   </a>
@@ -7,7 +7,11 @@
   <article class="profile-card">
     <header class="profile-header">
       <div class="profile-avatar">
-        <img [src]="editando ? (previaFoto || avatarPadrao) : (fotoUsuario || avatarPadrao)" [alt]="nomeUsuario">
+        @if (semFoto) {
+          <mat-icon class="avatar-fallback" aria-hidden="true">person</mat-icon>
+        } @else {
+          <img [src]="fotoExibida" [alt]="nomeUsuario" (error)="registrarErroFoto(fotoExibida)">
+        }
         <button
           type="button"
           class="avatar-overlay"
@@ -80,7 +84,7 @@
 
           <div class="edit-actions">
             <button type="button" class="primary-button" [disabled]="salvando || !nomeAlterado" (click)="salvarNome()">
-              {{ salvando ? 'Salvando...' : 'Salvar nome' }}
+              {{ salvando ? 'Salvando...' : 'Salvar' }}
             </button>
           </div>
         </section>

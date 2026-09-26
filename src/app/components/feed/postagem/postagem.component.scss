@@ -1,0 +1,274 @@
+/* =========================================
+   AVATAR
+   ========================================= */
+.avatar,
+.avatar-img {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--active-background);
+  color: var(--active-text);
+  font-weight: 700;
+  font-size: .95rem;
+  flex-shrink: 0;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* =========================================
+   CARD
+   ========================================= */
+.post {
+  display: flex;
+  gap: .75rem;
+  padding: .9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+  border-radius: .9rem;
+  background: var(--card-background);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+/* Enquanto edita, o card ganha destaque para o usuário saber onde está. */
+.post--editando {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+
+.post-avatar {
+  flex-shrink: 0;
+  padding-top: .1rem;
+}
+
+.post-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .6rem;
+  margin-bottom: .3rem;
+}
+
+.post-head-right {
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+  flex-shrink: 0;
+
+  time {
+    opacity: .55;
+    font-size: .75rem;
+    white-space: nowrap;
+  }
+}
+
+.post-identity {
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-size: .92rem;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.post-roles {
+  display: block;
+  opacity: .6;
+  font-size: .74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-content {
+  margin: 0;
+  font-size: .95rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.post-foot {
+  display: flex;
+  gap: .5rem;
+  margin-top: .6rem;
+  padding-top: .5rem;
+  border-top: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+  opacity: .55;
+  font-size: .74rem;
+}
+
+/* =========================================
+   MODO DE EDIÇÃO
+   ========================================= */
+.post-edit textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: .35rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-color);
+  font: inherit;
+  line-height: 1.5;
+  resize: none;
+
+  &::placeholder {
+    opacity: .55;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.post-edit-acoes {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding-top: .6rem;
+  margin-top: .4rem;
+  border-top: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+}
+
+.post-edit-contagem {
+  margin-right: auto;
+  opacity: .55;
+  font-size: .75rem;
+}
+
+.primary-button,
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  border: 0;
+  border-radius: 999px;
+  padding: .45rem 1rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  font-size: .85rem;
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+}
+
+.primary-button {
+  background: var(--active-background);
+  color: var(--active-text);
+}
+
+.ghost-button {
+  background: color-mix(in srgb, var(--text-color) 8%, transparent);
+  color: var(--text-color);
+  font-size: .82rem;
+  padding: .4rem .6rem;
+}
+
+/* =========================================
+   MENU DE AÇÕES
+   ========================================= */
+.post-menu {
+  position: relative;
+}
+
+.post-menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-color);
+  opacity: .6;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-color) 8%, transparent);
+    opacity: 1;
+  }
+
+  mat-icon {
+    font-size: 1.15rem;
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+}
+
+.post-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  padding: 0.3rem;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-background);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-color);
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover {
+      background: var(--surface-hover);
+    }
+
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+  }
+
+  .post-menu-item--perigo {
+    color: var(--color-danger, #c0392b);
+
+    &:hover {
+      background: var(--color-danger-bg);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .post {
+    gap: .6rem;
+    padding: .8rem .85rem;
+  }
+
+  .avatar,
+  .avatar-img {
+    width: 36px;
+    height: 36px;
+    font-size: .82rem;
+  }
+}

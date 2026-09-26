@@ -5,11 +5,12 @@ import { Router, RouterModule } from '@angular/router';
 import { CoreService } from '../../../services/core.service';
 import { LecionarioService } from '../../../services/lecionario.service';
 import { SupabaseService } from '../../../services/supabase.service';
+import { SearchbarComponent } from '../searchbar/searchbar.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule],
+  imports: [CommonModule, RouterModule, MatIconModule, SearchbarComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -22,8 +23,14 @@ export class HeaderComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   appsMenuOpen = false;
-  readonly avatarPadrao = 'casa.png';
-  fotoUsuario = this.avatarPadrao;
+  /** Sem foto, fica vazio: a view desenha o ícone de usuário. */
+  fotoUsuario = '';
+  /**
+   * URL que já falhou ao carregar. O Google responde 429 quando o volume de
+   * requisições estoura, e aí a imagem viraria um ícone quebrado. Guardar a
+   * URL em vez de um booleano faz a nova foto ser tentada de novo sozinha.
+   */
+  private fotoQueFalhou = '';
   nomeUsuario = 'Usuário';
   roles: string[] = ['membro'];
   isUserMenuOpen = false;
@@ -44,6 +51,14 @@ export class HeaderComponent {
     return this.roles.map((role) => this.labelsRole[role] ?? role).join(' · ') || 'Membro';
   }
 
+  get semFoto(): boolean {
+    return !this.fotoUsuario || this.fotoQueFalhou === this.fotoUsuario;
+  }
+
+  registrarErroFoto(url: string): void {
+    this.fotoQueFalhou = url;
+  }
+
   constructor(
     private router: Router,
     private supabase: SupabaseService,
@@ -58,7 +73,7 @@ export class HeaderComponent {
     // reflete aqui sem recarregar a página.
     this.coreService.usuario$.subscribe({
       next: (usuario) => {
-        this.fotoUsuario = usuario.foto || this.avatarPadrao;
+        this.fotoUsuario = usuario.foto || '';
         this.nomeUsuario = usuario.nome;
         this.emailUsuario = usuario.email;
         this.roles = usuario.roles;
@@ -87,7 +102,7 @@ export class HeaderComponent {
         nome:
           metadata['name'] || metadata['full_name'] || user.email?.split('@')[0] || 'Usuário',
         email: user.email || 'Email não informado',
-        foto: metadata['avatar_url'] || this.avatarPadrao,
+        foto: metadata['avatar_url'] || '',
         roles
       });
     } catch (erro) {

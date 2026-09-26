@@ -1,13 +1,15 @@
-import { CommonModule, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
+import { CoreService } from '../../services/core.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { ToastService } from '../../services/toast.service';
+import { PostagemComponent } from './postagem/postagem.component';
 
-/** Item unificado do mural: evento da agenda ou publicação do feed. */
-interface ItemMural {
+/** Item unificado do feed: evento da agenda ou publicação. */
+interface ItemFeed {
   tipo: 'evento' | 'publicacao';
   id: string;
   data: string;
@@ -18,41 +20,46 @@ interface ItemMural {
 @Component({
   selector: 'app-feed',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe, TitleCasePipe, MatIconModule, RouterModule],
+  imports: [CommonModule, FormsModule, TitleCasePipe, MatIconModule, RouterModule, PostagemComponent],
   templateUrl: './feed.component.html',
   styleUrl: './feed.component.scss'
 })
 export class FeedComponent implements OnInit {
   private readonly supabase = inject(SupabaseService);
   private readonly toast = inject(ToastService);
+  private readonly core = inject(CoreService);
 
-  readonly labelsRole: Record<string, string> = {
-    administrador: 'Administrador',
-    secretaria: 'Secretaria',
-    caixa: 'Caixa',
-    tesouraria: 'Tesouraria',
-    pastor: 'Pastor',
-    lider: 'Líder',
-    membro: 'Membro',
-    leitor: 'Membro'
-  };
   /** Somente administrador e líder publicam. */
   readonly rolesPublicadores = ['administrador', 'lider'];
 
   /** Eventos futuros ficam no topo; publicações vêm por recência. */
-  itens: ItemMural[] = [];
+  itens: ItemFeed[] = [];
   roles: string[] = ['membro'];
   usuarioAtualId = '';
+  minhaFoto = '';
 
   carregando = true;
   enviando = false;
   erro = '';
 
   conteudo = '';
-  editandoId = '';
-  editandoConteudo = '';
+
+  /** URL que já falhou ao carregar; o Google às vezes responde 429. */
+  private fotoQueFalhou = '';
+
+  get semFoto(): boolean {
+    return !this.minhaFoto || this.fotoQueFalhou === this.minhaFoto;
+  }
+
+  registrarErroFoto(url: string): void {
+    this.fotoQueFalhou = url;
+  }
 
   constructor() {
+    this.core.usuario$.subscribe({
+      next: (usuario) => (this.minhaFoto = usuario.foto)
+    });
+
     void this.supabase
       .getUser()
       .then((user) => (this.usuarioAtualId = user?.id ?? ''))
@@ -104,7 +111,7 @@ export class FeedComponent implements OnInit {
       eventos.status === 'fulfilled' && !eventos.value.error ? eventos.value.data ?? [] : [];
 
     if (publicacoes.status === 'rejected' || eventos.status === 'rejected') {
-      console.error('Falha parcial ao carregar o mural', { publicacoes, eventos });
+      console.error('Falha parcial ao carregar o feed', { publicacoes, eventos });
     }
     if (publicacoes.status === 'fulfilled' && publicacoes.value.error) {
       console.error(publicacoes.value.error);
@@ -135,7 +142,7 @@ export class FeedComponent implements OnInit {
     });
 
     if (!listaPublicacoes.length && publicacoes.status === 'fulfilled' && publicacoes.value.error) {
-      this.erro = 'Não foi possível carregar o mural.';
+      this.erro = 'Não foi possível carregar o feed.';
     }
 
     this.carregando = false;
@@ -160,70 +167,20 @@ export class FeedComponent implements OnInit {
     await this.carregar();
   }
 
-  iniciarEdicao(publicacao: any): void {
-    if (!this.podeEditar(publicacao)) return;
-    this.editandoId = publicacao.id;
-    this.editandoConteudo = publicacao.conteudo;
+  /** "agora", "há 5 min", "há 2 h", "há 3 d" — usado no card de evento. */
+  tempoRelativo(iso: string): string {
+    const minutos = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (minutos < 1) return 'agora';
+    if (minutos < 60) return `há ${minutos} min`;
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `há ${horas} h`;
+    const dias = Math.floor(horas / 24);
+    if (dias < 7) return `há ${dias} d`;
+    return new Date(iso).toLocaleDateString('pt-BR');
   }
 
-  cancelarEdicao(): void {
-    this.editandoId = '';
-    this.editandoConteudo = '';
-  }
-
-  async salvarEdicao(): Promise<void> {
-    const texto = this.editandoConteudo.trim();
-    if (!texto || !this.editandoId) return;
-
-    this.enviando = true;
-    const { error } = await this.supabase.editarFeed(this.editandoId, texto);
-    this.enviando = false;
-
-    if (error) {
-      console.error(error);
-      this.toast.erro('Não foi possível salvar a alteração');
-      return;
-    }
-
-    this.cancelarEdicao();
-    await this.carregar();
-  }
-
-  async excluir(publicacao: any): Promise<void> {
-    if (!this.podeEditar(publicacao)) return;
-    if (!confirm('Remover esta atualização do mural?')) return;
-
-    const { error } = await this.supabase.excluirFeed(publicacao.id);
-    if (error) {
-      console.error(error);
-      this.toast.erro('Não foi possível remover a atualização');
-      return;
-    }
-
-    this.toast.sucesso('Atualização removida');
-    await this.carregar();
-  }
-
-  autorNome(publicacao: any): string {
-    return publicacao.autor?.nome || publicacao.autor?.email || 'Usuário';
-  }
-
-  /** Avatar do autor; vazio quando não há foto, caindo nas iniciais. */
-  autorFoto(publicacao: any): string {
-    return publicacao.autor?.foto || '';
-  }
-
-  autorRoles(publicacao: any): string[] {
-    const roles: string[] = Array.isArray(publicacao.autor?.roles) ? publicacao.autor.roles : [];
-    return roles.map((role) => this.labelsRole[role] ?? role);
-  }
-
-  iniciais(nome: string): string {
-    return nome
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte.charAt(0).toUpperCase())
-      .join('');
+  /** Data por extenso para o tooltip do timestamp do evento. */
+  dataCompleta(iso: string): string {
+    return new Date(iso).toLocaleString('pt-BR');
   }
 }

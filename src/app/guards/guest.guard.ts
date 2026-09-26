@@ -15,7 +15,7 @@ export class GuestGuard implements CanActivate {
     const user = await this.supabase.getUser();
 
     if (user) {
-      await this.router.navigate(['/mural']);
+      await this.router.navigate(['/home']);
       return false;
     }
 

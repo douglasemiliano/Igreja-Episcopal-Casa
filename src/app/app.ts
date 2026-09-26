@@ -67,7 +67,7 @@ export class App implements OnInit {
   }
 
   mudouData() { this.router.navigateByUrl("/lecionario") }
-  goToHome() { this.router.navigateByUrl("/mural") }
+  goToHome() { this.router.navigateByUrl("/home") }
 
   toggleDarkMode() {
     this.isDarkMode = !this.isDarkMode;

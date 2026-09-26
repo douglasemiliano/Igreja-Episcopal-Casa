@@ -33,10 +33,22 @@ export class PerfilComponent implements OnInit {
     membro: 'Membro',
     leitor: 'Membro'
   };
-  readonly avatarPadrao = 'casa.png';
 
   get labels(): string[] {
     return this.roles.map((role) => this.labelsRole[role] ?? role);
+  }
+
+  /** Foto exibida no avatar: a pré-visualização enquanto edita, a salva caso contrário. */
+  get fotoExibida(): string {
+    return this.editando ? this.previaFoto : this.fotoUsuario;
+  }
+
+  get semFoto(): boolean {
+    return !this.fotoExibida || this.fotoQueFalhou === this.fotoExibida;
+  }
+
+  registrarErroFoto(url: string): void {
+    this.fotoQueFalhou = url;
   }
 
   // --- edição ---
@@ -49,6 +61,8 @@ export class PerfilComponent implements OnInit {
 
   novoNome = '';
   previaFoto = '';
+  /** URL que já falhou ao carregar; o Google às vezes responde 429. */
+  private fotoQueFalhou = '';
   novaSenha = '';
   confirmarSenha = '';
   @ViewChild('inputFoto') inputFoto?: ElementRef<HTMLInputElement>;
@@ -63,7 +77,7 @@ export class PerfilComponent implements OnInit {
     if (session) {
       const user = session.user;
       const metadata = user.user_metadata ?? {};
-      this.fotoUsuario = metadata['avatar_url'] || this.avatarPadrao;
+      this.fotoUsuario = metadata['avatar_url'] || '';
       this.nomeUsuario =
         metadata['name'] || metadata['full_name'] || user.email?.split('@')[0] || 'Usuário';
       this.emailUsuario = user.email || 'Email não informado';

@@ -1,0 +1,48 @@
+<div class="searchbar" [class.searchbar--inline]="inline" (click)="$event.stopPropagation()">
+
+  <div class="searchbar-field">
+    <mat-icon class="material-icons-outlined searchbar-icon">search</mat-icon>
+
+    <input
+      class="searchbar-input"
+      type="text"
+      role="combobox"
+      autocomplete="off"
+      aria-label="Buscar no menu"
+      [attr.aria-expanded]="painelAberto"
+      [placeholder]="placeholder"
+      [ngModel]="termo"
+      (ngModelChange)="aoDigitar($event)"
+      (keydown)="aoTeclar($event)">
+
+    @if (termo) {
+      <button class="searchbar-clear" type="button" aria-label="Limpar busca" (click)="limpar()">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </div>
+
+  @if (painelAberto) {
+    <div class="searchbar-panel" role="listbox">
+
+      @if (resultados.length) {
+        @for (item of resultados; track item.path; let i = $index) {
+          <a
+            class="searchbar-result"
+            role="option"
+            [class.ativo]="i === indiceAtivo"
+            [attr.aria-selected]="i === indiceAtivo"
+            [routerLink]="item.path"
+            (click)="selecionar(item, false)">
+            <mat-icon class="material-icons-outlined">{{ item.icon }}</mat-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      } @else {
+        <p class="searchbar-vazio">Nenhum item encontrado</p>
+      }
+
+    </div>
+  }
+
+</div>

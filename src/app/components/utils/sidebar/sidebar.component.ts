@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { Tooltip } from 'bootstrap';
 import { MatIcon } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
+import { SearchbarComponent } from '../searchbar/searchbar.component';
 import { CoreService } from '../../../services/core.service';
+import { MenuItem, MenuService } from '../../../services/menu.service';
 import { SupabaseService } from '../../../services/supabase.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, MatIcon, RouterModule],
+  imports: [CommonModule, MatIcon, RouterModule, SearchbarComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
@@ -23,10 +25,15 @@ export class SidebarComponent implements OnDestroy, OnInit {
  
   private coreService: CoreService = inject(CoreService);
   private supabaseService: SupabaseService = inject(SupabaseService);
+  private menuService: MenuService = inject(MenuService);
  
-  fotoUsuario: string;
+  fotoUsuario: string = '';
+  /** URL que já falhou ao carregar; o Google às vezes responde 429. */
+  private fotoQueFalhou = '';
   nomeUsuario: string = "Você";
   roles: string[] = ['membro'];
+  termoBusca = '';
+
   readonly labelsRole: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
@@ -41,7 +48,19 @@ export class SidebarComponent implements OnDestroy, OnInit {
   get labels(): string[] {
     return this.roles.map((role) => this.labelsRole[role] ?? role);
   }
-  avatarPadrao: string = 'https://imgs.search.brave.com/CFBTYPNRel95sDw00APELv5D4Ghs73sYYcN0-tLpV5U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tYXJr/ZXRwbGFjZS5jYW52/YS5jb20vZ0pseTAv/TUFHRGtNZ0pseTAv/MS90bC9jYW52YS11/c2VyLXByb2ZpbGUt/aWNvbi12ZWN0b3Iu/LWF2YXRhci1vci1w/ZXJzb24taWNvbi4t/cHJvZmlsZS1waWN0/dXJlLC1wb3J0cmFp/dC1zeW1ib2wuLU1B/R0RrTWdKbHkwLnBu/Zw';
+
+  get semFoto(): boolean {
+    return !this.fotoUsuario || this.fotoQueFalhou === this.fotoUsuario;
+  }
+
+  registrarErroFoto(url: string): void {
+    this.fotoQueFalhou = url;
+  }
+
+  /** Itens do menu que o usuário atual pode ver. */
+  get itensVisiveis(): MenuItem[] {
+    return this.menuService.disponiveis(this.roles);
+  }
   isMobile: boolean;
  
   constructor(private el: ElementRef, private router: Router) {
@@ -59,7 +78,7 @@ export class SidebarComponent implements OnDestroy, OnInit {
 
     this.coreService.usuario$.subscribe({
       next: (usuario) => {
-        this.fotoUsuario = usuario.foto || this.avatarPadrao;
+        this.fotoUsuario = usuario.foto || '';
         this.nomeUsuario = usuario.nome;
         this.roles = usuario.roles;
       }
@@ -79,7 +98,7 @@ export class SidebarComponent implements OnDestroy, OnInit {
       const metadata = user.user_metadata ?? {};
       this.coreService.setUsuario({
         nome: metadata['name'] || metadata['full_name'] || 'Você',
-        foto: metadata['avatar_url'] || this.avatarPadrao,
+        foto: metadata['avatar_url'] || '',
         roles
       });
     } catch (erro) {
@@ -93,12 +112,15 @@ export class SidebarComponent implements OnDestroy, OnInit {
 
  
   goHome(): void {
-    this.router.navigateByUrl('/mural');
+    this.router.navigateByUrl('/home');
   }
 
-  temPermissao(roles: string[] | null): boolean {
-    if (!roles || roles.length === 0) return true;
-    return roles.some((role) => this.roles.includes(role));
+  /** Escolher um item na busca fecha o menu lateral quando está no mobile. */
+  fecharNoMobile(): void {
+    this.termoBusca = '';
+    if (this.isMobile) {
+      this.sidenavToggle.emit();
+    }
   }
 
  

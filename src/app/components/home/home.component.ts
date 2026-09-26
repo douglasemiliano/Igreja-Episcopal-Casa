@@ -14,6 +14,9 @@ import { SupabaseService } from '../../services/supabase.service';
 export class HomeComponent implements OnInit {
   roles: string[] = ['membro'];
 
+  /** Espelha o `data.roles` de /dashboard em app.routes.ts. */
+  readonly rolesDashboard = ['administrador', 'pastor', 'secretaria', 'tesouraria'];
+
   private readonly supabase = inject(SupabaseService);
 
   async ngOnInit(): Promise<void> {

@@ -7,6 +7,7 @@
 
   <div class="quick-links" aria-label="Acessos rápidos">
 
+    @if (temPermissao(rolesDashboard)) {
     <a class="quick-link quick-link--primary" routerLink="/dashboard">
       <mat-icon>dashboard</mat-icon>
       <span>
@@ -15,6 +16,7 @@
       </span>
       <mat-icon class="arrow">arrow_forward</mat-icon>
     </a>
+    }
 
         @if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {
         <a class="quick-link" routerLink="/acoes">

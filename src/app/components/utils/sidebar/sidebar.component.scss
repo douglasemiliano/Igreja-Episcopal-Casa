@@ -53,33 +53,10 @@
   pointer-events: none;
 }
 
-/* --- TÍTULOS DE SEÇÃO (Home, Gestão, Outros) --- */
-.nav-section-label {
-  display: block; /* Garante que respeite altura e margens */
-  opacity: 1;
-  visibility: visible;
-  max-height: 40px; /* Ajuste para a altura média do seu texto */
-  transition: opacity 0.2s ease, 
-              visibility 0.2s ease, 
-              max-height 0.3s ease, 
-              margin 0.3s ease, 
-              padding 0.3s ease;
-}
+/* =========================================
+   COMPORTAMENTO PARA DISPOSITIVOS MÓVEIS (Telas até 768px)
+   ========================================= */
 
-/* Sumir completamente e zerar o espaço vertical das labels */
-.sidebar.collapsed .nav-section-label {
-  opacity: 0;
-  visibility: hidden;
-  max-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  overflow: hidden; /* Garante que o texto suma de vez */
-}
-
-
-/* --- COMPORTAMENTO PARA DISPOSITIVOS MÓVEIS (Telas até 768px) --- */
 @media (max-width: 768px) {
   :host {
     padding: 0;
@@ -108,7 +85,6 @@
 
   /* Garante que os textos fiquem sempre visíveis quando o menu abrir no mobile */
   .sidebar .brand-text,
-  .sidebar .nav-section-label,
   .sidebar .link-text,
   .sidebar .user-name,
   .sidebar .user-role {
@@ -183,7 +159,7 @@
   display: flex;
   flex-direction: column;
 
-  gap: 1.75rem;
+  gap: 0.75rem;
 
   overflow-y: auto;
   overflow-x: hidden;
@@ -194,32 +170,8 @@
 }
 
 
-.nav-section-label {
-  display: block;
-
-  font-size: 11px;
-  font-weight: 600;
-
-  letter-spacing: 0.08em;
-
-  text-transform: uppercase;
-
-  color: var(--logo-color);
-
-  padding: 0 0.75rem;
-
-  margin-bottom: 0.5rem;
-
-  white-space: nowrap;
-
-  overflow: hidden;
-
-  opacity: 1;
-
-  transition:
-    opacity 0.18s ease,
-    height 0.2s ease,
-    margin 0.2s ease;
+.sidebar-search {
+  flex-shrink: 0;
 }
 
 
@@ -376,6 +328,26 @@ ul.nav li .nav-link {
     flex-shrink: 0;
 
     border-radius: 50%;
+  }
+
+
+  /* Ícone que substitui a foto quando o usuário não tem imagem. */
+  .avatar-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: var(--active-background);
+    color: var(--active-text);
+
+    font-size: 1.05rem;
   }
 
 

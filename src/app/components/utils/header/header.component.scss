@@ -134,70 +134,14 @@
 
 /* =========================================
    BUSCA
-========================================= */
+   ========================================= */
 
-.search {
+.header-search {
   flex: 1;
-
   max-width: 320px;
-
-  height: 36px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 0.5rem;
-
   margin-left: auto;
-
-  padding: 0 0.9rem;
-
-  background-color: var(--surface-hover);
-
-  border-radius: 999px;
-
-  box-sizing: border-box;
-
-  transition:
-    background-color 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &:focus-within {
-    background-color: var(--card-background);
-
-    box-shadow:
-      0 0 0 2px rgba(0, 0, 0, 0.04);
-  }
-
-  .mat-icon {
-    width: 18px;
-    height: 18px;
-
-    flex-shrink: 0;
-
-    font-size: 18px;
-
-    color: var(--text-soft);
-  }
-
-  input {
-    width: 100%;
-
-    border: none;
-    outline: none;
-
-    background: transparent;
-
-    color: var(--text-color);
-
-    font-family: inherit;
-    font-size: 13px;
-
-    &::placeholder {
-      color: var(--text-soft);
-    }
-  }
 }
+
 
 
 /* =========================================
@@ -257,6 +201,20 @@
   }
 }
 
+/* Ícone que substitui a foto quando o usuário não tem imagem. */
+.avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--active-background);
+  color: var(--active-text);
+  font-size: 1.15rem;
+}
+
 .user-menu {
   position: absolute;
   top: calc(100% + 0.75rem);
@@ -282,6 +240,12 @@
     flex-shrink: 0;
     border-radius: 50%;
     object-fit: cover;
+  }
+
+  .avatar-fallback {
+    width: 48px;
+    height: 48px;
+    font-size: 1.6rem;
   }
 }
 
@@ -406,7 +370,7 @@
     gap: 1rem;
   }
 
-  .search {
+  .header-search {
     max-width: 240px;
   }
 }
@@ -418,7 +382,7 @@
     display: none;
   }
 
-  .search {
+  .header-search {
     max-width: none;
   }
 }
@@ -434,23 +398,32 @@
   }
 
   .header-content {
-    height: 52px;
+    height: auto;
 
+    flex-wrap: wrap;
     gap: 0.4rem;
+    row-gap: 0.5rem;
 
     padding: 0.5rem 0.75rem;
 
     border-radius: 15px;
   }
 
-  .search {
-    display: none;
+  /*
+   * No mobile a busca desce para uma segunda linha: na mesma linha só
+   * cabem o menu, o tema e o usuário. É por aqui que se navega, já que o
+   * menu lateral fica escondido atrás do botão.
+   */
+  .header-search {
+    order: 10;
+    flex-basis: 100%;
+    max-width: none;
+    margin-left: 0;
   }
 
   /*
-   * Com a busca oculta não existe mais o `margin-left: auto`
-   * dela, então o botão de tema passa a empurrar o grupo
-   * (tema + usuário) para o lado direito.
+   * Com a busca em outra linha, o `margin-left: auto` dela não empurra
+   * mais nada, então o botão de tema assume o papel.
    */
   .icon-button {
     margin-left: auto;

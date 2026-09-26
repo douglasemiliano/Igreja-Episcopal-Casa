@@ -85,13 +85,10 @@
 
 .login-logo {
   margin-bottom: 1.2rem;
-
-  img {
-    width: 58px;
-    height: 50px;
-
-    object-fit: contain;
-  }
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 
@@ -414,18 +411,9 @@
 }
 
 
-.facebook {
-  color: #1877f2;
-
-  background-color: transparent;
-
-  font-family: Arial, sans-serif;
-}
-
-
 /* =====================================================
    CADASTRO
-===================================================== */
+   ===================================================== */
 
 .signup-text {
   margin: 1.7rem 0 0;
@@ -620,3 +608,31 @@
     }
   }
 }
+
+.logo-casa {
+  width: 50px !important;       /* Dimensão otimizada para alinhar com os outros ícones */
+  height: 50px !important;      /* Dimensão otimizada */
+  color: var(--logo-color) !important;               /* Cor aplicada via currentColor */
+  display: inline-block !important; 
+  vertical-align: middle;
+  
+  /* PULO DO GATO: Impede que o flexbox esmague o SVG no colapso */
+  flex-shrink: 0 !important;    
+}
+
+  .brand-text {
+    font-family: 'Bebas Neue', sans-serif;
+    // letter-spacing: 1px;
+    font-size: 18px;
+    opacity: 1;
+    transform: translateX(0);
+    transition:opacity 0.18s ease,
+    transform 0.18s ease;
+    display:flex;
+    flex-direction:column;
+
+    :nth-child(2) {
+      margin-top: -0.5rem;
+      color: var(--logo-color)
+    }
+  }

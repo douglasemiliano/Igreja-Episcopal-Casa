@@ -27,259 +27,52 @@
   <!-- MENU -->
   <div class="nav-scroll" (click)="onNavClick($event)">
 
-    <!-- HOME -->
-    <section class="nav-section">
+    @if (!collapsed) {
+      <app-searchbar
+        class="sidebar-search"
+        placeholder="Buscar no menu..."
+        [inline]="true"
+        [(termo)]="termoBusca"
+        (navegou)="fecharNoMobile()">
+      </app-searchbar>
+    }
 
-      @if(!collapsed){
-      <span class="nav-section-label">
-        Home
-      </span>
-      }
-
+    @if (termoBusca.trim()) {
+      <!-- Durante a busca o menu some: o searchbar ocupa o lugar dele. -->
+    } @else {
       <ul class="nav">
 
-        <li>
-          <a routerLink="/mural" routerLinkActive="active" class="nav-link">
+        @for (item of itensVisiveis; track item.path) {
+          <li>
+            <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
 
-            <mat-icon class="material-icons-outlined">
-              campaign
-            </mat-icon>
+              <mat-icon class="material-icons-outlined">
+                {{ item.icon }}
+              </mat-icon>
 
-            <span class="link-text">
-              Mural
-            </span>
+              <span class="link-text">
+                {{ item.label }}
+              </span>
 
-          </a>
-        </li>
-
-        <li>
-          <a routerLink="/home" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              home
-            </mat-icon>
-
-            <span class="link-text">
-              Central
-            </span>
-
-          </a>
-        </li>
-
-
-        <li>
-          <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              dashboard
-            </mat-icon>
-
-            <span class="link-text">
-              Dashboard
-            </span>
-
-          </a>
-        </li>
-
-      </ul>
-
-    </section>
-
-
-    <!-- GESTÃO -->
-    <section class="nav-section">
-
-      <span class="nav-section-label">
-        Gestão
-      </span>
-
-      <ul class="nav">
-
-        <li>
-          <a routerLink="/membros" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              groups
-            </mat-icon>
-
-            <span class="link-text">
-              Membros
-            </span>
-
-          </a>
-        </li>
-
-
-        @if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {
-        <li>
-          <a routerLink="/acoes" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              payments
-            </mat-icon>
-
-            <span class="link-text">
-              Caixa
-            </span>
-
-          </a>
-        </li>
-        }
-
-
-        @if (temPermissao(['administrador', 'secretaria', 'caixa', 'tesouraria', 'pastor'])) {
-        <li>
-          <a routerLink="/relatorios-caixas" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              bar_chart
-            </mat-icon>
-
-            <span class="link-text">
-              Relatórios de Caixas
-            </span>
-
-          </a>
-        </li>
-        }
-
-
-        <li>
-          <a routerLink="/agenda" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              calendar_month
-            </mat-icon>
-
-            <span class="link-text">
-              Agenda
-            </span>
-
-          </a>
-        </li>
-
-      </ul>
-
-    </section>
-
-
-    <!-- OUTROS -->
-    <section class="nav-section">
-
-      <span class="nav-section-label">
-        Outros
-      </span>
-
-      <ul class="nav">
-
-        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
-        <li>
-          <a routerLink="/certificado" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              workspace_premium
-            </mat-icon>
-
-            <span class="link-text">
-              Certificados
-            </span>
-
-          </a>
-        </li>
-        }
-
-
-        <li>
-          <a routerLink="/lecionario" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              menu_book
-            </mat-icon>
-
-            <span class="link-text">
-              Lecionário
-            </span>
-
-          </a>
-        </li>
-
-
-        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
-        <li>
-          <a routerLink="/lecionario/listar" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              bookmarks
-            </mat-icon>
-
-            <span class="link-text">
-              Gerenciar lecionários
-            </span>
-
-          </a>
-        </li>
-        }
-
-
-        @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
-        <li>
-          <a routerLink="/livro" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              auto_stories
-            </mat-icon>
-
-            <span class="link-text">
-              Livros de Registro
-            </span>
-
-          </a>
-        </li>
+            </a>
+          </li>
         }
 
       </ul>
-
-    </section>
-
-
-    <!-- ADMINISTRAÇÃO -->
-    @if (temPermissao(['administrador', 'pastor'])) {
-    <section class="nav-section">
-
-      <span class="nav-section-label">
-        Administração
-      </span>
-
-      <ul class="nav">
-
-        <li>
-          <a routerLink="/usuarios" routerLinkActive="active" class="nav-link">
-
-            <mat-icon class="material-icons-outlined">
-              manage_accounts
-            </mat-icon>
-
-            <span class="link-text">
-              Usuários
-            </span>
-
-          </a>
-        </li>
-
-      </ul>
-
-    </section>
     }
 
   </div>
-
 
   <!-- FOOTER -->
   <div class="sidebar-footer">
 
     <div class="user-card">
 
-      <img [src]="fotoUsuario" alt="">
+      @if (semFoto) {
+        <mat-icon class="avatar-fallback" aria-hidden="true">person</mat-icon>
+      } @else {
+        <img [src]="fotoUsuario" alt="" (error)="registrarErroFoto(fotoUsuario)">
+      }
 
       <div class="d-flex flex-column">
         <span class="user-name">

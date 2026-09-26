@@ -13,7 +13,7 @@ export class RoleGuard implements CanActivate {
     const pode = await this.supabase.temAlgumaRole(allowed);
     if (pode) return true;
 
-    await this.router.navigate(['/mural']);
+    await this.router.navigate(['/home']);
     return false;
   }
 }
