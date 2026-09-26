@@ -1,14 +1,12 @@
 <div class="container mt-4">
   <header class="relatorios-heading">
     <div>
-      <p class="eyebrow">Relatórios</p>
-      <h1>Relatório de caixas</h1>
-      <p>Consulte os caixas do dia e os detalhes de cada caixa.</p>
+      <p class="eyebrow">Caixas</p>
+      <h1>Histórico e relatórios</h1>
+      <p>Cada caixa com o que entrou, o que saiu e o que ficou para a igreja. Clique para abrir o relatório completo.</p>
     </div>
     <div class="relatorios-actions">
       <button type="button" class="refresh-button" (click)="carregarBase()">Atualizar</button>
-      <button type="button" class="refresh-button" [disabled]="!linha" (click)="exportarExcel()">Excel</button>
-      <button type="button" class="refresh-button" [disabled]="!linha" (click)="exportarPdf()">PDF</button>
     </div>
   </header>
 
@@ -17,104 +15,267 @@
   }
 
   @if (carregando) {
-    <p class="empty-state">Carregando relatórios...</p>
+    <p class="empty-state">Carregando caixas...</p>
+  } @else if (!caixas.length) {
+    <p class="empty-state">Nenhum caixa registrado ainda.</p>
   } @else {
-
-    
-    <!-- <section class="resumo-panel">
-      <div class="panel-heading">
-        <div>
-          <h2>Detalhes do caixa</h2>
-          <small>As informações dos gráficos refletem o caixa selecionado</small>
-        </div>
-        <select class="caixa-select" [(ngModel)]="caixaSelecionadaId" (change)="selecionarCaixa()" aria-label="Selecionar caixa">
-          <option value="">Todos os caixas do dia</option>
-          @for (caixa of caixasDisponiveis; track caixa.id) {
-            <option [value]="caixa.id">{{ rotuloCaixa(caixa) }}</option>
+    <section class="resumo-panel">
+      <div class="relatorios-filtro">
+        <label class="filter-label" for="filtro-acao">Filtrar por ação</label>
+        <select id="filtro-acao" [(ngModel)]="filtroCategoria" name="filtro_acao">
+          <option value="">Todas as ações</option>
+          @for (categoria of categorias; track categoria) {
+            <option [value]="categoria">{{ nomeCategoria(categoria) }}</option>
           }
         </select>
+        <small class="filter-hint">O filtro vale para os totais da lista, para o relatório e para a exportação.</small>
       </div>
 
-      @if (linha) {
-        <div class="resumo-cards">
-          <div class="resumo-card resumo-card--highlight">
-            <span>Arrecadado no caixa</span>
-            <strong>{{ formatarMoeda(totalArrecadado) }}</strong>
-            <small>vendas pagas</small>
-          </div>
-          <div class="resumo-card resumo-card--warning">
-            <span>Fiado em aberto</span>
-            <strong>{{ formatarMoeda(totalFiado) }}</strong>
-            <small>aguardando pagamento</small>
-          </div>
-          <div class="resumo-card">
-            <span>Valor esperado</span>
-            <strong>{{ formatarMoeda(linha.valorEsperado) }}</strong>
-            <small>calculado no fechamento</small>
-          </div>
-          <div class="resumo-card">
-            <span>Diferença</span>
-            <strong [class.negativa]="linha.diferenca < 0">{{ formatarMoeda(linha.diferenca) }}</strong>
-            <small>informado × esperado</small>
-          </div>
-        </div>
-
-        <div class="resumo-breakdown">
-          <div class="resumo-panel">
-            <div class="panel-heading"><h2>Por categoria</h2></div>
-            @for (item of totaisCategoria; track item.nome) {
-              <div class="resumo-linha"><span>{{ item.nome }}</span><strong>{{ formatarMoeda(item.total) }}</strong></div>
-            } @empty {
-              <p class="empty-state">Sem vendas pagas.</p>
-            }
-          </div>
-          <div class="resumo-panel">
-            <div class="panel-heading"><h2>Por forma de pagamento</h2></div>
-            @for (item of totaisForma; track item.nome) {
-              <div class="resumo-linha"><span>{{ item.nome }}</span><strong>{{ formatarMoeda(item.total) }}</strong></div>
-            } @empty {
-              <p class="empty-state">Sem vendas pagas.</p>
-            }
-          </div>
-        </div>
-
-        <div class="resumo-panel">
-          <div class="panel-heading"><h2>Dados do caixa</h2></div>
-          <article class="caixa-item">
-            <div class="caixa-item-head">
-              <strong>{{ rotuloCaixaSelecionada() }}</strong>
-              <small>aberto em {{ formatarDataHora(linha.abertoEm) }} · fechado em {{ formatarDataHora(linha.fechadoEm) }}</small>
-            </div>
-            <div class="caixa-item-grid">
-              <div><span>Abertura</span><strong>{{ formatarMoeda(linha.valorAbertura) }}</strong></div>
-              <div><span>Total vendido</span><strong>{{ formatarMoeda(linha.totalVendas) }}</strong></div>
-              <div><span>Fiado</span><strong>{{ formatarMoeda(linha.totalFiado) }}</strong></div>
-              <div><span>Esperado</span><strong>{{ formatarMoeda(linha.valorEsperado) }}</strong></div>
-              <div><span>Informado</span><strong>{{ formatarMoeda(linha.valorFechamentoInformado) }}</strong></div>
-              <div>
-                <span>Diferença</span>
-                <strong [class.negativa]="linha.diferenca < 0">{{ formatarMoeda(linha.diferenca) }}</strong>
-              </div>
-            </div>
-          </article>
-        </div>
-      } @else {
-        <p class="empty-state">Escolha um caixa para ver os detalhes e filtrar os gráficos.</p>
+      @if (caixaAberto) {
+        <p class="aviso">
+          Há um caixa aberto agora. Feche-o antes de reabrir qualquer caixa anterior.
+        </p>
       }
-    </section> -->
+
+      <div class="caixas-lista">
+        @for (caixa of caixas; track caixa.id) {
+          <article class="caixa-linha" [class.caixa-linha--aberto]="caixa.status === 'aberto'">
+            <button type="button" class="caixa-linha-head" (click)="alternarResumo(caixa.id)" [attr.aria-expanded]="caixaExpandido === caixa.id">
+              <div class="caixa-linha-ident">
+                <span class="status-pill" [class.status-pill--aberto]="caixa.status === 'aberto'">
+                  {{ caixa.status === 'aberto' ? 'Aberto' : 'Fechado' }}
+                </span>
+                <div>
+                  <strong>{{ rotuloCaixa(caixa) }}</strong>
+                  <small>
+                    aberto às {{ formatarHora(caixa.aberto_em) }}
+                    @if (caixa.fechado_em) {
+                      · fechado às {{ formatarHora(caixa.fechado_em) }}
+                    }
+                  </small>
+                </div>
+              </div>
+
+              <div class="caixa-linha-valores">
+                <div>
+                  <span>Vendido</span>
+                  <strong>{{ formatarMoeda(totalVendido(caixa.id)) }}</strong>
+                </div>
+                <div>
+                  <span>Recebido</span>
+                  <strong>{{ formatarMoeda(totalRecebido(caixa.id)) }}</strong>
+                </div>
+                <div>
+                  <span>Saídas</span>
+                  <strong>{{ formatarMoeda(totalSaidas(caixa.id)) }}</strong>
+                </div>
+                <div>
+                  <span>Fica para a igreja</span>
+                  <strong>{{ formatarMoeda(fechadoParaIgreja(caixa.id)) }}</strong>
+                </div>
+              </div>
+
+              <span class="caixa-linha-toggle">{{ caixaExpandido === caixa.id ? 'Fechar' : 'Ver relatório' }}</span>
+            </button>
+
+            @if (totalPendente(caixa.id) > 0) {
+              <p class="caixa-linha-fiado">
+                <span class="fiado-dot"></span>
+                Fiado em aberto: {{ formatarMoeda(totalPendente(caixa.id)) }}
+              </p>
+            }
+
+            @if (caixaExpandido === caixa.id) {
+              <div class="caixa-relatorio">
+                <section class="relatorio-bloco">
+                  <h3>Fechamento da gaveta</h3>
+                  <div class="caixa-item-grid">
+                    <div><span>Valor inicial</span><strong>{{ formatarMoeda(valorInicial(caixa)) }}</strong></div>
+                    <div><span>Recebido em dinheiro</span><strong>{{ formatarMoeda(totalRecebidoDinheiro(caixa.id)) }}</strong></div>
+                    <div><span>Saídas</span><strong>- {{ formatarMoeda(totalSaidas(caixa.id)) }}</strong></div>
+                    <div class="destaque"><span>Esperado na gaveta</span><strong>{{ formatarMoeda(valorEsperadoEmCaixa(caixa)) }}</strong></div>
+                    <div>
+                      <span>Contado</span>
+                      <strong>
+                        @if (caixa.valor_fechamento_informado === null || caixa.valor_fechamento_informado === undefined) {
+                          —
+                        } @else {
+                          {{ formatarMoeda(paraNumero(caixa.valor_fechamento_informado)) }}
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Diferença</span>
+                      <strong [class.negativa]="paraNumero(caixa.diferenca) < 0">
+                        @if (caixa.diferenca === null || caixa.diferenca === undefined) {
+                          —
+                        } @else {
+                          {{ formatarMoeda(paraNumero(caixa.diferenca)) }}
+                        }
+                      </strong>
+                    </div>
+                  </div>
+                  @if (caixa.valor_esperado !== null && caixa.valor_esperado !== undefined) {
+                    <small class="relatorio-nota">
+                      Esperado registrado no fechamento: {{ formatarMoeda(paraNumero(caixa.valor_esperado)) }}
+                    </small>
+                  } @else {
+                    <small class="relatorio-nota">Este caixa ainda não foi fechado.</small>
+                  }
+                </section>
+
+                <div class="resumo-breakdown">
+                  <section class="relatorio-bloco">
+                    <h3>Por ação</h3>
+                    @for (categoria of categorias; track categoria) {
+                      <div class="resumo-linha">
+                        <span>{{ nomeCategoria(categoria) }}</span>
+                        <strong>{{ formatarMoeda(totalPorCategoria(caixa.id, categoria)) }}</strong>
+                      </div>
+                    }
+                  </section>
+
+                  <section class="relatorio-bloco">
+                    <h3>Por forma de pagamento</h3>
+                    @for (forma of formas; track forma) {
+                      <div class="resumo-linha">
+                        <span>{{ nomeForma(forma) }}</span>
+                        <strong>
+                          {{ formatarMoeda(totalPorForma(caixa.id, forma)) }}
+                          <small class="resumo-linha-qtd">{{ quantidadePorForma(caixa.id, forma) }} venda(s)</small>
+                        </strong>
+                      </div>
+                    }
+                  </section>
+                </div>
+
+                @if (saidasDoCaixa(caixa.id).length) {
+                  <section class="relatorio-bloco">
+                    <h3>Saídas</h3>
+                    <div class="relatorio-lista">
+                      @for (saida of saidasDoCaixa(caixa.id); track saida.id) {
+                        <div class="relatorio-linha relatorio-linha--saida">
+                          <div>
+                            <strong>{{ saida.motivo }}</strong>
+                            <small>{{ formatarDataHora(saida.criado_em) }}</small>
+                          </div>
+                          <div class="relatorio-linha-valor">
+                            <strong>- {{ formatarMoeda(paraNumero(saida.valor_efetivo)) }}</strong>
+                            @if (paraNumero(saida.troco) > 0) {
+                              <small>
+                                tirou {{ formatarMoeda(paraNumero(saida.valor)) }} e voltou
+                                {{ formatarMoeda(paraNumero(saida.troco)) }}
+                              </small>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </section>
+                }
+
+                @if (devedoresDoCaixa(caixa.id).length) {
+                  <section class="relatorio-bloco">
+                    <h3>Devedores</h3>
+                    <div class="relatorio-lista">
+                      @for (devedor of devedoresDoCaixa(caixa.id); track devedor.dataVenda + devedor.total + devedor.nome) {
+                        <div class="relatorio-linha">
+                          <div>
+                            <strong>{{ devedor.nome }}</strong>
+                            <small>{{ devedor.itens }} · {{ formatarData(devedor.dataVenda) }}</small>
+                            @if (devedor.telefone || devedor.email) {
+                              <small>{{ devedor.telefone || devedor.email }}</small>
+                            }
+                          </div>
+                          <div class="relatorio-linha-valor">
+                            <strong>{{ formatarMoeda(devedor.total) }}</strong>
+                            <small>a receber</small>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </section>
+                }
+
+                <section class="relatorio-bloco">
+                  <h3>Vendas</h3>
+                  @if (!vendasDoCaixa(caixa.id).length) {
+                    <p class="empty-state">Nenhuma venda neste caixa.</p>
+                  } @else {
+                    <div class="tabela-wrapper">
+                      <table class="tabela-relatorio">
+                        <thead>
+                          <tr>
+                            <th>Item</th>
+                            <th>Ação</th>
+                            <th>Quem</th>
+                            <th>Pagamento</th>
+                            <th>Situação</th>
+                            <th class="num">Valor</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (venda of vendasDoCaixa(caixa.id); track venda.id) {
+                            <tr>
+                              <td>{{ venda.quantidade }}x {{ venda.descricao }}</td>
+                              <td>{{ nomeCategoria(venda.categoria) }}</td>
+                              <td>{{ venda.membro?.nome_completo || 'Avulso' }}</td>
+                              <td>{{ nomeForma(venda.forma_pagamento) }}</td>
+                              <td>
+                                <span class="situacao-pill" [class.situacao-pill--pendente]="venda.status === 'pendente'">
+                                  {{ venda.status === 'pendente' ? 'Pendente' : venda.status === 'cancelado' ? 'Cancelada' : 'Paga' }}
+                                </span>
+                              </td>
+                              <td class="num">{{ formatarMoeda(paraNumero(venda.valor_total)) }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                </section>
+
+                @if (caixa.observacoes_reabertura) {
+                  <p class="relatorio-observacao">Reabertura: {{ caixa.observacoes_reabertura }}</p>
+                }
+                @if (caixa.observacoes_fechamento) {
+                  <p class="relatorio-observacao">Fechamento: {{ caixa.observacoes_fechamento }}</p>
+                }
+
+                <div class="relatorio-acoes">
+                  <button type="button" class="refresh-button" (click)="exportarPdf(caixa)">Baixar PDF</button>
+                  <button type="button" class="refresh-button" (click)="exportarCsv(caixa)">Baixar CSV</button>
+
+                  @if (podeReabrir(caixa)) {
+                    <button type="button" class="refresh-button refresh-button--primary" (click)="abrirModalReabertura(caixa)">
+                      Reabrir este caixa
+                    </button>
+                    <small class="relatorio-nota">Use para registrar a quitação de um fiado deste turno.</small>
+                  }
+                </div>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    </section>
 
     <section class="resumo-panel caixa-dia-card">
       <div class="panel-heading">
         <div>
-          <h2>Detalhes</h2>
-          <small>As informações dos gráficos refletem o caixa selecionado</small>
+          <h2>Gráficos do dia</h2>
+          <small>Os gráficos refletem o dia selecionado e, se escolher, um caixa só</small>
         </div>
-        <select class="caixa-select" [(ngModel)]="caixaSelecionadaId" (change)="selecionarCaixa()" aria-label="Selecionar caixa">
-          <option value="">Todos os caixas do dia</option>
-          @for (caixa of caixasDisponiveis; track caixa.id) {
-            <option [value]="caixa.id">{{ rotuloCaixa(caixa) }}</option>
-          }
-        </select>
+        <div class="dia-controles">
+          <label class="filter-label" for="dia_caixa">Dia</label>
+          <input id="dia_caixa" class="day-input" type="date" [(ngModel)]="diaCaixa" (change)="carregarCaixasDia()" />
+          <select class="caixa-select" [(ngModel)]="caixaSelecionadaId" (change)="selecionarCaixa()" aria-label="Selecionar caixa">
+            <option value="">Todos os caixas</option>
+            @for (caixa of caixas; track caixa.id) {
+              <option [value]="caixa.id">{{ rotuloCaixa(caixa) }}</option>
+            }
+          </select>
+        </div>
       </div>
 
       @if (carregandoCaixasDia) {
@@ -123,7 +284,7 @@
         <p class="empty-state">Nenhum caixa aberto neste dia.</p>
       } @else {
         <div class="metric-grid">
-          <div class="metric-card"><span>Arrecadado no dia</span><strong>{{ formatarMoeda(totalArrecadado) }}</strong><small>vendas pagas</small></div>
+          <div class="metric-card"><span>Arrecadado no dia</span><strong>{{ formatarMoeda(totalDia) }}</strong><small>vendas pagas</small></div>
           <div class="metric-card metric-card--warning"><span>Fiado no dia</span><strong>{{ formatarMoeda(fiadoDia) }}</strong><small>aguardando pagamento</small></div>
           <div class="metric-card"><span>Caixas no dia</span><strong>{{ caixasDia.length }}</strong><small>{{ caixasDia.length === 1 ? 'caixa aberto' : 'caixas abertos' }}</small></div>
         </div>
@@ -148,7 +309,7 @@
         </div>
 
         <div class="caixas-dia-list">
-          <div class="panel-heading"><h2>Valores de cada caixa</h2></div>
+          <div class="panel-heading"><h2>Valores de cada caixa do dia</h2></div>
           @for (caixa of caixasDia; track caixa.id; let indice = $index) {
             <div class="caixa-dia-row" (click)="selecionarCaixaPorId(caixa.id)" [class.selecionado]="caixa.id === caixaSelecionadaId">
               <div class="caixa-dia-info">
@@ -166,6 +327,47 @@
         </div>
       }
     </section>
-
   }
 </div>
+
+@if (modalReabrirAberto && caixaParaReabrir) {
+  <div class="modal-backdrop" role="presentation" (click)="fecharModalReabertura()">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reabrir-title" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">Corrigir o caixa de {{ formatarData(caixaParaReabrir.aberto_em) }}</p>
+          <h2 id="reabrir-title">Reabrir caixa</h2>
+          <p>As vendas e o fiado deste caixa voltam a aparecer, para você registrar a quitação.</p>
+        </div>
+        <button type="button" class="modal-close" (click)="fecharModalReabertura()" aria-label="Fechar">&times;</button>
+      </div>
+
+      <div class="reabertura-aviso">
+        <strong>O fechamento anterior será substituído.</strong>
+        <span>
+          Quando você fechar de novo, os números deste caixa serão os novos.
+          Se a reabertura for um engano, feche o caixa em seguida e nada se perde.
+        </span>
+      </div>
+
+      @if (totalPendente(caixaParaReabrir.id) > 0) {
+        <div class="reabertura-aviso reabertura-aviso--fiado">
+          <span>Este caixa tem {{ formatarMoeda(totalPendente(caixaParaReabrir.id)) }} de fiado em aberto.</span>
+        </div>
+      }
+
+      <label class="field field-wide">
+        <span class="field-label">Por que está reabrindo</span>
+        <input [(ngModel)]="observacoesReabertura" name="obs_reabertura" placeholder="Quitação de fiado da hamburgada">
+        <small class="field-hint">Obrigatório. Fica registrado na reabertura deste caixa.</small>
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="refresh-button" (click)="fecharModalReabertura()">Cancelar</button>
+        <button type="button" class="refresh-button refresh-button--primary" [disabled]="salvando" (click)="confirmarReabertura()">
+          {{ salvando ? 'Reabrindo...' : 'Reabrir caixa' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

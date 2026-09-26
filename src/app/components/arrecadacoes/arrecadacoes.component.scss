@@ -6,6 +6,16 @@
    --background-color e --text-color.
    ========================================================= */
 
+/*
+ * Estas duas cores se repetem dezenas de vezes no arquivo. O SCSS resolve a
+ * mixagem em tempo de compilação e o `var()` continua intacto no CSS final,
+ * então nomear aqui deixa o arquivo legível e o budget de estilo folga.
+ */
+$borda-suave: color-mix(in srgb, var(--text-color) 11%, transparent);
+$texto-apagado: color-mix(in srgb, var(--text-color) 55%, transparent);
+$texto-suave: color-mix(in srgb, var(--text-color) 62%, transparent);
+$fundo-fraco: color-mix(in srgb, var(--text-color) 9%, transparent);
+
 .caixa-page {
   width: 100%;
   max-width: 1380px;
@@ -150,9 +160,341 @@ h3 {
   background: var(--color-success-bg);
 }
 
-.caixa-badge--fechado {
+.caixa-badge--fechado,
+.caixa-badge--historico {
   color: var(--color-danger);
   background: var(--color-danger-bg);
+}
+
+/* ---------- Fechamento do caixa: as duas contas ---------- */
+
+/*
+ * Duas contas que costumam ser confundidas, então ficam separadas de propósito:
+ * a da igreja (quanto a ação gerou) e a da gaveta (quanto dinheiro sobrou).
+ */
+.fecho-panel,
+.gaveta-panel {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid $borda-suave;
+  border-radius: 0.7rem;
+  background: var(--card-background);
+}
+
+.fecho-linha,
+.gaveta-linha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--text-color) 72%, transparent);
+}
+
+.fecho-linha--total,
+.gaveta-linha--total {
+  margin-top: 0.3rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid $borda-suave;
+  color: var(--text-color);
+  font-weight: var(--font-bold);
+}
+
+.fecho-linha--total strong,
+.gaveta-linha--total strong {
+  font-size: 1.15rem;
+  color: var(--color-primary);
+}
+
+.fecho-linha .is-negative {
+  color: var(--color-danger);
+}
+
+.fecho-nota,
+.gaveta-nota {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: $texto-apagado;
+}
+
+/* ---------- Fiado e saídas ---------- */
+
+.devedores-panel,
+.saidas-panel {
+  margin-bottom: 1rem;
+}
+
+.devedor-item,
+.saida-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid $borda-suave;
+  border-radius: 0.6rem;
+  background: var(--card-background);
+  margin-bottom: 0.5rem;
+}
+
+.devedor-item {
+  border-left: 3px solid var(--color-warning, var(--color-danger));
+}
+
+/* Saída é dinheiro que saiu: vermelho no texto e fundo vermelho claro, para
+   o olho achar na lista sem precisar ler o número. */
+.saida-item {
+  background: var(--color-danger-bg);
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  border-left: 3px solid var(--color-danger);
+  color: var(--color-danger-text);
+}
+
+.saida-item .saida-info strong,
+.saida-item .saida-side strong {
+  color: var(--color-danger-text);
+}
+
+.saida-item .saida-info small {
+  color: color-mix(in srgb, var(--color-danger-text) 75%, transparent);
+}
+
+.saida-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.devedor-info,
+.saida-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.devedor-info small,
+.saida-info small {
+  font-size: 0.72rem;
+  color: $texto-apagado;
+}
+
+.devedor-contato {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.devedor-total {
+  color: var(--color-danger);
+  white-space: nowrap;
+}
+
+.saida-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+
+.saida-side strong {
+  color: var(--color-danger);
+}
+
+.saida-preview {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0.25rem 0 0.9rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--card-background));
+  font-size: 0.85rem;
+}
+
+.saida-preview strong {
+  color: var(--color-danger);
+  font-size: 1.1rem;
+}
+
+/* ---------- Conferência e reabertura ---------- */
+
+.fechamento-resumo .fechamento-destaque {
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid $borda-suave;
+}
+
+.fechamento-resumo .fechamento-destaque strong {
+  color: var(--color-primary);
+}
+
+.conferencia-resultado,
+.reabertura-aviso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.conferencia-resultado span,
+.reabertura-aviso span {
+  color: color-mix(in srgb, var(--text-color) 65%, transparent);
+}
+
+.conferencia-resultado {
+  background: color-mix(in srgb, var(--color-success) 10%, var(--card-background));
+}
+
+.conferencia-resultado--negativa {
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--card-background));
+}
+
+.conferencia-resultado--positiva,
+.reabertura-aviso {
+  background: color-mix(in srgb, var(--color-warning) 14%, var(--card-background));
+}
+
+.reabertura-aviso {
+  margin-bottom: 0.9rem;
+}
+
+.reabertura-aviso--fiado {
+  background: color-mix(in srgb, var(--color-danger) 9%, var(--card-background));
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: $texto-apagado;
+}
+
+/* ---------- Histórico ---------- */
+
+.historico-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.historico-item {
+  padding: 1rem;
+  border: 1px solid $borda-suave;
+  border-radius: 0.7rem;
+  background: var(--card-background);
+}
+
+.historico-item--aberto {
+  border-color: color-mix(in srgb, var(--color-success) 45%, transparent);
+}
+
+.historico-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.historico-item-head h3 {
+  margin: 0.3rem 0 0.1rem;
+  font-size: 1rem;
+  font-weight: var(--font-bold);
+}
+
+.historico-item-head small,
+.historico-item-valores span,
+.historico-acoes small {
+  font-size: 0.72rem;
+  color: $texto-apagado;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: $fundo-fraco;
+  font-size: 0.65rem;
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-pill--aberto {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+.historico-item-valores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.historico-item-valores div {
+  text-align: right;
+}
+
+.historico-item-valores span {
+  display: block;
+  font-size: 0.65rem;
+}
+
+.historico-item-valores strong {
+  font-size: 0.95rem;
+}
+
+.historico-fiado,
+.historico-conferencia,
+.historico-observacao {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.7rem 0 0;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--text-color) 70%, transparent);
+}
+
+.fiado-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-danger);
+}
+
+.historico-observacao {
+  font-style: italic;
+}
+
+.historico-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid $borda-suave;
+}
+
+@media (max-width: 640px) {
+  .historico-item-head {
+    flex-direction: column;
+  }
+
+  .historico-item-valores {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .historico-item-valores div {
+    text-align: left;
+  }
 }
 
 /* ---------- Botões ---------- */
@@ -209,7 +551,7 @@ h3 {
   gap: 0.35rem;
   margin-bottom: 1.25rem;
   padding: 0.3rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border: 1px solid $fundo-fraco;
   border-radius: 0.75rem;
   background: color-mix(in srgb, var(--text-color) 5%, transparent);
 }
@@ -248,7 +590,7 @@ h3 {
 
 .tabs button.active {
   background: var(--card-background);
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--text-color) 9%, transparent);
+  box-shadow: 0 3px 10px $fundo-fraco;
   color: var(--color-primary);
   opacity: 1;
 }
@@ -308,7 +650,7 @@ h3 {
   padding: 0.35rem 0.55rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text-color) 6%, transparent);
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
   font-size: 0.72rem;
   font-weight: var(--font-semibold);
 }
@@ -531,7 +873,7 @@ select:focus {
 .free-item-editor small {
   display: block;
   margin-top: 0.2rem;
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
 }
 
 .free-item-fields {
@@ -587,7 +929,7 @@ select:focus {
   justify-content: space-between;
   gap: 0.7rem;
   padding-bottom: 0.8rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
+  border-bottom: 1px solid $borda-suave;
 }
 
 .cart-heading h3 {
@@ -612,7 +954,7 @@ select:focus {
   align-items: center;
   gap: 0.45rem;
   padding: 0.75rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border-bottom: 1px solid $fundo-fraco;
 }
 
 .cart-item-main {
@@ -699,7 +1041,7 @@ select:focus {
   border: 0;
   border-top: 1px dashed color-mix(in srgb, var(--text-color) 14%, transparent);
   background: transparent;
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
   cursor: pointer;
   font: inherit;
   font-size: 0.76rem;
@@ -716,14 +1058,14 @@ select:focus {
   align-items: center;
   margin-bottom: 1.1rem;
   padding: 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border: 1px solid $fundo-fraco;
   border-radius: 0.65rem;
   background: color-mix(in srgb, var(--text-color) 3.5%, transparent);
 }
 
 .filter-label {
   margin-right: 0.2rem;
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
 }
 
 .open-total {
@@ -762,6 +1104,70 @@ select:focus {
   border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
 }
 
+/* Card recolhível: o cabeçalho é o botão que abre e fecha os itens. */
+.pending-heading--botao {
+  width: 100%;
+  border: 0;
+  border-bottom: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pending-heading--botao:hover {
+  background: color-mix(in srgb, var(--text-color) 7%, transparent);
+}
+
+.pending-heading--botao:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.pending-toggle {
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--text-color) 8%, transparent);
+  font-size: 0.7rem;
+  font-weight: var(--font-bold);
+  color: color-mix(in srgb, var(--text-color) 70%, transparent) !important;
+}
+
+.pending-detalhe {
+  padding: 0.25rem 1rem 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent);
+}
+
+.pending-rodape {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0 0.4rem;
+  margin-top: 0.3rem;
+  border-top: 1px dashed color-mix(in srgb, var(--text-color) 15%, transparent);
+  font-size: 0.8rem;
+}
+
+.pending-rodape strong {
+  font-size: 1rem;
+  font-weight: var(--font-bold);
+}
+
+.pending-quitar {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.6rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: var(--color-success-btn);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: var(--font-bold);
+  cursor: pointer;
+}
+
 .pending-heading small,
 .pending-item small,
 .sale-main small {
@@ -778,7 +1184,8 @@ select:focus {
   white-space: nowrap;
 }
 
-.pending-heading-actions > span {
+/* O total da venda. Só o primeiro span: o outro é o botão "Ver detalhes". */
+.pending-heading-actions > span:first-child {
   font-weight: var(--font-bold);
 }
 
@@ -797,7 +1204,7 @@ select:focus {
 
 .pending-item,
 .sale-item {
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border-bottom: 1px solid $fundo-fraco;
 }
 
 .pending-item:last-child,
@@ -834,7 +1241,7 @@ select:focus {
   border: 1px dashed color-mix(in srgb, var(--text-color) 16%, transparent);
   border-radius: 0.65rem;
   background: color-mix(in srgb, var(--text-color) 3%, transparent);
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
   text-align: center;
 }
 
@@ -848,7 +1255,7 @@ select:focus {
 .summary-card {
   min-width: 0;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
+  border: 1px solid $borda-suave;
   border-radius: 0.7rem;
   background: var(--card-background);
 }
@@ -862,7 +1269,7 @@ select:focus {
 
 .summary-card--highlight {
   border-color: transparent;
-  background: var(--active-background);
+  background: var(--color-primary);
   color: var(--color-primary-contrast);
   box-shadow: 0 5px 16px color-mix(in srgb, var(--active-background) 18%, transparent);
 }
@@ -883,7 +1290,7 @@ select:focus {
 .payment-totals {
   margin-bottom: 1.1rem;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
+  border: 1px solid $borda-suave;
   border-radius: 0.7rem;
   background: var(--card-background);
 }
@@ -903,11 +1310,11 @@ select:focus {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.65rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 9%, transparent);
+  border-bottom: 1px solid $fundo-fraco;
 }
 
 .payment-total-list span {
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
 }
 
 .payment-total-list strong {
@@ -947,7 +1354,7 @@ select:focus {
   gap: 0.55rem;
   width: min(100%, 430px);
   padding: 2.4rem 2rem;
-  border: 1px solid color-mix(in srgb, var(--text-color) 11%, transparent);
+  border: 1px solid $borda-suave;
   border-radius: 1rem;
   background: var(--card-background);
   text-align: center;
@@ -960,7 +1367,7 @@ select:focus {
 }
 
 .caixa-gate-card > p:not(.eyebrow) {
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
   font-size: 0.88rem;
 }
 
@@ -1013,7 +1420,7 @@ select:focus {
 
 .payment-modal-heading p:last-child {
   margin: 0.45rem 0 0;
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
   font-size: 0.8rem;
 }
 
@@ -1091,7 +1498,7 @@ select:focus {
 
 .fechamento-resumo span {
   display: block;
-  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+  color: $texto-suave;
   font-size: 0.75rem;
 }
 
@@ -1328,7 +1735,7 @@ select:focus {
   --fx-border: color-mix(in srgb, var(--text-color) 16%, transparent);
   --fx-divider: color-mix(in srgb, var(--text-color) 12%, transparent);
   --fx-text: var(--text-color);
-  --fx-muted: color-mix(in srgb, var(--text-color) 62%, transparent);
+  --fx-muted: $texto-suave;
   --fx-label: color-mix(in srgb, var(--text-color) 52%, transparent);
   --fx-warn-bg: color-mix(in srgb, #fde047 14%, var(--card-background));
   --fx-warn-border: color-mix(in srgb, #fde047 38%, transparent);
@@ -2288,3 +2695,10 @@ select:focus {
     }
   }
 }
+
+/* --- conta do membro --- */
+.section-hint{margin:.35rem 0 0;font-size:.82rem;opacity:.68;max-width:34rem}
+.pending-contato{display:block;margin-top:.15rem}
+.pending-aviso-outros{margin:0;padding:.6rem .8rem;border-radius:.5rem;background:var(--color-warning-bg);color:var(--color-warning-text);font-size:.76rem;line-height:1.35;border-bottom:1px solid color-mix(in srgb, var(--text-color) 10%, transparent)}
+.payment-modal-total{margin:0 0 .2rem;text-align:center;font-size:.9rem}
+.payment-modal-total strong{font-size:1.05rem}

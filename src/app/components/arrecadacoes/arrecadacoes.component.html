@@ -1,22 +1,18 @@
 <div class="card-container">
   
-  @if (caixaAtual) {
     <header class="caixa-header">
   
   
-      <span class="caixa-badge caixa-badge--aberto">Caixa aberto
-        <!-- <small>desde {{ formatarDataHora(caixaAtual.aberto_em) }}</small> -->
-      </span>
-      <!-- <button type="button" class="caixa-fechar-button" (click)="abrirModalFechamentoCaixa()">Fechar caixa</button> -->
-  
+      <span class="caixa-badge" [class.caixa-badge--aberto]="caixaAtual" [class.caixa-badge--historico]="!caixaAtual">{{ caixaAtual ? 'Caixa aberto' : 'Caixa fechado' }}</span>
+
       <div>
         <p class="eyebrow">Ações da igreja</p>
         <h1>Caixa</h1>
         <p class="subtitle">Registre cada venda e acompanhe o que ficou para depois.</p>
       </div>
       <div class="header-total">
-        <span>Total pago</span>
-        <strong>{{ formatarMoeda(totalPago) }}</strong>
+        <span>Recebido</span>
+        <strong>{{ formatarMoeda(totalRecebido) }}</strong>
       </div>
     </header>
   
@@ -31,8 +27,8 @@
     <button type="button" [class.active]="abaAtiva === 'pendentes'" (click)="setAba('pendentes')">
       <span class="tab-icon">!</span>
       <span>Fiado</span>
-      @if (gruposPendentes.length) {
-        <span class="tab-count">{{ gruposPendentes.length }}</span>
+@if (vendasPendentes.length) {
+            <span class="tab-count">{{ vendasPendentes.length }}</span>
       }
     </button>
     <button type="button" [class.active]="abaAtiva === 'resumo'" (click)="setAba('resumo')">
@@ -181,6 +177,10 @@
         <div>
           <p class="eyebrow">Pagar depois</p>
           <h2>Fiado em aberto</h2>
+          <p class="section-hint">
+            Cada linha é uma venda. Toque na linha para abrir os itens e quitar
+            a venda.
+          </p>
         </div>
         <strong class="open-total">{{ formatarMoeda(totalPendente) }}</strong>
       </div>
@@ -195,45 +195,74 @@
 
       @if (carregando) {
         <p class="empty-state">Carregando pendências...</p>
-      } @else if (!gruposPendentes.length) {
+      } @else if (!vendasPendentes.length) {
         <p class="empty-state empty-state--icon">
           <span class="empty-emoji">📋</span>
           Nenhum fiado registrado.
         </p>
       } @else {
         <div class="pending-groups">
-          @for (grupo of gruposPendentes; track grupo.vendaId) {
-            <article class="pending-group">
-              <div class="pending-heading">
+          @for (venda of vendasPendentes; track venda.vendaId) {
+            <article class="pending-group pending-group--collapse">
+              <button
+                type="button"
+                class="pending-heading pending-heading--botao"
+                (click)="alternarVendaExpandida(venda.vendaId)"
+                [attr.aria-expanded]="vendaExpandida(venda.vendaId)"
+              >
                 <div>
-                  <strong>{{ grupo.membro }}</strong>
-                  <small>Uma venda · {{ grupo.itens.length }} {{ grupo.itens.length === 1 ? 'item' : 'itens' }}</small>
+                  <strong>{{ venda.membro }}</strong>
+                  <small>
+                    {{ nomeFormaPagamento(venda.forma_pagamento) }} ·
+                    {{ formatarDataHora(venda.data_venda) }} ·
+                    {{ venda.itens.length }} {{ venda.itens.length === 1 ? 'item' : 'itens' }}
+                  </small>
+                  @if (venda.telefone || venda.email) {
+                    <small class="pending-contato">{{ venda.telefone || venda.email }}</small>
+                  }
                 </div>
                 <div class="pending-heading-actions">
-                  <span>{{ formatarMoeda(grupo.total) }}</span>
-                  <button type="button" (click)="marcarVendaComoPaga(grupo)">Marcar venda como paga</button>
+                  <span>{{ formatarMoeda(venda.total) }}</span>
+                  <span class="pending-toggle">{{ vendaExpandida(venda.vendaId) ? 'Fechar' : 'Ver detalhes' }}</span>
                 </div>
-              </div>
-              @for (item of grupo.itens; track item.id) {
-                <div class="pending-item">
-                  <div>
-                    <strong>{{ item.descricao }}</strong>
-                    <small>{{ nomeCategoria(item.categoria) }} · {{ nomeFormaPagamento(item.forma_pagamento) }} · {{ formatarData(item.data_venda) }} · x{{ item.quantidade }}</small>
+              </button>
+
+              @if (vendaExpandida(venda.vendaId)) {
+                @if (venda.fiadoEmOutrosCaixas > 0) {
+                  <p class="pending-aviso-outros">
+                    Esta pessoa também deve {{ formatarMoeda(venda.fiadoEmOutrosCaixas) }} em outro
+                    caixa. Fica separado de propósito: o dinheiro pertence ao caixa
+                    onde a compra foi feita.
+                  </p>
+                }
+
+                <div class="pending-detalhe">
+                  @for (item of venda.itens; track item.id) {
+                    <div class="pending-item">
+                      <div>
+                        <strong>{{ item.descricao }}</strong>
+                        <small>
+                          {{ nomeCategoria(item.categoria) }} · x{{ item.quantidade }}
+                        </small>
+                      </div>
+                      <div class="pending-item-actions">
+                        <strong>{{ formatarMoeda(item.valor_total) }}</strong>
+                        <button type="button" (click)="excluirItem(item)">Excluir item</button>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="pending-rodape">
+                    <span>Total da venda</span>
+                    <strong>{{ formatarMoeda(venda.total) }}</strong>
                   </div>
-                  <div class="pending-item-actions">
-                    <strong>{{ formatarMoeda(item.valor_total) }}</strong>
-                    <button type="button" (click)="excluirItem(item)">Excluir item</button>
-                  </div>
+
+                  <button type="button" class="pending-quitar" (click)="abrirModalPagamento(venda.vendaId)">
+                    Marcar venda como paga
+                  </button>
                 </div>
               }
             </article>
-          }
-        </div>
-
-        <div class="mobile-only venda-cards-wrap">
-          <p class="eyebrow">Vendas no fiado</p>
-          @for (venda of vendasFiado; track venda.vendaId) {
-            <ng-container *ngTemplateOutlet="cartaoVenda; context: { $implicit: venda }"></ng-container>
           }
         </div>
 
@@ -256,13 +285,16 @@
           <button type="button" class="refresh-button" (click)="exportarExcel()">Excel</button>
           <button type="button" class="refresh-button" (click)="exportarPdf()">PDF</button>
           <button type="button" class="refresh-button" (click)="carregarDados()">Atualizar</button>
-          <button type="button" class="btn btn-danger" (click)="abrirModalFechamentoCaixa()">Fechar Caixa</button>
+          @if (caixaAtual) {
+            <button type="button" class="btn btn-secondary" (click)="abrirModalSaidaCaixa()">Registrar saída</button>
+            <button type="button" class="btn btn-danger" (click)="abrirModalFechamentoCaixa()">Fechar Caixa</button>
+          }
         </div>
       </div>
 
       <div class="mobile-only summary-hero">
-        <span>Total arrecadado</span>
-        <strong>{{ formatarMoeda(totalGeral) }}</strong>
+        <span>Total vendido</span>
+        <strong>{{ formatarMoeda(totalVendido) }}</strong>
         <small>{{ quantidadeVendas }} {{ quantidadeVendas === 1 ? 'venda registrada' : 'vendas registradas' }}</small>
       </div>
 
@@ -279,17 +311,71 @@
 
       <div class="summary-cards">
         <div class="summary-card summary-card--highlight">
-          <span>Total registrado</span>
-          <strong>{{ formatarMoeda(totalFiltrado) }}</strong>
-        </div>
-        <div class="summary-card summary-card--pending">
-          <span>Em aberto</span>
-          <strong>{{ formatarMoeda(totalPendente) }}</strong>
+          <span>Total vendido</span>
+          <strong>{{ formatarMoeda(totalVendido) }}</strong>
+          <small>inclui fiado</small>
         </div>
         <div class="summary-card">
-          <span>Feijoada</span>
-          <strong>{{ formatarMoeda(totalFeijoada) }}</strong>
+          <span>Recebido</span>
+          <strong>{{ formatarMoeda(totalRecebido) }}</strong>
+          <small>de {{ vendasPagas }} {{ vendasPagas === 1 ? 'venda' : 'vendas' }}</small>
         </div>
+        <div class="summary-card summary-card--pending">
+          <span>Fiado em aberto</span>
+          <strong>{{ formatarMoeda(totalPendente) }}</strong>
+          <small>{{ devedores.length }} {{ devedores.length === 1 ? 'pessoa' : 'pessoas' }}</small>
+        </div>
+      </div>
+
+      <div class="fecho-panel">
+        <p class="eyebrow">Como fecha este caixa</p>
+        <div class="fecho-linha">
+          <span>Recebido de vendas</span>
+          <strong>{{ formatarMoeda(totalRecebido) }}</strong>
+        </div>
+        <div class="fecho-linha">
+          <span>Saídas do caixa</span>
+          <strong [class.is-negative]="totalSaidasLiquido > 0">&minus; {{ formatarMoeda(totalSaidasLiquido) }}</strong>
+        </div>
+        @if (valorInicial > 0) {
+          <div class="fecho-linha">
+            <span>Troco que já estava na gaveta</span>
+            <strong>&minus; {{ formatarMoeda(valorInicial) }}</strong>
+          </div>
+        }
+        <div class="fecho-linha fecho-linha--total">
+          <span>Fica para a igreja</span>
+          <strong>{{ formatarMoeda(fechadoParaIgreja) }}</strong>
+        </div>
+        <p class="fecho-nota">
+          O valor inicial não é lucro da ação, por isso sai da conta. O fiado não
+          entra em "recebido": ele aparece em "Vendido" e só entra aqui quando a
+          venda é quitada.
+        </p>
+      </div>
+
+      <div class="gaveta-panel">
+        <p class="eyebrow">Conferência da gaveta</p>
+        <div class="gaveta-linha">
+          <span>Troco inicial</span>
+          <strong>{{ formatarMoeda(valorInicial) }}</strong>
+        </div>
+        <div class="gaveta-linha">
+          <span>Vendas em dinheiro</span>
+          <strong>{{ formatarMoeda(totalRecebidoEmDinheiro) }}</strong>
+        </div>
+        <div class="gaveta-linha">
+          <span>Saídas (já com o troco de volta)</span>
+          <strong>&minus; {{ formatarMoeda(totalSaidasLiquido) }}</strong>
+        </div>
+        <div class="gaveta-linha gaveta-linha--total">
+          <span>Deveria ter na gaveta</span>
+          <strong>{{ formatarMoeda(valorEsperadoEmCaixa) }}</strong>
+        </div>
+        <p class="gaveta-nota">
+          Pix, débito e crédito não entram aqui: viram direto na conta da ação e
+          nunca passam pela gaveta.
+        </p>
       </div>
 
       <div class="summary-filter">
@@ -322,6 +408,61 @@
         </div>
       </div>
 
+      @if (devedores.length) {
+        <div class="devedores-panel">
+          <p class="eyebrow">Quem está devendo</p>
+          @for (devedor of devedores; track devedor.vendaId) {
+            <div class="devedor-item">
+              <div class="devedor-info">
+                <strong>{{ devedor.nome }}</strong>
+                <small>
+                  {{ formatarData(devedor.dataVenda) }} · {{ devedor.itens }}
+                </small>
+                @if (devedor.telefone || devedor.email) {
+                  <small class="devedor-contato">
+                    @if (devedor.telefone) {
+                      <span>{{ devedor.telefone }}</span>
+                    }
+                    @if (devedor.email) {
+                      <span>{{ devedor.email }}</span>
+                    }
+                  </small>
+                }
+              </div>
+              <strong class="devedor-total">{{ formatarMoeda(devedor.total) }}</strong>
+            </div>
+          }
+        </div>
+      }
+
+      @if (saidasDoCaixa.length) {
+        <div class="saidas-panel">
+          <p class="eyebrow">Saídas do caixa</p>
+          @for (saida of saidasDoCaixa; track saida.id) {
+            <div class="saida-item">
+              <div class="saida-info">
+                <strong>{{ saida.motivo }}</strong>
+                <small>
+                  {{ formatarDataHora(saida.criado_em) }}
+                  @if (paraNumero(saida.troco) > 0) {
+                    · tirou {{ formatarMoeda(paraNumero(saida.valor)) }} e voltou {{ formatarMoeda(paraNumero(saida.troco)) }} de troco
+                  }
+                </small>
+              </div>
+              <div class="saida-side">
+                <strong>&minus; {{ formatarMoeda(paraNumero(saida.valor_efetivo)) }}</strong>
+                @if (caixaAtual) {
+                  <div class="saida-acoes">
+                    <button type="button" class="delete-button" (click)="abrirModalEdicaoSaida(saida)">Editar</button>
+                    <button type="button" class="delete-button" (click)="excluirSaidaCaixa(saida)">Excluir</button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       @if (!arrecadacoesFiltradas.length) {
         <p class="empty-state">Nenhum lançamento encontrado com esses filtros.</p>
       } @else {
@@ -353,17 +494,25 @@
       }
     </section>
   }
-} @else {
-  <div class="caixa-gate">
-    <div class="caixa-gate-card">
-      <span class="caixa-gate-icon">$</span>
-      <p class="eyebrow">Início do turno</p>
-      <h2>Abra o caixa para começar</h2>
-      <p>As vendas só podem ser registradas com o caixa aberto.</p>
-      <button type="button" class="caixa-abrir-button caixa-gate-button" (click)="abrirModalAberturaCaixa()">Abrir caixa</button>
-    </div>
-  </div>
-}
+
+  <!--
+    Sem caixa aberto, registrar venda não faz sentido. O resto da tela continua
+    funcionando: dá para ver o resumo de ontem, o fiado e o histórico.
+  -->
+  @if (!caixaAtual && abaAtiva === 'registrar') {
+    <section class="view">
+      <div class="caixa-gate">
+        <div class="caixa-gate-card">
+          <span class="caixa-gate-icon">$</span>
+          <p class="eyebrow">Início do turno</p>
+          <h2>Abra o caixa para começar</h2>
+          <p>As vendas só podem ser registradas com o caixa aberto.</p>
+          <button type="button" class="caixa-abrir-button caixa-gate-button" (click)="abrirModalAberturaCaixa()">Abrir caixa</button>
+        </div>
+      </div>
+    </section>
+  }
+
 </div>
 
 @if (caixaAtual && abaAtiva === 'registrar') {
@@ -529,7 +678,7 @@
         }
         <div class="venda-card-actions">
           @if (venda.status === 'pendente') {
-            <button type="button" class="venda-card-pagar" (click)="marcarVendaComoPaga(venda)">Marcar venda como paga</button>
+            <button type="button" class="venda-card-pagar" (click)="abrirModalPagamento(venda.vendaId)">Marcar venda como paga</button>
           }
           @for (item of venda.itens; track item.id) {
             <button type="button" class="venda-card-excluir" (click)="excluirItem(item)">Excluir {{ item.descricao }}</button>
@@ -545,8 +694,8 @@
     <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title" (click)="$event.stopPropagation()">
       <div class="payment-modal-heading">
         <div>
-          <p class="eyebrow">Quitar fiado</p>
-          <h2 id="payment-modal-title">Como a venda foi paga?</h2>
+          <p class="eyebrow">Quitar conta</p>
+          <h2 id="payment-modal-title">Como foi pago?</h2>
           <p>Escolha o método usado no pagamento desta venda.</p>
         </div>
         <button type="button" class="payment-modal-close" (click)="fecharModalPagamento()" aria-label="Fechar">×</button>
@@ -576,10 +725,22 @@
         <div>
           <p class="eyebrow">Início do turno</p>
           <h2 id="abertura-title">Abrir caixa</h2>
-          <p>Nenhum valor inicial é necessário para abrir o caixa.</p>
+          <p>Se já houver troco na gaveta, informe aqui para a conferência fechar certa.</p>
         </div>
         <button type="button" class="payment-modal-close" (click)="fecharModalAberturaCaixa()" aria-label="Fechar">×</button>
       </div>
+
+      <label class="field field-wide">
+        <span class="field-label">Troco inicial na gaveta</span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="valorAberturaCaixa"
+          name="valor_abertura_caixa"
+          placeholder="0,00">
+        <small class="field-hint">Não é lucro da ação. Serve só para a contagem da gaveta.</small>
+      </label>
 
       <label class="field field-wide">
         <span class="field-label">Observação <small>(opcional)</small></span>
@@ -603,14 +764,44 @@
         <div>
           <p class="eyebrow">Fim do turno</p>
           <h2 id="fechamento-title">Fechar caixa</h2>
-          <p>O caixa será fechado com o valor total arrecadado.</p>
+          <p>Conte o dinheiro que sobrou na gaveta e confira com o esperado.</p>
         </div>
         <button type="button" class="payment-modal-close" (click)="fecharModalFechamentoCaixa()" aria-label="Fechar">×</button>
       </div>
 
       <div class="fechamento-resumo">
-        <div><span>Total arrecadado</span><strong>{{ formatarMoeda(totalArrecadadoCaixaAtual) }}</strong></div>
+        <div><span>Vendido</span><strong>{{ formatarMoeda(totalVendido) }}</strong></div>
+        <div><span>Recebido</span><strong>{{ formatarMoeda(totalRecebido) }}</strong></div>
+        <div><span>Fiado em aberto</span><strong>{{ formatarMoeda(totalPendente) }}</strong></div>
+        <div><span>Saídas do caixa</span><strong>&minus; {{ formatarMoeda(totalSaidasLiquido) }}</strong></div>
+        <div class="fechamento-destaque"><span>Deveria ter na gaveta</span><strong>{{ formatarMoeda(valorEsperadoEmCaixa) }}</strong></div>
       </div>
+
+      <label class="field field-wide">
+        <span class="field-label">Quanto você contou na gaveta</span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="valorFechamentoInformado"
+          name="valor_fechamento_caixa"
+          placeholder="0,00">
+      </label>
+
+      @if (temConferencia) {
+        <div class="conferencia-resultado" [class.conferencia-resultado--negativa]="diferencaConferencia < 0" [class.conferencia-resultado--positiva]="diferencaConferencia > 0">
+          @if (diferencaConferencia === 0) {
+            <strong>Conta batida.</strong>
+            <span>O que você contou é exatamente o que deveria ter.</span>
+          } @else if (diferencaConferencia < 0) {
+            <strong>Faltaram {{ formatarMoeda(tamanhoDiferenca) }}</strong>
+            <span>Teve mais saída do que entrada em dinheiro. Confira as vendas em dinheiro e as saídas.</span>
+          } @else {
+            <strong>Sobrou {{ formatarMoeda(tamanhoDiferenca) }}</strong>
+            <span>Tem mais dinheiro na gaveta do que o esperado. Confira se não esqueceu de lançar uma venda.</span>
+          }
+        </div>
+      }
 
       <label class="field field-wide">
         <span class="field-label">Observação <small>(opcional)</small></span>
@@ -626,3 +817,81 @@
     </section>
   </div>
 }
+
+@if (modalSaidaAberto) {
+  <div class="payment-modal-backdrop" role="presentation" (click)="fecharModalSaidaCaixa()">
+    <section class="payment-modal" role="dialog" aria-modal="true" aria-labelledby="saida-title" (click)="$event.stopPropagation()">
+      <div class="payment-modal-heading">
+        <div>
+          <p class="eyebrow">{{ saidaEmEdicao ? 'Corrigir' : 'Dinheiro que sai' }}</p>
+          <h2 id="saida-title">{{ saidaEmEdicao ? 'Editar saída' : 'Registrar saída' }}</h2>
+          <p>
+            @if (saidaEmEdicao) {
+              Gastou menos do que tirou? Ajuste o valor e o que voltou para a
+              gaveta entra como troco.
+            } @else {
+              Para comprar insumos, por exemplo. Se voltar troco, informe abaixo.
+            }
+          </p>
+        </div>
+        <button type="button" class="payment-modal-close" (click)="fecharModalSaidaCaixa()" aria-label="Fechar">×</button>
+      </div>
+
+      <label class="field field-wide">
+        <span class="field-label">Quanto saiu do caixa</span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="novaSaida.valor"
+          name="saida_valor"
+          placeholder="0,00">
+        @if (saidaEmEdicao) {
+          <small class="field-hint">
+            Pegou {{ formatarMoeda(saidaEmEdicao.valor) }} mas gastou menos?
+            Ponha o valor que realmente saiu da gaveta.
+          </small>
+        }
+      </label>
+
+      <label class="field field-wide">
+        <span class="field-label">Troco que voltou <small>(opcional)</small></span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="novaSaida.troco"
+          name="saida_troco"
+          placeholder="0,00">
+        <small class="field-hint">
+          @if (saidaEmEdicao) {
+            O que não foi gasto volta para a gaveta: troque o valor acima e deixe
+            o troco em zero, ou informe aqui o que voltou.
+          } @else {
+            Tirou R$ 100 e voltou R$ 12? O gasto é R$ 88.
+          }
+        </small>
+      </label>
+
+      <label class="field field-wide">
+        <span class="field-label">Motivo</span>
+        <input [(ngModel)]="novaSaida.motivo" name="saida_motivo" placeholder="Compra de frango para a hamburgada">
+      </label>
+
+      @if (novaSaida.valor) {
+        <div class="saida-preview">
+          <span>Sai da gaveta</span>
+          <strong>&minus; {{ formatarMoeda(valorLiquidoSaida) }}</strong>
+        </div>
+      }
+
+      <div class="payment-modal-actions">
+        <button type="button" class="payment-modal-cancel" (click)="fecharModalSaidaCaixa()">Cancelar</button>
+        <button type="button" class="payment-modal-confirm" [disabled]="salvando" (click)="confirmarSaidaCaixa()">
+          {{ salvando ? 'Salvando...' : (saidaEmEdicao ? 'Salvar alteração' : 'Registrar saída') }}
+        </button>
+      </div>
+    </section>
+  </div>
+}
+

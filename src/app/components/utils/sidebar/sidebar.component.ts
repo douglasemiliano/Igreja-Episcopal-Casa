@@ -5,7 +5,7 @@ import { MatIcon } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
 import { SearchbarComponent } from '../searchbar/searchbar.component';
 import { CoreService } from '../../../services/core.service';
-import { MenuItem, MenuService } from '../../../services/menu.service';
+import { GrupoMenu, MenuItem, MenuService } from '../../../services/menu.service';
 import { SupabaseService } from '../../../services/supabase.service';
 
 @Component({
@@ -60,6 +60,11 @@ export class SidebarComponent implements OnDestroy, OnInit {
   /** Itens do menu que o usuário atual pode ver. */
   get itensVisiveis(): MenuItem[] {
     return this.menuService.disponiveis(this.roles);
+  }
+
+  /** Mesmo menu, em blocos, para o sidebar escrever os cabeçalhos. */
+  get gruposVisiveis(): GrupoMenu[] {
+    return this.menuService.grupos(this.roles);
   }
   isMobile: boolean;
  

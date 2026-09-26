@@ -60,3 +60,63 @@
 .caixa-item-grid strong.negativa{color:var(--color-warning)}
 @media(max-width:900px){.caixa-item-grid{grid-template-columns:repeat(3,1fr)}.resumo-cards{grid-template-columns:repeat(2,1fr)}.metric-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.resumo-cards{grid-template-columns:1fr}.resumo-breakdown{grid-template-columns:1fr}.caixa-item-grid{grid-template-columns:repeat(2,1fr)}.metric-grid{grid-template-columns:1fr}.bazar-charts{grid-template-columns:1fr}}
+/* --- lista de caixas com relat�rio sob demanda --- */
+.caixas-lista{display:flex;flex-direction:column;gap:.85rem}
+.caixa-linha{border:1px solid color-mix(in srgb,var(--text-color) 12%,transparent);border-radius:.6rem;padding:.9rem;background:var(--card-background)}
+.caixa-linha--aberto{border-color:color-mix(in srgb,var(--color-primary) 45%,transparent)}
+.caixa-linha-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;width:100%;padding:0;border:0;background:none;color:var(--text-color);font:inherit;cursor:pointer;text-align:left}
+.caixa-linha-ident{display:flex;align-items:center;gap:.7rem}
+.caixa-linha-ident strong{display:block;font-size:.95rem}
+.caixa-linha-ident small{font-size:.75rem;opacity:.62}
+.caixa-linha-valores{display:flex;gap:1.2rem;flex-wrap:wrap}
+.caixa-linha-valores span{display:block;font-size:.72rem;opacity:.62}
+.caixa-linha-valores strong{font-size:.88rem}
+.caixa-linha-toggle{font-size:.78rem;font-weight:700;color:var(--color-primary);white-space:nowrap}
+.caixa-linha-fiado{display:flex;align-items:center;gap:.4rem;margin:.7rem 0 0;font-size:.8rem;color:var(--color-warning)}
+.fiado-dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--color-warning);display:inline-block}
+.caixa-relatorio{margin-top:.9rem;padding-top:.9rem;border-top:1px solid color-mix(in srgb,var(--text-color) 9%,transparent)}
+.relatorio-bloco{margin-bottom:1.1rem}
+.relatorio-bloco h3{font-size:.95rem;margin:0 0 .6rem}
+.relatorio-linha{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.5rem 0;border-bottom:1px solid color-mix(in srgb,var(--text-color) 9%,transparent)}
+.relatorio-linha:last-child{border-bottom:0}
+.relatorio-linha strong{font-size:.85rem}
+.relatorio-linha small{display:block;font-size:.72rem;opacity:.62}
+.relatorio-linha-valor{text-align:right;white-space:nowrap}
+/* Saída é dinheiro que saiu: vermelho no texto, fundo vermelho claro. */
+.relatorio-linha--saida{margin:.3rem -.5rem;padding:.5rem;border-radius:.5rem;background:var(--color-danger-bg);color:var(--color-danger-text);border-bottom-color:transparent}
+.relatorio-linha--saida strong{color:var(--color-danger-text)}
+.relatorio-linha--saida small{opacity:.8}
+.relatorio-observacao{font-size:.78rem;opacity:.7;margin:.4rem 0}
+.relatorio-nota{display:block;margin-top:.6rem;font-size:.72rem;opacity:.62}
+.relatorio-acoes{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding-top:.6rem}
+.caixa-item-grid .destaque strong{color:var(--color-primary)}
+.resumo-linha-qtd{opacity:.6;font-size:.72rem;margin-left:.3rem}
+.caixa-linha-head:focus-visible{outline:2px solid var(--color-primary);outline-offset:.2rem;border-radius:.3rem}
+.filter-hint{display:block;margin-top:.4rem;font-size:.72rem;opacity:.62}
+.aviso{margin:0 0 1rem;padding:.7rem 1rem;border-radius:.5rem;background:var(--color-warning-bg);color:var(--color-warning-text);font-size:.85rem}
+.dia-controles{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.tabela-wrapper{overflow-x:auto}
+.tabela-relatorio{width:100%;border-collapse:collapse;font-size:.82rem}
+.tabela-relatorio th{text-align:left;padding:.45rem .5rem;border-bottom:1px solid color-mix(in srgb,var(--text-color) 18%,transparent);font-size:.72rem;opacity:.7;font-weight:700}
+.tabela-relatorio td{padding:.45rem .5rem;border-bottom:1px solid color-mix(in srgb,var(--text-color) 9%,transparent)}
+.tabela-relatorio .num{text-align:right;white-space:nowrap}
+.situacao-pill{display:inline-block;padding:.1rem .45rem;border-radius:1rem;font-size:.7rem;background:var(--color-success-bg);color:var(--color-success)}
+.situacao-pill--pendiente{background:var(--color-warning-bg);color:var(--color-warning-text)}
+.status-pill{display:inline-block;padding:.1rem .5rem;border-radius:1rem;font-size:.7rem;font-weight:700;background:color-mix(in srgb,var(--text-color) 10%,transparent);color:var(--text-muted)}
+.status-pill--aberto{background:var(--color-success-bg);color:var(--color-success)}
+.modal-backdrop{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:1000}
+.modal{width:min(34rem,100%);max-height:90vh;overflow-y:auto;padding:1.2rem;border-radius:.7rem;background:var(--card-background);color:var(--text-color)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1rem}
+.modal-head h2{margin:0 0 .3rem;font-size:1.2rem}
+.modal-head p{margin:0;font-size:.82rem;opacity:.7}
+.modal-close{border:0;background:none;color:var(--text-color);font-size:1.5rem;line-height:1;cursor:pointer}
+.modal-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1rem}
+.reabertura-aviso{display:flex;flex-direction:column;gap:.25rem;padding:.7rem .9rem;border-radius:.5rem;background:var(--surface-soft);margin-bottom:.8rem;font-size:.82rem}
+.reabertura-aviso--fiado{background:var(--color-warning-bg);color:var(--color-warning-text)}
+.field{display:flex;flex-direction:column;gap:.3rem}
+.field-wide{margin-bottom:.5rem}
+.field-label{font-size:.78rem;opacity:.7}
+.field-hint{font-size:.72rem;opacity:.6}
+.field input{padding:.55rem .7rem;border:1px solid color-mix(in srgb,var(--text-color) 18%,transparent);border-radius:.5rem;background:var(--card-background);color:var(--text-color)}
+.refresh-button--primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-primary-contrast)}
+@media(max-width:700px){.caixa-linha-valores{gap:.8rem}.relatorio-linha{flex-direction:column;align-items:flex-start;gap:.3rem}.relatorio-linha-valor{text-align:left}}

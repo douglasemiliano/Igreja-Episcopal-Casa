@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { jsPDF } from 'jspdf';
+import { DadosRelatorioCaixa, RelatorioCaixaService } from '../../services/relatorio-caixa.service';
 import { SupabaseService } from '../../services/supabase.service';
 
 interface Arrecadacao {
@@ -19,14 +19,58 @@ interface Arrecadacao {
   data_pagamento?: string | null;
   observacoes?: string | null;
   membro_id?: string | null;
-  membro?: { id: string; nome_completo: string } | null;
+  membro?: { id: string; nome_completo: string; email?: string | null; telefone?: string | null } | null;
 }
 
-interface GrupoPendente {
+/** Dinheiro que saiu do caixa durante o turno (insumos, compras). */
+interface SaidaCaixa {
+  id: string;
+  caixa_id: string;
+  valor: number;
+  troco: number;
+  valor_efetivo: number;
+  motivo: string;
+  criado_em: string;
+}
+
+/** Uma pessoa devendo, agrupada por venda, para a lista de quem está devendo. */
+interface Devedor {
   vendaId: string;
-  membro: string;
+  nome: string;
+  email: string;
+  telefone: string;
   total: number;
+  dataVenda: string;
+  itens: string;
+}
+
+/** Uma venda em aberto: a linha que aparece dentro da conta do membro. */
+interface VendaPendente {
+  vendaId: string;
+  forma_pagamento: NonNullable<Arrecadacao['forma_pagamento']>;
+  data_venda: string;
   itens: Arrecadacao[];
+  total: number;
+}
+
+/**
+ * A conta de fiado de uma pessoa, dentro de um caixa.
+ *
+ * A chave é membro + caixa, de propósito. Se a pessoa comprou no sábado e
+ * voltou no domingo, são duas contas — misturar faria a conferência da gaveta
+ * de um caixa depender de dinheiro de outro.
+ */
+interface ContaMembro {
+  chave: string;
+  membro: string;
+  telefone: string;
+  email: string;
+  /** As vendas que somam esta conta, da mais antiga para a mais recente. */
+  vendas: VendaPendente[];
+  vendaIds: string[];
+  total: number;
+  /** Fiado da mesma pessoa em outros caixas, só para aviso. */
+  fiadoEmOutrosCaixas: number;
 }
 
 interface VendaAgrupada {
@@ -68,6 +112,9 @@ interface Caixa {
   valor_esperado?: number | null;
   diferenca?: number | null;
   observacoes_fechamento?: string | null;
+  reaberto_em?: string | null;
+  observacoes_reabertura?: string | null;
+  vezes_reaberto?: number;
 }
 
 @Component({
@@ -79,6 +126,7 @@ interface Caixa {
 })
 export class ArrecadacoesComponent implements OnInit, OnDestroy {
   private readonly supabaseService = inject(SupabaseService);
+  private readonly relatorioService = inject(RelatorioCaixaService);
 
   readonly formasPagamento: NonNullable<Arrecadacao['forma_pagamento']>[] = ['pix', 'debito', 'credito', 'dinheiro', 'fiado'];
 
@@ -89,7 +137,7 @@ export class ArrecadacoesComponent implements OnInit, OnDestroy {
   erro = '';
   abaAtiva: 'registrar' | 'pendentes' | 'resumo' = 'registrar';
 
-  filtroCategoria = '';
+  filtroCategoria: Arrecadacao['categoria'] | '' = '';
   filtroStatus = '';
   filtroBusca = '';
   carrinho: ItemCarrinho[] = [];
@@ -117,11 +165,24 @@ export class ArrecadacoesComponent implements OnInit, OnDestroy {
 
   caixaAtual: Caixa | null = null;
 
+  /** Todos os caixas, do mais recente para o mais antigo. Alimenta o histórico. */
+  historicoCaixas: Caixa[] = [];
+  saidas: SaidaCaixa[] = [];
+
 modalAberturaCaixaAberto = false;
 observacoesAberturaCaixa = '';
+/** Troco que a pessoa põe na gaveta ao abrir. Não é receita da ação. */
+valorAberturaCaixa: number | null = null;
 
 modalFechamentoCaixaAberto = false;
 observacoesFechamentoCaixa = '';
+/** Quanto a pessoa contou na gaveta. Vazio = não contou, e não há diferença. */
+valorFechamentoInformado: number | null = null;
+
+  modalSaidaAberto = false;
+  /** Saída sendo corrigida. Nulo quando é um lançamento novo. */
+  saidaEmEdicao: SaidaCaixa | null = null;
+  novaSaida = { valor: null as number | null, troco: 0 as number | null, motivo: '' };
 
   ngOnInit(): void {
     this.carregarDados();
@@ -155,15 +216,39 @@ get totalArrecadadoCaixaAtual(): number {
     .reduce((total, item) => total + Number(item.valor_total), 0);
 }
 
-  get arrecadacoesCaixaAtual(): Arrecadacao[] {
-  if (!this.caixaAtual) return [];
-  return this.arrecadacoes.filter((item) => item.caixa_id === this.caixaAtual!.id);
-}
+  /**
+   * O caixa que a tela está olhando: o aberto, ou o mais recente se já fechou.
+   * Sem isso, o fiado de ontem fica invisível até alguém abrir o caixa de hoje.
+   */
+  get caixaEmFoco(): Caixa | null {
+    return this.caixaAtual ?? this.historicoCaixas[0] ?? null;
+  }
+
+  get arrecadacoesCaixa(): Arrecadacao[] {
+    const caixa = this.caixaEmFoco;
+    if (!caixa) return [];
+
+    return this.arrecadacoes
+      .filter((item) => item.caixa_id === caixa.id)
+      .sort((a, b) => {
+        const porData = new Date(b.data_venda).getTime() - new Date(a.data_venda).getTime();
+        if (porData !== 0) return porData;
+        // mesmo timestamp: desempata pelo id, que é sequencial, para a ordem
+        // não depender de como o Postgres devolveu as linhas
+        return b.id.localeCompare(a.id);
+      });
+  }
+
+  get saidasDoCaixa(): SaidaCaixa[] {
+    const caixa = this.caixaEmFoco;
+    if (!caixa) return [];
+    return this.saidas.filter((saida) => saida.caixa_id === caixa.id);
+  }
 
   get arrecadacoesFiltradas(): Arrecadacao[] {
     const busca = this.filtroBusca.trim().toLowerCase();
 
-    return this.arrecadacoesCaixaAtual.filter((arrecadacao) => {
+    return this.arrecadacoesCaixa.filter((arrecadacao) => {
       const correspondeCategoria = !this.filtroCategoria || arrecadacao.categoria === this.filtroCategoria;
       const correspondeStatus = !this.filtroStatus || arrecadacao.status === this.filtroStatus;
       const texto = `${arrecadacao.descricao} ${arrecadacao.membro?.nome_completo ?? ''}`.toLowerCase();
@@ -180,7 +265,7 @@ get totalArrecadadoCaixaAtual(): number {
   }
 
   get totalPendente(): number {
-    return this.arrecadacoesCaixaAtual
+    return this.arrecadacoesCaixa
       .filter((arrecadacao) => arrecadacao.status === 'pendente')
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
@@ -189,28 +274,169 @@ get totalArrecadadoCaixaAtual(): number {
     return this.arrecadacoesFiltradas.filter((arrecadacao) => arrecadacao.status === 'pendente');
   }
 
-  get gruposPendentes(): GrupoPendente[] {
+  /**
+   * As vendas em aberto, uma por linha.
+   *
+   * A lista mostra só o total de cada venda; o detalhe dos itens fica atrás
+   * do clique, para não transformar a aba numa parede de item. É só visual:
+   * os dados são os mesmos de antes.
+   */
+  get vendasPendentes(): VendaPendente[] {
     const grupos = new Map<string, Arrecadacao[]>();
 
-    for (const arrecadacao of this.pendenciasFiltradas) {
-      const vendaId = arrecadacao.venda_id ?? arrecadacao.id;
-      grupos.set(vendaId, [...(grupos.get(vendaId) ?? []), arrecadacao]);
+    for (const item of this.pendenciasFiltradas) {
+      const vendaId = item.venda_id ?? item.id;
+      grupos.set(vendaId, [...(grupos.get(vendaId) ?? []), item]);
+    }
+
+    return [...grupos.entries()]
+      .map(([vendaId, itens]) => {
+        const primeiro = itens[0];
+        return {
+          vendaId,
+          membro: primeiro.membro?.nome_completo || 'Membro não identificado',
+          telefone: primeiro.membro?.telefone ?? '',
+          email: primeiro.membro?.email ?? '',
+          forma_pagamento: primeiro.forma_pagamento ?? 'dinheiro',
+          data_venda: primeiro.data_venda,
+          itens: [...itens].sort((a, b) => a.id.localeCompare(b.id)),
+          total: itens.reduce((total, item) => total + Number(item.valor_total), 0),
+          fiadoEmOutrosCaixas: this.fiadoForaDesteCaixa(primeiro)
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }
+
+  /**
+   * O que a mesma pessoa deve em outros caixas.
+   *
+   * Aparece como aviso, e não como item da conta: o dinheiro pertence ao caixa
+   * onde a venda foi aberta, então quitá-lo junto bagunçaria a gaveta.
+   */
+  private fiadoForaDesteCaixa(referencia: Arrecadacao): number {
+    if (!referencia.membro_id) return 0;
+
+    return this.arrecadacoes
+      .filter(
+        (item) =>
+          item.membro_id === referencia.membro_id &&
+          item.status === 'pendente' &&
+          (item.caixa_id ?? '') !== (referencia.caixa_id ?? '')
+      )
+      .reduce((total, item) => total + Number(item.valor_total), 0);
+  }
+
+  get totalPago(): number {
+    return this.arrecadacoesCaixa
+      .filter((arrecadacao) => arrecadacao.status === 'pago')
+      .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
+  }
+
+  // --- A conta do caixa, em uma tela só ---
+  //
+  // Fica com nomes de letra porque o raciocínio é uma equação e o nome longo
+  // atrapalha. A ideia é separada em getters para o número não ser repetido
+  // em três lugares diferentes (tela, PDF e futuro cálculo no banco).
+
+  /** x: tudo que foi vendido, inclusive o fiado. */
+  get totalVendido(): number {
+    return this.arrecadacoesCaixa
+      .filter((item) => item.status !== 'cancelado')
+      .reduce((total, item) => total + Number(item.valor_total), 0);
+  }
+
+  /** y: o que efetivamente entrou, por qualquer forma de pagamento. */
+  get totalRecebido(): number {
+    return this.arrecadacoesCaixa
+      .filter((item) => item.status === 'pago')
+      .reduce((total, item) => total + Number(item.valor_total), 0);
+  }
+
+  /** Só o dinheiro que ficou na gaveta. É o que dá para conferir com a mão. */
+  get totalRecebidoEmDinheiro(): number {
+    return this.arrecadacoesCaixa
+      .filter((item) => item.status === 'pago' && (item.forma_pagamento ?? 'dinheiro') === 'dinheiro')
+      .reduce((total, item) => total + Number(item.valor_total), 0);
+  }
+
+  /** s: o que saiu da gaveta para comprar algo, já tirando o troco que voltou. */
+  get totalSaidasLiquido(): number {
+    return this.saidasDoCaixa.reduce((total, saida) => total + Number(saida.valor_efetivo), 0);
+  }
+
+  /** i: o dinheiro que já estava na gaveta quando o caixa abriu. */
+  /** O que a saída realmente consome da gaveta, já tirando o troco que voltou. */
+  get valorLiquidoSaida(): number {
+    return Number(this.novaSaida.valor ?? 0) - Number(this.novaSaida.troco ?? 0);
+  }
+
+  get valorInicial(): number {
+    return Number(this.caixaEmFoco?.valor_abertura ?? 0);
+  }
+
+  /**
+   * f: o que sobra para a igreja.
+   *
+   * Não entra o valor inicial porque ele não foi ganho na ação — é o troco
+   * que já estava lá. Também não entra o fiado como recebido, porque fiado
+   * não é dinheiro que voltou: ele aparece como positivo em `recebidoEmCaixa`.
+   */
+  get fechadoParaIgreja(): number {
+    return this.totalRecebido - this.totalSaidasLiquido - this.valorInicial;
+  }
+
+  /** Quanto deveria ter na gaveta agora, contando o troco devolvido. */
+  get valorEsperadoEmCaixa(): number {
+    return this.valorInicial + this.totalRecebidoEmDinheiro - this.totalSaidasLiquido;
+  }
+
+  /** d: o que a contagem real diz contra o esperado. */
+  get diferencaConferencia(): number {
+    return (this.valorFechamentoInformado ?? 0) - this.valorEsperadoEmCaixa;
+  }
+
+  get temConferencia(): boolean {
+    return this.valorFechamentoInformado !== null && this.valorFechamentoInformado !== undefined;
+  }
+
+  /** O tamanho da diferença, sem o sinal: o texto diz falta ou sobra. */
+  get tamanhoDiferenca(): number {
+    return Math.abs(this.diferencaConferencia);
+  }
+
+  /**
+   * Uma pessoa devendo, agrupada por venda, para a lista de quem está devendo.
+   */
+  get devedores(): Devedor[] {
+    const grupos = new Map<string, Arrecadacao[]>();
+
+    for (const item of this.arrecadacoesCaixa) {
+      if (item.status !== 'pendente') continue;
+      const vendaId = item.venda_id ?? item.id;
+      grupos.set(vendaId, [...(grupos.get(vendaId) ?? []), item]);
     }
 
     return [...grupos.entries()]
       .map(([vendaId, itens]) => ({
         vendaId,
-        membro: itens[0].membro?.nome_completo || 'Membro não identificado',
-        itens,
-        total: itens.reduce((total, item) => total + Number(item.valor_total), 0)
+        nome: itens[0].membro?.nome_completo || 'Membro não identificado',
+        email: itens[0].membro?.email ?? '',
+        telefone: itens[0].membro?.telefone ?? '',
+        total: itens.reduce((total, item) => total + Number(item.valor_total), 0),
+        dataVenda: itens[0].data_venda,
+        itens: itens.map((item) => `${item.quantidade}x ${item.descricao}`).join(', ')
       }))
-      .sort((a, b) => a.membro.localeCompare(b.membro));
+      .sort((a, b) => b.total - a.total);
   }
 
-  get totalPago(): number {
-    return this.arrecadacoesCaixaAtual
-      .filter((arrecadacao) => arrecadacao.status === 'pago')
-      .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
+
+  /** Quantas vendas foram efetivamente pagas, contando a venda uma vez só. */
+  get vendasPagas(): number {
+    return new Set(
+      this.arrecadacoesCaixa
+        .filter((item) => item.status === 'pago')
+        .map((item) => item.venda_id ?? item.id)
+    ).size;
   }
 
   get totalFeijoada(): number {
@@ -229,20 +455,12 @@ get totalArrecadadoCaixaAtual(): number {
     return this.totalPago + this.totalPendente;
   }
 
-  get totalRecebido(): number {
-    return this.totalPago;
-  }
-
   get quantidadeVendas(): number {
-    return new Set(this.arrecadacoesCaixaAtual.map((item) => item.venda_id ?? item.id)).size;
+    return new Set(this.arrecadacoesCaixa.map((item) => item.venda_id ?? item.id)).size;
   }
 
   get vendasResumo(): VendaAgrupada[] {
     return this.agruparVendas(this.arrecadacoesFiltradas).slice(0, 8);
-  }
-
-  get vendasFiado(): VendaAgrupada[] {
-    return this.agruparVendas(this.pendenciasFiltradas);
   }
 
   setAba(aba: 'registrar' | 'pendentes' | 'resumo'): void {
@@ -251,20 +469,24 @@ get totalArrecadadoCaixaAtual(): number {
   }
 
   totalPorCategoria(categoria: 'bazar' | 'hamburgada' | 'feijoada'): number {
-    return this.arrecadacoesCaixaAtual
+    return this.arrecadacoesCaixa
       .filter((arrecadacao) => arrecadacao.categoria === categoria)
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
 
   totalPorForma(forma: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado'): number {
-    return this.arrecadacoesCaixaAtual
+    return this.arrecadacoesCaixa
       .filter((arrecadacao) => (arrecadacao.forma_pagamento ?? 'dinheiro') === forma)
       .reduce((total, arrecadacao) => total + Number(arrecadacao.valor_total), 0);
   }
 
+  /**
+   * Conta vendas, não itens: uma venda de três itens em dinheiro é uma
+   * venda, e é assim que quem lê o resumo espera ver.
+   */
   quantidadePorForma(forma: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado'): number {
     return new Set(
-      this.arrecadacoesCaixaAtual
+      this.arrecadacoesCaixa
         .filter((arrecadacao) => (arrecadacao.forma_pagamento ?? 'dinheiro') === forma)
         .map((arrecadacao) => arrecadacao.venda_id ?? arrecadacao.id)
     ).size;
@@ -469,17 +691,38 @@ get totalArrecadadoCaixaAtual(): number {
     this.carregando = true;
     this.erro = '';
 
-    const [membrosResponse, vendasResponse] = await Promise.all([
+    const [membrosResponse, vendasResponse, caixasResponse] = await Promise.all([
       this.supabaseService.getMembros(),
-      this.supabaseService.getVendasArrecadacao()
+      this.supabaseService.getVendasArrecadacao(),
+      this.supabaseService.getTodasCaixas()
     ]);
 
-    if (membrosResponse.error || vendasResponse.error) {
+    if (membrosResponse.error || vendasResponse.error || caixasResponse.error) {
       this.erro = 'Não foi possível carregar os dados das arrecadações.';
-      console.error(membrosResponse.error || vendasResponse.error);
+      console.error(membrosResponse.error || vendasResponse.error || caixasResponse.error);
     } else {
       this.membros = membrosResponse.data ?? [];
       this.arrecadacoes = this.normalizarVendas(vendasResponse.data ?? []);
+      // mais recente primeiro: é a ordem em que a pessoa pensa nos turnos
+      this.historicoCaixas = [...(caixasResponse.data ?? [])].sort(
+        (a, b) => new Date(b.aberto_em).getTime() - new Date(a.aberto_em).getTime()
+      );
+    }
+
+    // As saídas vêm numa consulta só, filtrando por todos os caixas já
+    // carregados. Trazer só as do caixa aberto deixaria o histórico sem
+    // os números de saída dos turnos passados.
+    if (this.historicoCaixas.length) {
+      const { data: saidas, error } = await this.supabaseService.getSaidasCaixa(
+        this.historicoCaixas.map((caixa) => caixa.id)
+      );
+      if (error) {
+        console.error(error);
+      } else {
+        this.saidas = saidas ?? [];
+      }
+    } else {
+      this.saidas = [];
     }
 
     this.carregando = false;
@@ -545,10 +788,7 @@ get totalArrecadadoCaixaAtual(): number {
     this.abrirModalPagamento(vendaId);
   }
 
-  async marcarVendaComoPaga(grupo: GrupoPendente): Promise<void> {
-    this.abrirModalPagamento(grupo.vendaId);
-  }
-
+  /** Quita uma venda inteira: o status e a forma de pagamento são da venda. */
   abrirModalPagamento(vendaId: string): void {
     this.vendaPagamentoId = vendaId;
     this.formaPagamentoQuitacao = 'dinheiro';
@@ -560,6 +800,7 @@ get totalArrecadadoCaixaAtual(): number {
     this.vendaPagamentoId = '';
   }
 
+  /** Quita a venda inteira: o status e a forma de pagamento são da venda. */
   async confirmarPagamento(): Promise<void> {
     if (!this.vendaPagamentoId) {
       return;
@@ -620,59 +861,113 @@ get totalArrecadadoCaixaAtual(): number {
     return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  /**
+   * Numeric do Postgres chega como string. Converter no template com `+` ou
+   * `Number` não compila dentro de um componente Angular, então a conversão
+   * mora aqui.
+   */
+  paraNumero(valor: number | string | null | undefined): number {
+    return Number(valor ?? 0);
+  }
+
   formatarData(data: string): string {
     return new Date(data).toLocaleDateString('pt-BR');
   }
 
-  exportarExcel(): void {
-    const cabecalho = ['Data', 'Categoria', 'Descrição', 'Quantidade', 'Valor unitário', 'Total', 'Pagamento', 'Situação', 'Membro'];
-    const linhas = this.arrecadacoesFiltradas.map((item) => [
-      this.formatarData(item.data_venda),
-      this.nomeCategoria(item.categoria),
-      item.descricao,
-      item.quantidade,
-      Number(item.valor_unitario).toFixed(2),
-      Number(item.valor_total).toFixed(2),
-      this.nomeFormaPagamento(item.forma_pagamento),
-      item.status === 'pendente' ? 'Pendente' : 'Pago',
-      item.membro?.nome_completo ?? 'Avulso'
-    ]);
-    const csv = [cabecalho, ...linhas]
-      .map((linha) => linha.map((valor) => `"${String(valor).replace(/"/g, '""')}"`).join(';'))
-      .join('\r\n');
-    this.baixarArquivo(`resumo-arrecadacoes-${this.dataAtual()}.csv`, `\ufeff${csv}`, 'text/csv;charset=utf-8;');
+  /**
+   * O CSV é um relatório em três blocos: totais, saídas e vendas.
+   * Quem abre no Excel vê primeiro a conta do caixa, que é a parte que
+   * precisa bater com o papel.
+   */
+  /**
+   * Monta o resumo do caixa em foco e joga para o serviço de relatório.
+   *
+   * A tela de histórico monta a mesma estrutura, então as duas geram
+   * exatamente o mesmo papel a partir da mesma conta.
+   */
+  private dadosRelatorio(): DadosRelatorioCaixa {
+    const caixa = this.caixaEmFoco;
+    const filtros: string[] = [];
+
+    if (this.filtroCategoria) filtros.push(`Ação: ${this.nomeCategoria(this.filtroCategoria)}`);
+    if (this.filtroStatus) filtros.push(`Situação: ${this.filtroStatus}`);
+    if (this.filtroBusca.trim()) filtros.push(`Busca: "${this.filtroBusca.trim()}"`);
+
+    return {
+      titulo: 'Resumo do caixa',
+      subtitulo: caixa
+        ? `Caixa de ${this.formatarData(caixa.aberto_em)} · ${caixa.status === 'aberto' ? 'em andamento' : 'encerrado'}`
+        : 'Sem caixa em foco',
+      dataEmissao: this.formatarDataHora(new Date().toISOString()),
+
+      totalVendido: this.totalVendido,
+      totalRecebido: this.totalRecebido,
+      totalPendente: this.totalPendente,
+      totalSaidas: this.totalSaidasLiquido,
+      valorInicial: this.valorInicial,
+      fechadoParaIgreja: this.fechadoParaIgreja,
+
+      totalRecebidoDinheiro: this.totalRecebidoEmDinheiro,
+      valorEsperadoEmCaixa: this.valorEsperadoEmCaixa,
+      valorContado: this.valorFechamentoInformado,
+      diferenca: this.temConferencia ? this.diferencaConferencia : null,
+
+      porFormaPagamento: this.formasPagamento.map((forma) => ({
+        nome: this.nomeFormaPagamento(forma),
+        quantidade: this.quantidadePorForma(forma),
+        total: this.totalPorForma(forma)
+      })),
+      porCategoria: (['bazar', 'hamburgada', 'feijoada'] as const).map((categoria) => ({
+        nome: this.nomeCategoria(categoria),
+        total: this.totalPorCategoria(categoria)
+      })),
+
+      saidas: this.saidasDoCaixa.map((saida) => ({
+        data: this.formatarDataHora(saida.criado_em),
+        motivo: saida.motivo,
+        valor: Number(saida.valor),
+        troco: Number(saida.troco),
+        valorEfetivo: Number(saida.valor_efetivo)
+      })),
+
+      devedores: this.devedores.map((devedor) => ({
+        nome: devedor.nome,
+        email: devedor.email,
+        telefone: devedor.telefone,
+        total: devedor.total,
+        dataVenda: this.formatarData(devedor.dataVenda),
+        itens: devedor.itens
+      })),
+
+      vendas: this.arrecadacoesFiltradas.map((item) => ({
+        descricao: item.descricao,
+        dataVenda: this.formatarData(item.data_venda),
+        categoria: this.nomeCategoria(item.categoria),
+        quantidade: item.quantidade,
+        valorTotal: Number(item.valor_total),
+        formaPagamento: this.nomeFormaPagamento(item.forma_pagamento),
+        situacao: item.status === 'pendente' ? 'Pendente' : 'Pago',
+        membro: item.membro?.nome_completo ?? 'Avulso'
+      })),
+
+      filtros
+    };
   }
 
   exportarPdf(): void {
-    const documento = new jsPDF();
-    documento.setFontSize(16);
-    documento.text('Resumo de arrecadacoes', 14, 18);
-    documento.setFontSize(10);
-    documento.text(`Total filtrado: ${this.formatarMoeda(this.totalFiltrado)}`, 14, 27);
-
-    let y = 38;
-    this.arrecadacoesFiltradas.forEach((item) => {
-      const linha = `${this.formatarData(item.data_venda)} | ${this.nomeCategoria(item.categoria)} | ${item.descricao} x${item.quantidade} | ${this.formatarMoeda(item.valor_total)} | ${this.nomeFormaPagamento(item.forma_pagamento)}`;
-      const linhas = documento.splitTextToSize(linha, 180);
-      if (y > 275) {
-        documento.addPage();
-        y = 18;
-      }
-      documento.text(linhas, 14, y);
-      y += 7 * linhas.length;
-    });
-
-    documento.save(`resumo-arrecadacoes-${this.dataAtual()}.pdf`);
+    this.relatorioService
+      .gerarPdf(this.dadosRelatorio())
+      .save(`resumo-caixa-${this.dataAtual()}.pdf`);
   }
 
-  private baixarArquivo(nome: string, conteudo: string, tipo: string): void {
-    const blob = new Blob([conteudo], { type: tipo });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = nome;
-    link.click();
-    URL.revokeObjectURL(url);
+  exportarExcel(): void {
+    const csv = this.relatorioService.gerarCsv(this.dadosRelatorio());
+    // o BOM faz o Excel reconhecer UTF-8 e não comer o acento
+    this.relatorioService.baixaArquivo(
+      `resumo-caixa-${this.dataAtual()}.csv`,
+      `\ufeff${csv}`,
+      'text/csv;charset=utf-8;'
+    );
   }
 
   private dataAtual(): string {
@@ -719,6 +1014,7 @@ get totalArrecadadoCaixaAtual(): number {
 abrirModalAberturaCaixa(): void {
   this.erro = '';
   this.observacoesAberturaCaixa = '';
+  this.valorAberturaCaixa = 0;
   this.modalAberturaCaixaAberto = true;
 }
 
@@ -728,9 +1024,15 @@ fecharModalAberturaCaixa(): void {
 
 async confirmarAberturaCaixa(): Promise<void> {
   this.erro = '';
+  const valor = Number(this.valorAberturaCaixa ?? 0);
+  if (valor < 0) {
+    this.erro = 'O valor de abertura não pode ser negativo.';
+    return;
+  }
+
   this.salvando = true;
   const { error } = await this.supabaseService.abrirCaixa(
-    0,
+    valor,
     this.observacoesAberturaCaixa.trim() || null
   );
   this.salvando = false;
@@ -742,12 +1044,14 @@ async confirmarAberturaCaixa(): Promise<void> {
   }
 
   this.modalAberturaCaixaAberto = false;
-  await this.carregarCaixa();
+  this.abaAtiva = 'registrar';
+  await Promise.all([this.carregarCaixa(), this.carregarDados()]);
 }
 
 abrirModalFechamentoCaixa(): void {
   this.erro = '';
   this.observacoesFechamentoCaixa = '';
+  this.valorFechamentoInformado = null;
   this.modalFechamentoCaixaAberto = true;
 }
 
@@ -757,9 +1061,17 @@ fecharModalFechamentoCaixa(): void {
 
 async confirmarFechamentoCaixa(): Promise<void> {
   this.erro = '';
+
+  if (this.valorFechamentoInformado === null || this.valorFechamentoInformado === undefined) {
+    this.erro = 'Conte o dinheiro que sobrou na gaveta para fechar o caixa.';
+    return;
+  }
+
   this.salvando = true;
+  // o banco recalcula o esperado com base no dinheiro e nas saídas;
+  // o que a pessoa contou é a informação nova que entra aqui
   const { error } = await this.supabaseService.fecharCaixa(
-    this.totalArrecadadoCaixaAtual,
+    Number(this.valorFechamentoInformado),
     this.observacoesFechamentoCaixa.trim() || null
   );
   this.salvando = false;
@@ -772,12 +1084,113 @@ async confirmarFechamentoCaixa(): Promise<void> {
 
   this.modalFechamentoCaixaAberto = false;
   this.caixaAtual = null;
+  this.valorFechamentoInformado = null;
   this.observacoesFechamentoCaixa = '';
   this.observacoesAberturaCaixa = '';
   this.limparCarrinho();
   this.limparFormulario();
+  // volta para Registrar, que agora mostra o convite a abrir o próximo caixa
+  this.abaAtiva = 'registrar';
+  await Promise.all([this.carregarCaixa(), this.carregarDados()]);
+}
+
+  abrirModalSaidaCaixa(): void {
+    this.erro = '';
+    this.saidaEmEdicao = null;
+    this.novaSaida = { valor: null, troco: 0, motivo: '' };
+    this.modalSaidaAberto = true;
+  }
+
+  /**
+   * Corrige uma saída já registrada.
+   *
+   * O caso de uso érir e gastar menos: pegou 30, gastou 20, os 10 voltam para
+   * a gaveta. Em vez de inventar um lançamento de "devolução", a saída é
+   * corrigida — o valor da gaveta continua batendo com o que foi gasto.
+   */
+  abrirModalEdicaoSaida(saida: SaidaCaixa): void {
+    this.erro = '';
+    this.saidaEmEdicao = saida;
+    this.novaSaida = {
+      valor: Number(saida.valor),
+      troco: Number(saida.troco),
+      motivo: saida.motivo
+    };
+    this.modalSaidaAberto = true;
+  }
+
+  fecharModalSaidaCaixa(): void {
+    this.modalSaidaAberto = false;
+    this.saidaEmEdicao = null;
+  }
+
+  async confirmarSaidaCaixa(): Promise<void> {
+    this.erro = '';
+
+    const emEdicao = this.saidaEmEdicao;
+
+    if (!emEdicao && !this.caixaAtual) {
+      this.erro = 'Só é possível registrar saída com o caixa aberto.';
+      return;
+    }
+
+    const valor = Number(this.novaSaida.valor ?? 0);
+    const troco = Number(this.novaSaida.troco ?? 0);
+    const motivo = this.novaSaida.motivo.trim();
+
+    if (valor <= 0) {
+      this.erro = 'Informe quanto saiu do caixa.';
+      return;
+    }
+    if (troco < 0 || troco > valor) {
+      this.erro = 'O troco não pode ser maior que o valor retirado.';
+      return;
+    }
+    if (!motivo) {
+      this.erro = 'Escreva o motivo da saída.';
+      return;
+    }
+
+    this.salvando = true;
+    const { error } = emEdicao
+      ? await this.supabaseService.atualizarSaidaCaixa(emEdicao.id, { valor, troco, motivo })
+      : await this.supabaseService.registrarSaidaCaixa(this.caixaAtual!.id, {
+          valor,
+          troco,
+          motivo
+        });
+    this.salvando = false;
+
+    if (error) {
+      this.erro = emEdicao
+        ? 'Não foi possível salvar a alteração da saída.'
+        : 'Não foi possível registrar a saída.';
+      console.error(error);
+      return;
+    }
+
+    this.modalSaidaAberto = false;
+    this.saidaEmEdicao = null;
+    this.novaSaida = { valor: null, troco: 0, motivo: '' };
+    await this.carregarDados();
+  }
+
+async excluirSaidaCaixa(saida: SaidaCaixa): Promise<void> {
+  if (!confirm(`Excluir a saída de ${this.formatarMoeda(Number(saida.valor_efetivo))}?`)) {
+    return;
+  }
+
+  this.erro = '';
+  const { error } = await this.supabaseService.removerSaidaCaixa(saida.id);
+  if (error) {
+    this.erro = 'Não foi possível excluir a saída.';
+    console.error(error);
+    return;
+  }
+
   await this.carregarDados();
 }
+
 
 formatarDataHora(data: string): string {
   return new Date(data).toLocaleString('pt-BR');

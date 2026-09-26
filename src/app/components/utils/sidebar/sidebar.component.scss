@@ -187,6 +187,30 @@ ul.nav {
   list-style: none;
 }
 
+/* Categorias do menu: o cabeçalho some quando a barra recolhe, e os itens
+   mantêm o mesmo recuo para o texto não pular de coluna ao recolher. */
+ul.nav li.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+ul.nav li.nav-group + li.nav-group {
+  margin-top: 0.6rem;
+}
+
+.nav-group-title {
+  display: block;
+  padding: 0.35rem 0.9rem 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-color) 45%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 
 ul.nav li .nav-link {
   display: flex;

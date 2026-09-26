@@ -710,10 +710,70 @@ getVendasArrecadacao() {
     .from('vendas_arrecadacao')
     .select(`
       *,
-      membro:membros(id, nome_completo),
+      membro:membros(id, nome_completo, email, telefone),
       itens:itens_venda_arrecadacao(*)
     `)
-    .order('data_venda', { ascending: false });
+    .order('data_venda', { ascending: false })
+    .order('criado_em', { ascending: false });
+}
+
+getSaidasCaixa(caixaIds: string[]) {
+  if (!caixaIds.length) {
+    return Promise.resolve({ data: [] as any[], error: null });
+  }
+
+  return this.supabase
+    .from('saidas_caixa')
+    .select('*')
+    .in('caixa_id', caixaIds)
+    .order('criado_em', { ascending: false });
+}
+
+registrarSaidaCaixa(caixaId: string, saida: { valor: number; troco: number; motivo: string }) {
+  return this.supabase
+    .from('saidas_caixa')
+    .insert([
+      {
+        caixa_id: caixaId,
+        valor: saida.valor,
+        troco: saida.troco,
+        motivo: saida.motivo
+      }
+    ])
+    .select()
+    .single();
+}
+
+  /**
+   * Corrige uma saída já registrada.
+   *
+   * `valor_efetivo` é coluna gerada no banco (valor - troco), então não entra
+   * aqui: o Postgres recalcula sozinho. Quem editou e quando ficam guardados,
+   * porque mexer em número de gaveta precisa ser rastreável.
+   */
+  async atualizarSaidaCaixa(saidaId: string, saida: { valor: number; troco: number; motivo: string }) {
+    const { data } = await this.supabase.auth.getUser();
+    return this.supabase
+      .from('saidas_caixa')
+      .update({
+        valor: saida.valor,
+        troco: saida.troco,
+        motivo: saida.motivo,
+        atualizado_por: data.user?.id ?? null,
+        atualizado_em: new Date().toISOString()
+      })
+      .eq('id', saidaId);
+  }
+
+  removerSaidaCaixa(saidaId: string) {
+    return this.supabase.from('saidas_caixa').delete().eq('id', saidaId);
+  }
+
+async reabrirCaixa(caixaId: string, observacoes: string) {
+  return this.supabase.rpc('reabrir_caixa', {
+    p_caixa_id: caixaId,
+    p_observacoes: observacoes
+  });
 }
 
 async criarVendaArrecadacao(venda: any, itens: any[]) {
@@ -764,17 +824,18 @@ async removerItemArrecadacao(itemId: string, vendaId: string, totalRestante: num
     .eq('id', vendaId);
 }
 
+  /** Quita a venda: status e forma de pagamento são do nível da venda. */
   marcarVendaArrecadacaoComoPaga(id: string, formaPagamento: 'pix' | 'debito' | 'credito' | 'dinheiro') {
-  return this.supabase
-    .from('vendas_arrecadacao')
-    .update({
-      status: 'pago',
-      forma_pagamento: formaPagamento,
-      data_pagamento: new Date().toISOString(),
-      atualizado_em: new Date().toISOString()
-    })
-    .eq('id', id);
-}
+    return this.supabase
+      .from('vendas_arrecadacao')
+      .update({
+        status: 'pago',
+        forma_pagamento: formaPagamento,
+        data_pagamento: new Date().toISOString(),
+        atualizado_em: new Date().toISOString()
+      })
+      .eq('id', id);
+  }
 
 async getCaixaAberto() {
   return this.supabase

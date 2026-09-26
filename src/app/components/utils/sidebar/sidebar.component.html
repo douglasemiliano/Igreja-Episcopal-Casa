@@ -42,19 +42,25 @@
     } @else {
       <ul class="nav">
 
-        @for (item of itensVisiveis; track item.path) {
-          <li>
-            <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
+        @for (grupo of gruposVisiveis; track grupo.titulo) {
+          <li class="nav-group">
+            @if (!collapsed) {
+              <span class="nav-group-title">{{ grupo.titulo }}</span>
+            }
 
-              <mat-icon class="material-icons-outlined">
-                {{ item.icon }}
-              </mat-icon>
+            @for (item of grupo.itens; track item.path) {
+              <a [routerLink]="item.path" routerLinkActive="active" class="nav-link">
 
-              <span class="link-text">
-                {{ item.label }}
-              </span>
+                <mat-icon class="material-icons-outlined">
+                  {{ item.icon }}
+                </mat-icon>
 
-            </a>
+                <span class="link-text">
+                  {{ item.label }}
+                </span>
+
+              </a>
+            }
           </li>
         }
 
