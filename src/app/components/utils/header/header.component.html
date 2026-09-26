@@ -113,6 +113,18 @@
           </button>
 
           <button
+            class="user-menu-item"
+            [class.user-menu-item--update]="atualizacaoDisponivel"
+            type="button"
+            role="menuitem"
+            [disabled]="verificandoAtualizacao"
+            (click)="atualizarApp()"
+          >
+            <mat-icon>system_update_alt</mat-icon>
+            <span>{{ rotuloAtualizacao }}</span>
+          </button>
+
+          <button
             class="user-menu-item user-menu-item--logout"
             type="button"
             role="menuitem"

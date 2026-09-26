@@ -5,8 +5,13 @@
     role="alert"
     [class.success]="toast.tipo === 'success'"
     [class.error]="toast.tipo === 'error'">
-    <div class="d-flex">
+    <div class="d-flex align-items-center">
       <div class="toast-body">{{ toast.mensagem }}</div>
+      @if (toast.acao; as acao) {
+      <button type="button" class="btn btn-link btn-sm me-2 p-0 text-nowrap" (click)="executar(toast)">
+        {{ acao.rotulo }}
+      </button>
+      }
       <button
         type="button"
         class="btn-close me-2 m-auto"

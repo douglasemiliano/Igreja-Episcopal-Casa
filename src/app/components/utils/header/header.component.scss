@@ -325,6 +325,27 @@
     height: 20px;
     font-size: 20px;
   }
+
+  &:disabled {
+    color: var(--text-soft);
+    cursor: default;
+
+    &:hover,
+    &:focus-visible {
+      background: transparent;
+    }
+  }
+}
+
+/* Versão nova esperando: o botão fica azul para chamar o olho. */
+.user-menu-item--update {
+  color: var(--color-primary);
+  font-weight: 600;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-light-primary);
+  }
 }
 
 .user-menu-item--logout {

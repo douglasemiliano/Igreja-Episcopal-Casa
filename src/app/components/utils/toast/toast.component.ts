@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ToastService } from '../../../services/toast.service';
+import { Toast, ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-toast-container',
@@ -11,4 +11,10 @@ import { ToastService } from '../../../services/toast.service';
 })
 export class ToastContainerComponent {
   readonly toastService = inject(ToastService);
+
+  /** Fecha o toast e só então roda a ação, para ela poder recarregar a página. */
+  executar(toast: Toast): void {
+    this.toastService.fechar(toast.id);
+    toast.acao?.executar();
+  }
 }

@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
 import { CoreService } from '../../../services/core.service';
 import { LecionarioService } from '../../../services/lecionario.service';
+import { PwaUpdateService } from '../../../services/pwa-update.service';
 import { SupabaseService } from '../../../services/supabase.service';
 import { SearchbarComponent } from '../searchbar/searchbar.component';
 
@@ -67,6 +68,25 @@ export class HeaderComponent {
     return !this.fotoUsuario || this.fotoQueFalhou === this.fotoUsuario;
   }
 
+  /**
+   * Rótulo do botão de atualização. Só de olhar o texto já dá para saber em
+   * que estado a checagem está, e se já há versão nova esperando.
+   */
+  get rotuloAtualizacao(): string {
+    if (this.pwaUpdate.verificando()) return 'Verificando...';
+    return this.pwaUpdate.atualizacaoPronta() ? 'Atualizar agora' : 'Atualizar app';
+  }
+
+  /** Versão nova já baixada: o botão ganha destaque. */
+  get atualizacaoDisponivel(): boolean {
+    return this.pwaUpdate.atualizacaoPronta();
+  }
+
+  /** Evita que o botão seja tocado de novo com a verificação em andamento. */
+  get verificandoAtualizacao(): boolean {
+    return this.pwaUpdate.verificando();
+  }
+
   registrarErroFoto(url: string): void {
     this.fotoQueFalhou = url;
   }
@@ -75,7 +95,8 @@ export class HeaderComponent {
     private router: Router,
     private supabase: SupabaseService,
     private lecionarioService: LecionarioService,
-    private coreService: CoreService
+    private coreService: CoreService,
+    private pwaUpdate: PwaUpdateService
   ) {}
 
   ngOnInit(): void {
@@ -182,6 +203,15 @@ export class HeaderComponent {
   goToPerfil(): void {
     this.closeUserMenu();
     this.router.navigate(['/perfil']);
+  }
+
+  /**
+   * Procura versão nova e recarrega. Se houver, ela já foi baixada e é
+   * ativada antes do reload; se não houver, o reload é o que o usuário pediu.
+   */
+  async atualizarApp(): Promise<void> {
+    this.closeUserMenu();
+    await this.pwaUpdate.recarregar();
   }
 
   goToCadastro(): void {
