@@ -190,7 +190,7 @@ export class PostagemComponent {
     if (error) {
       console.error(error);
       if (typeof imagemUrl === 'string') {
-        void this.supabase.removerImagemPostagem(imagemUrl);
+        void this.supabase.removerImagem(imagemUrl);
       }
       this.salvando = false;
       this.toast.erro('Não foi possível salvar a alteração');
@@ -208,7 +208,7 @@ export class PostagemComponent {
     // `imagemUrl` só é string quando houve upload; se ficou undefined, a
     // coluna não foi tocada e apagar a foto atual quebraria a publicação.
     if (fotoAntiga && typeof imagemUrl === 'string') {
-      void this.supabase.removerImagemPostagem(fotoAntiga);
+      void this.supabase.removerImagem(fotoAntiga);
     }
 
     this.toast.sucesso('Atualização editada');
@@ -228,7 +228,7 @@ export class PostagemComponent {
     }
 
     if (this.publicacao.imagem_url) {
-      void this.supabase.removerImagemPostagem(this.publicacao.imagem_url);
+      void this.supabase.removerImagem(this.publicacao.imagem_url);
     }
 
     this.toast.sucesso('Atualização removida');

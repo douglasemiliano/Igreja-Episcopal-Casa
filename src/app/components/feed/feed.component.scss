@@ -242,10 +242,35 @@ a.text-button {
     }
   }
 
-  .post-head time {
-    color: var(--color-primary);
-    opacity: 1;
-    font-weight: 600;
+  /*
+   * Mesmo tratamento das publicações comuns: horário cinza e pequeno, dentro
+   * do mesmo wrapper. A data do evento já aparece em destaque no corpo do
+   * post, então o timestamp não precisa competir com ela em cor e negrito.
+   */
+  .post-head-right {
+    display: flex;
+    align-items: center;
+    gap: .15rem;
+    flex-shrink: 0;
+
+    time {
+      opacity: .55;
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+  }
+
+  /* `contain` + `height: auto`: a foto do evento aparece inteira. */
+  .evento-imagem {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    object-fit: contain;
+    margin-top: .6rem;
+    border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+    border-radius: .6rem;
+    background: var(--background-color);
   }
 }
 

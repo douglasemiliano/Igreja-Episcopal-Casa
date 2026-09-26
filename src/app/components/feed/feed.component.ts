@@ -68,6 +68,17 @@ export class FeedComponent implements OnInit {
     this.fotoQueFalhou = url;
   }
 
+  /** Capas de evento que já falharam ao carregar; o Storage às vezes devolve 429. */
+  private capasQueFalharam = new Set<string>();
+
+  temCapaEvento(evento: any): boolean {
+    return !!evento.imagem_url && !this.capasQueFalharam.has(evento.imagem_url);
+  }
+
+  marcarCapaQueFalhou(url: string): void {
+    this.capasQueFalharam.add(url);
+  }
+
   constructor() {
     this.core.usuario$.subscribe({
       next: (usuario) => (this.minhaFoto = usuario.foto)
@@ -107,6 +118,8 @@ export class FeedComponent implements OnInit {
   async carregar(): Promise<void> {
     this.carregando = true;
     this.erro = '';
+    // A lista recarrega inteira, então as falhas antigas não valem mais.
+    this.capasQueFalharam.clear();
 
     // Publicações e eventos futuros são carregados em paralelo: um erro
     // em um deles não pode esconder o outro.
@@ -186,7 +199,7 @@ export class FeedComponent implements OnInit {
     if (error) {
       console.error(error);
       if (imagemUrl) {
-        void this.supabase.removerImagemPostagem(imagemUrl);
+        void this.supabase.removerImagem(imagemUrl);
       }
       this.enviando = false;
       this.toast.erro('Não foi possível publicar a atualização');
@@ -203,7 +216,15 @@ export class FeedComponent implements OnInit {
     await this.carregar();
   }
 
-  /** "agora", "há 5 min", "há 2 h", "há 3 d" — usado no card de evento. */
+  /**
+   * "agora", "há 5 min", "há 2 h", "há 3 d" — mede quando o post foi criado,
+   * não quando o evento acontece.
+   *
+   * Passar a data do evento aqui dava "agora" em todo card: o mural só traz
+   * eventos futuros, então a diferença para agora seria negativa e cairia no
+   * primeiro `if`. A data do evento é mostrada por `dataEvento`, no corpo do
+   * post.
+   */
   tempoRelativo(iso: string): string {
     const minutos = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
     if (minutos < 1) return 'agora';
@@ -213,6 +234,37 @@ export class FeedComponent implements OnInit {
     const dias = Math.floor(horas / 24);
     if (dias < 7) return `há ${dias} d`;
     return new Date(iso).toLocaleDateString('pt-BR');
+  }
+
+  /**
+   * Data e hora do evento no corpo do card: "hoje, 19:30", "amanhã, 19:30"
+   * ou "12/05, 19:30".
+   */
+  dataEvento(iso: string): string {
+    const data = new Date(iso);
+    if (isNaN(data.getTime())) return '';
+
+    const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const hoje = new Date();
+
+    // Comparação por calendário, não por diferença de timestamp: somar 24 h
+    // em ms erra o dia em horário de verão.
+    const inicioDoDia = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+    if (inicioDoDia(data) === inicioDoDia(hoje)) return `hoje, ${hora}`;
+
+    const amanha = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1);
+    if (inicioDoDia(data) === inicioDoDia(amanha)) return `amanhã, ${hora}`;
+
+    // O ano só aparece quando é outro, para não repetir a cada card.
+    const mesmoAno = data.getFullYear() === hoje.getFullYear();
+    const dia = data.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      ...(mesmoAno ? {} : { year: 'numeric' })
+    });
+
+    return `${dia}, ${hora}`;
   }
 
   /** Data por extenso para o tooltip do timestamp do evento. */

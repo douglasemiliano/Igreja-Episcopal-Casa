@@ -1,4 +1,55 @@
-<div class="agenda-page"><header class="agenda-heading"><div><p class="eyebrow">Organização da igreja</p><h1>Agenda</h1><p>Cultos, reuniões, celebrações, escalas e ações.</p></div></header>
-@if (erro) {<div class="alert">{{ erro }}</div>}
-<section class="agenda-layout" [class.agenda-layout--list]="!podeEditar">@if (podeEditar) {<form class="agenda-form" (ngSubmit)="salvar()"><div class="panel-heading"><h2>{{ editandoId ? 'Editar evento' : 'Novo evento' }}</h2>@if(editandoId){<button type="button" class="text-button" (click)="cancelar()">Cancelar</button>}</div><label>Título<input name="titulo" [(ngModel)]="form.titulo" placeholder="Ex.: Culto de domingo" required></label><label>Tipo<select name="tipo" [(ngModel)]="form.tipo">@for(tipo of tipos; track tipo){<option [value]="tipo">{{ tipo | titlecase }}</option>}</select></label><label>Início<input name="inicio" type="datetime-local" [(ngModel)]="form.inicio" required></label><label>Fim<input name="fim" type="datetime-local" [(ngModel)]="form.fim"></label><label>Local<input name="local" [(ngModel)]="form.local" placeholder="Ex.: Igreja principal"></label><label>Responsáveis<input name="responsaveis" [(ngModel)]="form.responsaveis" placeholder="Nomes ou equipe"></label><label>Observações<textarea name="observacoes" [(ngModel)]="form.observacoes" rows="3"></textarea></label><button class="primary-button" type="submit" [disabled]="salvando">{{ salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Adicionar evento') }}</button></form>}
-<section class="agenda-list"><div class="panel-heading"><h2>Próximos eventos</h2><select [(ngModel)]="filtroTipo" aria-label="Filtrar por tipo"><option value="">Todos os tipos</option>@for(tipo of tipos; track tipo){<option [value]="tipo">{{ tipo | titlecase }}</option>}</select></div>@if(carregando){<p>Carregando agenda...</p>}@else if(!eventosFiltrados.length){<p class="empty">Nenhum evento cadastrado.</p>}@else{@for(evento of eventosFiltrados; track evento.id){<article class="event-card"><div class="event-date"><strong>{{ evento.inicio | date:'dd' }}</strong><span>{{ evento.inicio | date:'MMM' }}</span></div><div class="event-content"><span class="tag">{{ evento.tipo | titlecase }}</span><h3>{{ evento.titulo }}</h3><p>{{ evento.inicio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.local || 'Local não informado' }}</p>@if(evento.responsaveis){<small>Responsáveis: {{ evento.responsaveis }}</small>}@if(evento.observacoes){<small>{{ evento.observacoes }}</small>}</div>@if (podeEditar) {<div class="event-actions"><button type="button" (click)="iniciarEdicao(evento)" aria-label="Editar">Editar</button><button type="button" (click)="excluir(evento)" aria-label="Excluir">Excluir</button></div>}</article>}}</section></section></div>
+<div class="agenda-page">
+    <header class="agenda-heading">
+        <div>
+            <p class="eyebrow">Organização da igreja</p>
+            <h1>Agenda</h1>
+            <p>Cultos, reuniões, celebrações, escalas e ações.</p>
+        </div>
+    </header>
+    @if (erro) {<div class="alert">{{ erro }}</div>}
+    <section class="agenda-layout" [class.agenda-layout--list]="!podeEditar">@if (podeEditar) {<form class="agenda-form"
+            (ngSubmit)="salvar()">
+            <div class="panel-heading">
+                <h2>{{ editandoId ? 'Editar evento' : 'Novo evento' }}</h2>@if(editandoId){<button type="button"
+                    class="text-button" (click)="cancelar()">Cancelar</button>}
+            </div><label>Título<input name="titulo" [(ngModel)]="form.titulo" placeholder="Ex.: Culto de domingo"
+                    required></label><label>Tipo<select name="tipo" [(ngModel)]="form.tipo">@for(tipo of tipos; track
+                    tipo){<option [value]="tipo">{{ tipo | titlecase }}</option>}</select></label><label>Início<input
+                    name="inicio" type="datetime-local" [(ngModel)]="form.inicio" required></label><label>Fim<input
+                    name="fim" type="datetime-local" [(ngModel)]="form.fim"></label><label>Local<input name="local"
+                    [(ngModel)]="form.local" placeholder="Ex.: Igreja principal"></label><label>Responsáveis<input
+                    name="responsaveis"                     [(ngModel)]="form.responsaveis"
+                    placeholder="Nomes ou equipe"></label><label>Observações<textarea name="observacoes"
+                    [(ngModel)]="form.observacoes" rows="3"></textarea></label>
+            <app-seletor-imagem
+                #seletorCapa
+                [urlAtual]="imagemRemovida ? '' : (form.imagem_url || '')"
+                (arquivo)="imagemArquivo = $event; imagemRemovida = false"
+                (removido)="imagemRemovida = true"></app-seletor-imagem>
+            <button class="primary-button" type="submit" [disabled]="salvando">{{ salvando ? 'Salvando...' :
+                (editandoId ? 'Salvar alterações' : 'Adicionar evento') }}</button>
+        </form>}
+        <section class="agenda-list">
+            <div class="panel-heading">
+                <h2>Próximos eventos</h2><select [(ngModel)]="filtroTipo" aria-label="Filtrar por tipo">
+                    <option value="">Todos os tipos</option>@for(tipo of tipos; track tipo){<option [value]="tipo">{{
+                        tipo | titlecase }}</option>}
+                </select>
+            </div>@if(carregando){<p>Carregando agenda...</p>}@else if(!eventosFiltrados.length){<p class="empty">Nenhum
+                evento cadastrado.</p>}@else{@for(evento of eventosFiltrados; track evento.id){<article
+                class="event-card">
+                <div
+                    class="event-date"><strong>{{ evento.inicio | date:'dd' }}</strong><span>{{ evento.inicio |
+                            date:'MMM' }}</span></div>
+                <div class="event-content"><span class="tag">{{ evento.tipo | titlecase }}</span>
+                    <h3>{{ evento.titulo }}</h3>
+                    <p>{{ evento.inicio | date:'dd/MM/yyyy HH:mm' }} · {{ evento.local || 'Local não informado' }}</p>
+                    @if(evento.responsaveis){<small>Responsáveis: {{ evento.responsaveis
+                        }}</small>}@if(evento.observacoes){<small>{{ evento.observacoes }}</small>}
+                </div>@if (podeEditar) {<div class="event-actions"><button type="button" (click)="iniciarEdicao(evento)"
+                        aria-label="Editar">Editar</button><button type="button" (click)="excluir(evento)"
+                        aria-label="Excluir">Excluir</button></div>}
+            </article>}}
+        </section>
+    </section>
+</div>

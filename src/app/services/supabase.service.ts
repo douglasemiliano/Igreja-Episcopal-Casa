@@ -470,7 +470,7 @@ getAgenda(filtros: { inicio?: string; fim?: string } = {}) {
 getProximosEventos(limite = 5) {
   return this.supabase
     .from('agenda_igreja')
-    .select('id, titulo, tipo, inicio, local, responsaveis, observacoes')
+      .select('id, titulo, tipo, inicio, local, responsaveis, observacoes, imagem_url, criado_em')
     .gte('inicio', new Date().toISOString())
     .order('inicio', { ascending: true })
     .limit(limite);
@@ -595,18 +595,34 @@ excluirFeed(id: string) {
   return this.supabase.from('feed_publicacoes').delete().eq('id', id);
 }
 
-// --- FOTO DA PUBLICAÇÃO ---
+// --- FOTO DA PUBLICAÇÃO E DO EVENTO ---
+
+  /** Foto da publicação do feed. */
+  async enviarImagemPostagem(arquivo: File): Promise<{ url: string } | { erro: string }> {
+    return this.enviarFotoParaBucket(arquivo, '');
+  }
 
   /**
-   * Envia a foto para `postagens/<user_id>/<aleatorio>.<ext>` e devolve a URL
-   * pública. O nome tem sufixo aleatório porque o post pode trocar de imagem
+   * Foto do evento. O prefixo separa os dois arquivos na mesma pasta do
+   * usuário: `postagens/<id>/evento-<aleatorio>.jpg`.
+   */
+  async enviarImagemEvento(arquivo: File): Promise<{ url: string } | { erro: string }> {
+    return this.enviarFotoParaBucket(arquivo, 'evento-');
+  }
+
+  /**
+   * Envia a foto para `postagens/<user_id>/<prefixo><aleatorio>.<ext>` e devolve
+   * a URL pública. O nome tem sufixo aleatório porque a foto pode ser trocada
    * várias vezes e sobrescrever a anterior quebraria o cache do navegador.
    *
    * O teto de tamanho vale para o arquivo escolhido; o que sobe é sempre o
    * JPEG reduzido pelo canvas, então a imagem nunca chega ao bucket no
    * tamanho original.
    */
-  async enviarImagemPostagem(arquivo: File): Promise<{ url: string } | { erro: string }> {
+  private async enviarFotoParaBucket(
+    arquivo: File,
+    prefixo: string
+  ): Promise<{ url: string } | { erro: string }> {
     const user = await this.getUser();
     if (!user) return { erro: 'Sessão expirada. Faça login novamente.' };
 
@@ -627,7 +643,7 @@ excluirFeed(id: string) {
       return { erro: 'Não foi possível preparar a imagem para envio.' };
     }
 
-    const caminho = `${user.id}/${this.idAleatorio()}.jpg`;
+    const caminho = `${user.id}/${prefixo}${this.idAleatorio()}.jpg`;
 
     const { error: erroUpload } = await this.supabase.storage
       .from('postagens')
@@ -643,12 +659,19 @@ excluirFeed(id: string) {
   }
 
 /**
- * Apaga a foto no storage a partir da URL pública.
- * Falha silenciosa: é limpeza, e o chamador já Gravou o dado do post.
+ * Apaga a foto no storage a partir da URL pública, seja do feed ou do evento.
+ * Falha silenciosa: é limpeza, e o chamador já gravou o dado na tabela.
+ *
+ * A guarda exige que a foto esteja na pasta de quem está chamando. Isso
+ * protege a URL de ser adulterada para apontar para a pasta de outro, mas
+ * tem uma consequência: quem troca a capa de um evento criado por outra
+ * pessoa não consegue apagar o arquivo antigo — ele vira órfão no bucket.
+ * A alternativa (liberar remoção para qualquer autenticado) abriria espaço
+ * para um usuário apagar a foto de outro, o que é bem pior.
  */
-async removerImagemPostagem(url: string): Promise<void> {
+async removerImagem(url: string): Promise<void> {
   try {
-    const caminho = this.caminhoDaUrlPostagem(url);
+    const caminho = this.caminhoDaUrlBucket(url);
     if (!caminho) return;
 
     const user = await this.getUser();
@@ -662,7 +685,7 @@ async removerImagemPostagem(url: string): Promise<void> {
 }
 
   /** Extrai o caminho do objeto de uma URL pública do bucket `postagens`. */
-  private caminhoDaUrlPostagem(url: string): string {
+  private caminhoDaUrlBucket(url: string): string {
     const marcador = '/object/public/postagens/';
     const indice = url.indexOf(marcador);
     if (indice === -1) return '';

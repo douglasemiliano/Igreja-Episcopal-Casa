@@ -1,7 +1,7 @@
 <div class="feed-page">
   <header class="feed-heading">
     <div>
-      <h1>Feed</h1>
+      <h1>Feed de Notícias</h1>
       <p>Atualizações, avisos e os próximos eventos da igreja.</p>
     </div>
   </header>
@@ -26,16 +26,17 @@
           [(ngModel)]="conteudo"
           placeholder="O que você gostaria de avisar à igreja?"></textarea>
         <div class="composer-actions">
+          
           <small class="composer-count">{{ conteudo.length }}/1000</small>
+        <app-seletor-imagem
+          #seletorImagem
+          (arquivo)="imagemArquivo = $event"
+          (removido)="imagemArquivo = null" />
           <button class="primary-button" type="button" [disabled]="enviando || !conteudo.trim()" (click)="publicar()">
             {{ enviando ? 'Publicando...' : 'Publicar' }}
           </button>
         </div>
 
-        <app-seletor-imagem
-          #seletorImagem
-          (arquivo)="imagemArquivo = $event"
-          (removido)="imagemArquivo = null" />
       </div>
     </section>
   }
@@ -61,14 +62,25 @@
                   <strong>{{ item.evento.titulo }}</strong>
                   <small class="post-roles">{{ item.evento.tipo | titlecase }}</small>
                 </div>
-                <time [attr.datetime]="item.evento.inicio" [attr.title]="dataCompleta(item.evento.inicio)">
-                  {{ tempoRelativo(item.evento.inicio) }}
-                </time>
+                <div class="post-head-right">
+                  <time [attr.datetime]="item.evento.criado_em" [attr.title]="dataCompleta(item.evento.criado_em)">
+                    {{ tempoRelativo(item.evento.criado_em) }}
+                  </time>
+                </div>
               </header>
 
               <p class="post-content">
-                @if (item.evento.local) { {{ item.evento.local }} }
+                {{ dataEvento(item.evento.inicio) }}@if (item.evento.local) { · {{ item.evento.local }} }
               </p>
+
+              @if (temCapaEvento(item.evento)) {
+                <img
+                  class="evento-imagem"
+                  [src]="item.evento.imagem_url"
+                  [alt]="'Foto do evento ' + item.evento.titulo"
+                  loading="lazy"
+                  (error)="marcarCapaQueFalhou(item.evento.imagem_url)">
+              }
 
               @if (item.evento.responsaveis || item.evento.observacoes) {
                 <p class="post-detalhes">
