@@ -142,6 +142,15 @@
   margin-left: auto;
 }
 
+/*
+ * Botão de lupa: só existe no mobile, onde a busca é aberta por demanda.
+ * No desktop o campo fica sempre visível e a lupa ficaria sobrando.
+ */
+.search-toggle {
+  display: none;
+  margin-left: auto;
+}
+
 
 
 /* =========================================
@@ -388,6 +397,43 @@
 }
 
 
+/*
+ * No mobile a busca sai da linha: fechada, só a lupa ocupa o slot à
+ * esquerda do tema; aberta, o campo cresce a partir dela e ocupa o centro
+ * do header, terminando logo antes do botão de tema. Nada desce para uma
+ * segunda linha — por isso o `nowrap`, que impede o wrap de empurrar a
+ * busca para baixo quando a tela é estreita.
+ *
+ * A lupa some com a busca aberta porque o campo já traz o próprio X para
+ * fechar; os dois botões juntos só roubariam largura do campo.
+ */
+@media (max-width: 768px) {
+
+  .header-content {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .header-search {
+    display: none;
+
+    &.header-search--aberta {
+      display: block;
+      flex: 1;
+      margin-left: 0;
+    }
+  }
+
+  .search-toggle {
+    display: inline-flex;
+
+    &:has(+ .header-search--aberta) {
+      display: none;
+    }
+  }
+}
+
+
 @media (max-width: 600px) {
 
   .header {
@@ -400,33 +446,12 @@
   .header-content {
     height: auto;
 
-    flex-wrap: wrap;
     gap: 0.4rem;
     row-gap: 0.5rem;
 
     padding: 0.5rem 0.75rem;
 
     border-radius: 15px;
-  }
-
-  /*
-   * No mobile a busca desce para uma segunda linha: na mesma linha só
-   * cabem o menu, o tema e o usuário. É por aqui que se navega, já que o
-   * menu lateral fica escondido atrás do botão.
-   */
-  .header-search {
-    order: 10;
-    flex-basis: 100%;
-    max-width: none;
-    margin-left: 0;
-  }
-
-  /*
-   * Com a busca em outra linha, o `margin-left: auto` dela não empurra
-   * mais nada, então o botão de tema assume o papel.
-   */
-  .icon-button {
-    margin-left: auto;
   }
 
   .user-info {

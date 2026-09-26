@@ -20,7 +20,7 @@ export interface MenuItem {
 })
 export class MenuService {
   readonly itens: MenuItem[] = [
-    { path: '/home', label: 'Feed', icon: 'newspaper', roles: [] },
+    { path: '/home', label: 'Inicio', icon: 'newspaper', roles: [] },
     {
       path: '/central',
       label: 'Central',

@@ -4,6 +4,7 @@
     <mat-icon class="material-icons-outlined searchbar-icon">search</mat-icon>
 
     <input
+      #campo
       class="searchbar-input"
       type="text"
       role="combobox"
@@ -15,7 +16,11 @@
       (ngModelChange)="aoDigitar($event)"
       (keydown)="aoTeclar($event)">
 
-    @if (termo) {
+    @if (fechavel) {
+      <button class="searchbar-clear" type="button" aria-label="Fechar busca" (click)="fechado.emit()">
+        <mat-icon>close</mat-icon>
+      </button>
+    } @else if (termo) {
       <button class="searchbar-clear" type="button" aria-label="Limpar busca" (click)="limpar()">
         <mat-icon>close</mat-icon>
       </button>

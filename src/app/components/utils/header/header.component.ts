@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
 import { CoreService } from '../../../services/core.service';
@@ -23,6 +23,18 @@ export class HeaderComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   appsMenuOpen = false;
+  /**
+   * No mobile a busca fica atrás da lupa: fechada ocupa o header só o
+   * botão, aberta a campo cresce no meio da linha, à esquerda do tema.
+   * No desktop o campo é sempre visível e esta flag é ignorada.
+   */
+  buscaAberta = false;
+
+  /** O header sabe se está no mobile para não expor o X no desktop. */
+  isMobile = false;
+
+  @ViewChild(SearchbarComponent) busca?: SearchbarComponent;
+
   /** Sem foto, fica vazio: a view desenha o ícone de usuário. */
   fotoUsuario = '';
   /**
@@ -85,6 +97,15 @@ export class HeaderComponent {
         this.isDarkMode = data === 'dark';
       }
     });
+
+    this.coreService.isMobile$.subscribe({
+      next: (data) => {
+        // Ao voltar para desktop o campo já é visível por CSS, então a
+        // busca "aberta" não pode sobrar marcada para quando voltar.
+        if (!data) this.buscaAberta = false;
+        this.isMobile = data;
+      }
+    });
   }
 
   private async carregarUsuario(): Promise<void> {
@@ -127,6 +148,24 @@ export class HeaderComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.isUserMenuOpen = false;
+    this.fecharBusca();
+  }
+
+  alternarBusca(): void {
+    this.buscaAberta = !this.buscaAberta;
+
+    if (this.buscaAberta) {
+      /*
+       * O foco só funciona depois que o Angular aplica a classe que troca
+       * display: none por flex. Focar no mesmo tick do clique não faria
+       * nada, porque o input ainda está fora do layout.
+       */
+      setTimeout(() => this.busca?.focar());
+    }
+  }
+
+  fecharBusca(): void {
+    this.buscaAberta = false;
   }
 
   onDarkToggle(): void {

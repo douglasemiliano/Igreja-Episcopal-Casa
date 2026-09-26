@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnDestroy, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnDestroy, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
@@ -31,6 +31,14 @@ export class SearchbarComponent implements OnDestroy {
   @Input() placeholder = 'Buscar no menu...';
   @Input() inline = false;
 
+  /**
+   * No mobile a busca só existe enquanto o usuário não fecha, então o
+   * botão vira "fechar" em vez de "limpar" — não há teclado para dar
+   * Escape e o campo não pode ficar ocupando a linha.
+   */
+  @Input() fechavel = false;
+  @Output() fechado = new EventEmitter<void>();
+
   @Input() termo = '';
   @Output() termoChange = new EventEmitter<string>();
 
@@ -41,6 +49,8 @@ export class SearchbarComponent implements OnDestroy {
   indiceAtivo = -1;
   painelAberto = false;
   roles: string[] = ['membro'];
+
+  @ViewChild('campo') campo?: ElementRef<HTMLInputElement>;
 
   private readonly inscricao: Subscription;
 
@@ -57,6 +67,14 @@ export class SearchbarComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.inscricao.unsubscribe();
+  }
+
+  /**
+   * Foca o campo. No mobile quem chama é o header, ao abrir a busca por
+   * trás da lupa — sem isso o usuário teria que tocar de novo no campo.
+   */
+  focar(): void {
+    this.campo?.nativeElement.focus();
   }
 
   aoDigitar(valor: string): void {

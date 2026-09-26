@@ -10,7 +10,7 @@
     <!-- LINKS -->
     <nav class="header-nav">
 
-      <a href="#" class="nav-link">
+      <!-- <a href="#" class="nav-link">
         Apps
       </a>
 
@@ -24,15 +24,30 @@
 
       <a href="#" class="nav-link">
         Email
-      </a>
+      </a> -->
 
     </nav>
 
 
     <!-- BUSCA -->
+    <button
+      class="icon-button search-toggle"
+      type="button"
+      aria-label="Buscar no menu"
+      [attr.aria-expanded]="buscaAberta"
+      (click)="alternarBusca()">
+
+      <mat-icon>search</mat-icon>
+
+    </button>
+
     <app-searchbar
       class="header-search"
-      placeholder="Buscar no menu...">
+      [class.header-search--aberta]="buscaAberta"
+      [fechavel]="isMobile"
+      placeholder="Buscar no menu..."
+      (fechado)="fecharBusca()"
+      (navegou)="fecharBusca()">
     </app-searchbar>
 
 
