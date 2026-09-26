@@ -146,11 +146,22 @@ export class FeedComponent implements OnInit {
       console.error(eventos.value.error);
     }
 
+    /*
+     * Ordem única por recência: o que foi publicado mais recentemente fica
+     * no topo, evento ou não. Antes o tipo do item decidia a ordem e todo
+     * evento ia para cima, de modo que uma postagem recém-criada aparecia
+     * abaixo de eventos antigos.
+     *
+     * A chave é `criado_em` nos dois casos — a mesma que aparece no horário do
+     * card. Ordenar o evento pela data em que acontece (`inicio`) não
+     * resolveria, já que eventos são sempre futuros e voltariam a flutuar
+     * para o topo.
+     */
     this.itens = [
       ...listaEventos.map((evento) => ({
         tipo: 'evento' as const,
         id: evento.id,
-        data: evento.inicio,
+        data: evento.criado_em,
         evento
       })),
       ...listaPublicacoes.map((publicacao) => ({
@@ -159,13 +170,7 @@ export class FeedComponent implements OnInit {
         data: publicacao.criado_em,
         publicacao
       }))
-    ].sort((a, b) => {
-      // Eventos primeiro (próximos), publicaciones por recência.
-      if (a.tipo !== b.tipo) return a.tipo === 'evento' ? -1 : 1;
-      return a.tipo === 'evento'
-        ? new Date(a.data).getTime() - new Date(b.data).getTime()
-        : new Date(b.data).getTime() - new Date(a.data).getTime();
-    });
+    ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
     if (!listaPublicacoes.length && publicacoes.status === 'fulfilled' && publicacoes.value.error) {
       this.erro = 'Não foi possível carregar o feed.';
