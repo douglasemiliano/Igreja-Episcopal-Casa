@@ -27,8 +27,8 @@
     <button type="button" [class.active]="abaAtiva === 'pendentes'" (click)="setAba('pendentes')">
       <span class="tab-icon">!</span>
       <span>Fiado</span>
-@if (vendasPendentes.length) {
-            <span class="tab-count">{{ vendasPendentes.length }}</span>
+@if (contasMembro.length) {
+            <span class="tab-count">{{ contasMembro.length }}</span>
       }
     </button>
     <button type="button" [class.active]="abaAtiva === 'resumo'" (click)="setAba('resumo')">
@@ -178,8 +178,8 @@
           <p class="eyebrow">Pagar depois</p>
           <h2>Fiado em aberto</h2>
           <p class="section-hint">
-            Cada linha é uma venda. Toque na linha para abrir os itens e quitar
-            a venda.
+            Cada conta é de uma pessoa. Toque na conta para ver as compras e
+            quitar tudo de uma vez.
           </p>
         </div>
         <strong class="open-total">{{ formatarMoeda(totalPendente) }}</strong>
@@ -195,70 +195,81 @@
 
       @if (carregando) {
         <p class="empty-state">Carregando pendências...</p>
-      } @else if (!vendasPendentes.length) {
+      } @else if (!contasMembro.length) {
         <p class="empty-state empty-state--icon">
           <span class="empty-emoji">📋</span>
           Nenhum fiado registrado.
         </p>
       } @else {
         <div class="pending-groups">
-          @for (venda of vendasPendentes; track venda.vendaId) {
-            <article class="pending-group pending-group--collapse">
+          @for (conta of contasMembro; track conta.chave) {
+            <article class="pending-group pending-group--conta">
               <button
                 type="button"
                 class="pending-heading pending-heading--botao"
-                (click)="alternarVendaExpandida(venda.vendaId)"
-                [attr.aria-expanded]="vendaExpandida(venda.vendaId)"
+                (click)="alternarContaExpandida(conta.chave)"
+                [attr.aria-expanded]="contaExpandida(conta.chave)"
               >
                 <div>
-                  <strong>{{ venda.membro }}</strong>
+                  <strong>{{ conta.membro }}</strong>
                   <small>
-                    {{ nomeFormaPagamento(venda.forma_pagamento) }} ·
-                    {{ formatarDataHora(venda.data_venda) }} ·
-                    {{ venda.itens.length }} {{ venda.itens.length === 1 ? 'item' : 'itens' }}
+                    {{ conta.vendas.length }} {{ conta.vendas.length === 1 ? 'compra' : 'compras' }}
+                    · desde {{ formatarData(conta.vendas[0].data_venda) }}
                   </small>
-                  @if (venda.telefone || venda.email) {
-                    <small class="pending-contato">{{ venda.telefone || venda.email }}</small>
+                  @if (conta.telefone || conta.email) {
+                    <small class="pending-contato">{{ conta.telefone || conta.email }}</small>
                   }
                 </div>
                 <div class="pending-heading-actions">
-                  <span>{{ formatarMoeda(venda.total) }}</span>
-                  <span class="pending-toggle">{{ vendaExpandida(venda.vendaId) ? 'Fechar' : 'Ver detalhes' }}</span>
+                  <span>{{ formatarMoeda(conta.total) }}</span>
+                  <span class="pending-toggle">{{ contaExpandida(conta.chave) ? 'Fechar' : 'Ver compras' }}</span>
                 </div>
               </button>
 
-              @if (vendaExpandida(venda.vendaId)) {
-                @if (venda.fiadoEmOutrosCaixas > 0) {
+              @if (contaExpandida(conta.chave)) {
+                @if (conta.fiadoEmOutrosCaixas > 0) {
                   <p class="pending-aviso-outros">
-                    Esta pessoa também deve {{ formatarMoeda(venda.fiadoEmOutrosCaixas) }} em outro
+                    Esta pessoa também deve {{ formatarMoeda(conta.fiadoEmOutrosCaixas) }} em outro
                     caixa. Fica separado de propósito: o dinheiro pertence ao caixa
                     onde a compra foi feita.
                   </p>
                 }
 
                 <div class="pending-detalhe">
-                  @for (item of venda.itens; track item.id) {
-                    <div class="pending-item">
-                      <div>
-                        <strong>{{ item.descricao }}</strong>
-                        <small>
-                          {{ nomeCategoria(item.categoria) }} · x{{ item.quantidade }}
-                        </small>
-                      </div>
-                      <div class="pending-item-actions">
-                        <strong>{{ formatarMoeda(item.valor_total) }}</strong>
-                        <button type="button" (click)="excluirItem(item)">Excluir item</button>
-                      </div>
-                    </div>
+                  @for (venda of conta.vendas; track venda.vendaId) {
+                    <section class="conta-venda">
+                      <header class="conta-venda-head">
+                        <span>
+                          {{ nomeFormaPagamento(venda.forma_pagamento) }} ·
+                          {{ formatarDataHora(venda.data_venda) }}
+                        </span>
+                        <strong>{{ formatarMoeda(venda.total) }}</strong>
+                      </header>
+
+                      @for (item of venda.itens; track item.id) {
+                        <div class="pending-item">
+                          <div>
+                            <strong>{{ item.descricao }}</strong>
+                            <small>
+                              {{ nomeCategoria(item.categoria) }} · x{{ item.quantidade }}
+                            </small>
+                          </div>
+                          <div class="pending-item-actions">
+                            <button type="button" (click)="excluirItem(item)">Excluir item</button>
+                            <strong>{{ formatarMoeda(item.valor_total) }}</strong>
+                          </div>
+                        </div>
+                      }
+                    </section>
                   }
 
                   <div class="pending-rodape">
-                    <span>Total da venda</span>
-                    <strong>{{ formatarMoeda(venda.total) }}</strong>
+                    <span>Total da conta</span>
+                    <strong>{{ formatarMoeda(conta.total) }}</strong>
                   </div>
 
-                  <button type="button" class="pending-quitar" (click)="abrirModalPagamento(venda.vendaId)">
-                    Marcar venda como paga
+                  <button type="button" class="pending-quitar" (click)="abrirModalPagamentoConta(conta)">
+                    Quitar conta de {{ conta.membro }}
                   </button>
                 </div>
               }
@@ -327,7 +338,7 @@
         </div>
       </div>
 
-      <div class="fecho-panel">
+      <!-- <div class="fecho-panel">
         <p class="eyebrow">Como fecha este caixa</p>
         <div class="fecho-linha">
           <span>Recebido de vendas</span>
@@ -352,9 +363,9 @@
           entra em "recebido": ele aparece em "Vendido" e só entra aqui quando a
           venda é quitada.
         </p>
-      </div>
+      </div> -->
 
-      <div class="gaveta-panel">
+      <!-- <div class="gaveta-panel">
         <p class="eyebrow">Conferência da gaveta</p>
         <div class="gaveta-linha">
           <span>Troco inicial</span>
@@ -376,7 +387,7 @@
           Pix, débito e crédito não entram aqui: viram direto na conta da ação e
           nunca passam pela gaveta.
         </p>
-      </div>
+      </div> -->
 
       <div class="summary-filter">
         <span class="filter-label">Mostrar no resumo</span>
@@ -397,7 +408,7 @@
         <div><span>Feijoada</span><strong>{{ formatarMoeda(totalPorCategoria('feijoada')) }}</strong></div>
       </div> -->
 
-      <div class="payment-totals">
+      <!-- <div class="payment-totals">
         <p class="eyebrow">Por forma de pagamento</p>
         <div class="payment-total-list">
           <div><span>Pix <small>{{ quantidadePorForma('pix') }}×</small></span><strong>{{ formatarMoeda(totalPorForma('pix')) }}</strong></div>
@@ -406,17 +417,21 @@
           <div><span>Dinheiro <small>{{ quantidadePorForma('dinheiro') }}×</small></span><strong>{{ formatarMoeda(totalPorForma('dinheiro')) }}</strong></div>
           <div><span>Fiado <small>{{ quantidadePorForma('fiado') }}×</small></span><strong>{{ formatarMoeda(totalPorForma('fiado')) }}</strong></div>
         </div>
-      </div>
+      </div> -->
 
       @if (devedores.length) {
         <div class="devedores-panel">
           <p class="eyebrow">Quem está devendo</p>
-          @for (devedor of devedores; track devedor.vendaId) {
+          @for (devedor of devedores; track devedor.chave) {
             <div class="devedor-item">
               <div class="devedor-info">
                 <strong>{{ devedor.nome }}</strong>
                 <small>
-                  {{ formatarData(devedor.dataVenda) }} · {{ devedor.itens }}
+                  @if (devedor.vendas > 1) {
+                    {{ devedor.vendas }} compras · desde {{ formatarData(devedor.dataVenda) }}
+                  } @else {
+                    {{ formatarData(devedor.dataVenda) }} · {{ devedor.itens }}
+                  }
                 </small>
                 @if (devedor.telefone || devedor.email) {
                   <small class="devedor-contato">
@@ -466,27 +481,14 @@
       @if (!arrecadacoesFiltradas.length) {
         <p class="empty-state">Nenhum lançamento encontrado com esses filtros.</p>
       } @else {
-        <div class="sales-list">
-          @for (arrecadacao of arrecadacoesFiltradas; track arrecadacao.id) {
-            <div class="sale-item">
-              <div class="sale-main">
-                <strong>{{ arrecadacao.descricao }}</strong>
-                <small>{{ nomeCategoria(arrecadacao.categoria) }} · {{ nomeFormaPagamento(arrecadacao.forma_pagamento) }} · {{ formatarData(arrecadacao.data_venda) }} · x{{ arrecadacao.quantidade }}</small>
-              </div>
-              <div class="sale-side">
-                <strong>{{ formatarMoeda(arrecadacao.valor_total) }}</strong>
-                <span class="status" [class.status--pending]="arrecadacao.status === 'pendente'">{{ arrecadacao.status === 'pendente' ? 'Pendente' : 'Pago' }}</span>
-              </div>
-              @if (arrecadacao.status === 'pendente' && ehPrimeiroItemDaVenda(arrecadacao)) {
-                <button type="button" class="delete-button" (click)="marcarComoPago(arrecadacao)">Marcar venda como paga</button>
-              }
-              <button type="button" class="delete-button" (click)="excluirItem(arrecadacao)" aria-label="Excluir item">Excluir item</button>
-            </div>
-          }
-        </div>
-
-        <div class="mobile-only venda-cards-wrap">
-          <p class="eyebrow">Últimas vendas</p>
+        <!--
+          A lista de vendas é agrupada por venda, e não por item, em todas as
+          telas: uma compra é um negócio só, mesmo tendo cinco itens dentro.
+          No desktop era uma linha por item, e a mesma compra aparecia cinco
+          vezes sem nada dizendo que eram a mesma coisa.
+        -->
+        <div class="venda-cards-wrap">
+          <p class="eyebrow">Vendas</p>
           @for (venda of vendasResumo; track venda.vendaId) {
             <ng-container *ngTemplateOutlet="cartaoVenda; context: { $implicit: venda }"></ng-container>
           }
@@ -659,8 +661,16 @@
     <button type="button" class="venda-card-head" (click)="alternarVendaExpandida(venda.vendaId)">
       <span class="venda-card-tags">
         <span class="pag-pill {{ classePagamento(venda.forma_pagamento) }}">{{ nomeFormaPagamento(venda.forma_pagamento) }}</span>
-        <span class="acao-pill">{{ nomeCategoria(venda.categoria) }}</span>
-        <small>{{ formatarData(venda.data_venda) }}</small>
+        @for (categoria of venda.categorias; track categoria) {
+          <span class="acao-pill">{{ nomeCategoria(categoria) }}</span>
+        }
+        @if (venda.status === 'pendente') {
+          <span class="status status--pending">Pendente</span>
+        }
+        @if (venda.membro) {
+          <span class="venda-card-membro">{{ venda.membro }}</span>
+        }
+        <small>{{ formatarData(venda.data_venda) }} · {{ venda.itens.length }} {{ venda.itens.length === 1 ? 'item' : 'itens' }}</small>
       </span>
       <strong class="venda-card-total">{{ formatarMoeda(venda.total) }}</strong>
     </button>
@@ -678,7 +688,7 @@
         }
         <div class="venda-card-actions">
           @if (venda.status === 'pendente') {
-            <button type="button" class="venda-card-pagar" (click)="abrirModalPagamento(venda.vendaId)">Marcar venda como paga</button>
+            <p class="venda-card-obs">Fiado: para quitar, abra a aba Fiado.</p>
           }
           @for (item of venda.itens; track item.id) {
             <button type="button" class="venda-card-excluir" (click)="excluirItem(item)">Excluir {{ item.descricao }}</button>
@@ -696,10 +706,30 @@
         <div>
           <p class="eyebrow">Quitar conta</p>
           <h2 id="payment-modal-title">Como foi pago?</h2>
-          <p>Escolha o método usado no pagamento desta venda.</p>
+          <p>Escolha o método usado no pagamento da conta.</p>
         </div>
         <button type="button" class="payment-modal-close" (click)="fecharModalPagamento()" aria-label="Fechar">×</button>
       </div>
+
+      @if (contaPagamento) {
+        <div class="payment-modal-conta">
+          <div>
+            <strong>{{ contaPagamento.nome }}</strong>
+            <small>
+              @if (contaPagamento.vendaIds.length > 1) {
+                {{ contaPagamento.vendaIds.length }} compras
+              } @else {
+                1 compra
+              }
+            </small>
+          </div>
+          <strong>{{ formatarMoeda(contaPagamento.total) }}</strong>
+        </div>
+      }
+
+      @if (erro) {
+        <p class="payment-modal-erro" role="alert">{{ erro }}</p>
+      }
 
       <div class="payment-modal-options">
         <button type="button" [class.selected]="formaPagamentoQuitacao === 'pix'" (click)="formaPagamentoQuitacao = 'pix'">Pix</button>

@@ -33,13 +33,17 @@ interface SaidaCaixa {
   criado_em: string;
 }
 
-/** Uma pessoa devendo, agrupada por venda, para a lista de quem está devendo. */
+/** Uma pessoa devendo, agrupada por pessoa, para a lista de quem está devendo. */
 interface Devedor {
-  vendaId: string;
+  /** A conta da pessoa, no mesmo formato de `ContaMembro.chave`. */
+  chave: string;
   nome: string;
   email: string;
   telefone: string;
   total: number;
+  /** Quantas vendas somam esta dívida. */
+  vendas: number;
+  /** A data da venda mais recente: é a que dá para cobrar. */
   dataVenda: string;
   itens: string;
 }
@@ -47,10 +51,16 @@ interface Devedor {
 /** Uma venda em aberto: a linha que aparece dentro da conta do membro. */
 interface VendaPendente {
   vendaId: string;
+  membro_id: string | null;
+  caixa_id: string | null;
+  membro: string;
+  telefone: string;
+  email: string;
   forma_pagamento: NonNullable<Arrecadacao['forma_pagamento']>;
   data_venda: string;
   itens: Arrecadacao[];
   total: number;
+  fiadoEmOutrosCaixas: number;
 }
 
 /**
@@ -75,8 +85,10 @@ interface ContaMembro {
 
 interface VendaAgrupada {
   vendaId: string;
+  /** Quem vai pagar. Vazio quando a venda não tem membro vinculado. */
   membro: string;
-  categoria: 'bazar' | 'hamburgada' | 'feijoada';
+  /** Uma venda pode misturar ações: bazar e hamburgada no mesmo carrinho. */
+  categorias: Arrecadacao['categoria'][];
   forma_pagamento: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado';
   status: 'pago' | 'pendente';
   data_venda: string;
@@ -146,12 +158,18 @@ export class ArrecadacoesComponent implements OnInit, OnDestroy {
   pagamentoConfirmado = false;
   toastVendaRegistrada = false;
   vendasExpandidas = new Set<string>();
+  contasExpandidas = new Set<string>();
   private toastTimer?: ReturnType<typeof setTimeout>;
   modalValorLivreAberto = false;
   itemLivreDescricao = '';
   itemLivreValor: number | null = null;
   modalPagamentoAberto = false;
-  vendaPagamentoId = '';
+  /**
+   * A conta que o modal vai quitar. Guardar as vendas aqui, e não só a chave,
+   * porque o modal precisa mostrar o total e porque a lista pode mudar entre a
+   * hora de abrir e a de confirmar.
+   */
+  contaPagamento: { nome: string; total: number; vendaIds: string[] } | null = null;
   formaPagamentoQuitacao: 'pix' | 'debito' | 'credito' | 'dinheiro' = 'dinheiro';
 
   novoLancamento = {
@@ -275,14 +293,13 @@ get totalArrecadadoCaixaAtual(): number {
   }
 
   /**
-   * As vendas em aberto, uma por linha.
+   * As vendas em aberto do caixa em foco, uma por linha.
    *
-   * A lista mostra só o total de cada venda; o detalhe dos itens fica atrás
-   * do clique, para não transformar a aba numa parede de item. É só visual:
-   * os dados são os mesmos de antes.
+   * É a matéria-prima das contas: a lista mostra só o total de cada venda, e o
+   * detalhe dos itens fica atrás do clique, para não transformar a aba numa
+   * parede de item.
    */
-  get vendasPendentes(): VendaPendente[] {
-    const grupos = new Map<string, Arrecadacao[]>();
+  get vendasPendentes(): VendaPendente[] {    const grupos = new Map<string, Arrecadacao[]>();
 
     for (const item of this.pendenciasFiltradas) {
       const vendaId = item.venda_id ?? item.id;
@@ -294,6 +311,8 @@ get totalArrecadadoCaixaAtual(): number {
         const primeiro = itens[0];
         return {
           vendaId,
+          membro_id: primeiro.membro_id ?? null,
+          caixa_id: primeiro.caixa_id ?? null,
           membro: primeiro.membro?.nome_completo || 'Membro não identificado',
           telefone: primeiro.membro?.telefone ?? '',
           email: primeiro.membro?.email ?? '',
@@ -305,6 +324,52 @@ get totalArrecadadoCaixaAtual(): number {
         };
       })
       .sort((a, b) => b.total - a.total);
+  }
+
+  /**
+   * A conta de fiado de cada pessoa, com as vendas dela dentro.
+   *
+   * Comprar fiado duas vezes no mesmo caixa não abre duas contas: é a mesma
+   * pessoa devendo, e a tela mostra uma linha só, com o total somado. As vendas
+   * continuam separadas por dentro, porque cada uma tem data e itens próprios.
+   */
+  get contasMembro(): ContaMembro[] {
+    const grupos = new Map<string, VendaPendente[]>();
+
+    for (const venda of this.vendasPendentes) {
+      const chave = this.chaveConta(venda);
+      grupos.set(chave, [...(grupos.get(chave) ?? []), venda]);
+    }
+
+    return [...grupos.entries()]
+      .map(([chave, vendas]) => {
+        const maisAntigasPrimeiro = [...vendas].sort(
+          (a, b) => new Date(a.data_venda).getTime() - new Date(b.data_venda).getTime()
+        );
+        return {
+          chave,
+          membro: vendas[0].membro,
+          telefone: vendas[0].telefone,
+          email: vendas[0].email,
+          vendas: maisAntigasPrimeiro,
+          vendaIds: vendas.map((venda) => venda.vendaId),
+          total: vendas.reduce((total, venda) => total + venda.total, 0),
+          // o aviso é da pessoa, não da venda: não adianta repetir a mesma
+          // frase em cada linha da mesma conta
+          fiadoEmOutrosCaixas: Math.max(...vendas.map((venda) => venda.fiadoEmOutrosCaixas))
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }
+
+  /**
+   * A identidade de uma conta de fiado: a pessoa e o caixa.
+   *
+   * O caixa entra na chave porque o dinheiro de um turno pertence àquela gaveta.
+   * Sem ele, a conta de sábado se misturaria com a de domingo.
+   */
+  private chaveConta(venda: Pick<VendaPendente, 'membro_id' | 'caixa_id'>): string {
+    return `${venda.membro_id ?? 'sem-membro'}::${venda.caixa_id ?? 'sem-caixa'}`;
   }
 
   /**
@@ -405,25 +470,33 @@ get totalArrecadadoCaixaAtual(): number {
   }
 
   /**
-   * Uma pessoa devendo, agrupada por venda, para a lista de quem está devendo.
+   * Quem está devendo, uma linha por pessoa.
+   *
+   * Mesmo agrupamento da aba de fiado: quem compra fiado duas vezes aparece uma
+   * vez só, com as duas compras somadas. Senão o resumo falaria em dizer "2
+   * pessoas" para alguém que está devendo uma vez só.
    */
   get devedores(): Devedor[] {
     const grupos = new Map<string, Arrecadacao[]>();
 
     for (const item of this.arrecadacoesCaixa) {
       if (item.status !== 'pendente') continue;
-      const vendaId = item.venda_id ?? item.id;
-      grupos.set(vendaId, [...(grupos.get(vendaId) ?? []), item]);
+      const chave = this.chaveConta({ membro_id: item.membro_id ?? null, caixa_id: item.caixa_id ?? null });
+      grupos.set(chave, [...(grupos.get(chave) ?? []), item]);
     }
 
     return [...grupos.entries()]
-      .map(([vendaId, itens]) => ({
-        vendaId,
+      .map(([chave, itens]) => ({
+        chave,
         nome: itens[0].membro?.nome_completo || 'Membro não identificado',
         email: itens[0].membro?.email ?? '',
         telefone: itens[0].membro?.telefone ?? '',
         total: itens.reduce((total, item) => total + Number(item.valor_total), 0),
-        dataVenda: itens[0].data_venda,
+        vendas: new Set(itens.map((item) => item.venda_id ?? item.id)).size,
+        dataVenda: itens.reduce(
+          (maisRecente, item) => (item.data_venda > maisRecente ? item.data_venda : maisRecente),
+          itens[0].data_venda
+        ),
         itens: itens.map((item) => `${item.quantidade}x ${item.descricao}`).join(', ')
       }))
       .sort((a, b) => b.total - a.total);
@@ -459,8 +532,15 @@ get totalArrecadadoCaixaAtual(): number {
     return new Set(this.arrecadacoesCaixa.map((item) => item.venda_id ?? item.id)).size;
   }
 
+  /**
+   * As vendas do caixa em foco, uma por linha, com os itens dentro.
+   *
+   * Uma compra é um negócio só, mesmo tendo vários itens: mostrar um item por
+   * linha faz a mesma compra aparecer várias vezes, e nada na tela diz que são
+   * a mesma coisa.
+   */
   get vendasResumo(): VendaAgrupada[] {
-    return this.agruparVendas(this.arrecadacoesFiltradas).slice(0, 8);
+    return this.agruparVendas(this.arrecadacoesFiltradas);
   }
 
   setAba(aba: 'registrar' | 'pendentes' | 'resumo'): void {
@@ -638,6 +718,18 @@ get totalArrecadadoCaixaAtual(): number {
     }
   }
 
+  alternarContaExpandida(chave: string): void {
+    if (this.contasExpandidas.has(chave)) {
+      this.contasExpandidas.delete(chave);
+    } else {
+      this.contasExpandidas.add(chave);
+    }
+  }
+
+  contaExpandida(chave: string): boolean {
+    return this.contasExpandidas.has(chave);
+  }
+
   vendaExpandida(vendaId: string): boolean {
     return this.vendasExpandidas.has(vendaId);
   }
@@ -667,8 +759,8 @@ get totalArrecadadoCaixaAtual(): number {
     return [...grupos.entries()]
       .map(([vendaId, itens]) => ({
         vendaId,
-        membro: itens[0].membro?.nome_completo || 'Membro não identificado',
-        categoria: itens[0].categoria,
+        membro: itens[0].membro?.nome_completo ?? '',
+        categorias: [...new Set(itens.map((item) => item.categoria))],
         forma_pagamento: itens[0].forma_pagamento ?? 'dinheiro',
         status: itens.some((item) => item.status === 'pendente') ? 'pendente' as const : 'pago' as const,
         data_venda: itens[0].data_venda,
@@ -783,38 +875,39 @@ get totalArrecadadoCaixaAtual(): number {
     await this.carregarDados();
   }
 
-  async marcarComoPago(arrecadacao: Arrecadacao): Promise<void> {
-    const vendaId = arrecadacao.venda_id ?? arrecadacao.id;
-    this.abrirModalPagamento(vendaId);
-  }
-
-  /** Quita uma venda inteira: o status e a forma de pagamento são da venda. */
-  abrirModalPagamento(vendaId: string): void {
-    this.vendaPagamentoId = vendaId;
+    /** Quita a conta inteira: uma confirmação para todas as vendas da pessoa. */
+  abrirModalPagamentoConta(conta: ContaMembro): void {
+    this.erro = '';
+    this.contaPagamento = {
+      nome: conta.membro,
+      total: conta.total,
+      vendaIds: [...conta.vendaIds]
+    };
     this.formaPagamentoQuitacao = 'dinheiro';
     this.modalPagamentoAberto = true;
   }
 
   fecharModalPagamento(): void {
     this.modalPagamentoAberto = false;
-    this.vendaPagamentoId = '';
+    this.contaPagamento = null;
   }
 
-  /** Quita a venda inteira: o status e a forma de pagamento são da venda. */
+  /** Quita a conta inteira: uma chamada para todas as vendas da pessoa. */
   async confirmarPagamento(): Promise<void> {
-    if (!this.vendaPagamentoId) {
+    const conta = this.contaPagamento;
+    if (!conta) {
       return;
     }
 
     this.salvando = true;
-    const { error } = await this.supabaseService.marcarVendaArrecadacaoComoPaga(
-      this.vendaPagamentoId,
+    const { error } = await this.supabaseService.marcarVendasArrecadacaoComoPagas(
+      conta.vendaIds,
       this.formaPagamentoQuitacao
     );
     this.salvando = false;
 
     if (error) {
-      this.erro = 'Não foi possível marcar a venda como paga.';
+      this.erro = 'Não foi possível quitar a conta.';
       console.error(error);
       return;
     }
@@ -935,6 +1028,7 @@ get totalArrecadadoCaixaAtual(): number {
         email: devedor.email,
         telefone: devedor.telefone,
         total: devedor.total,
+        vendas: devedor.vendas,
         dataVenda: this.formatarData(devedor.dataVenda),
         itens: devedor.itens
       })),
@@ -998,11 +1092,6 @@ get totalArrecadadoCaixaAtual(): number {
     return this.arrecadacoes
       .filter((item) => (item.venda_id ?? item.id) === vendaId)
       .reduce((total, item) => total + Number(item.valor_total), 0);
-  }
-
-  ehPrimeiroItemDaVenda(arrecadacao: Arrecadacao): boolean {
-    const vendaId = arrecadacao.venda_id ?? arrecadacao.id;
-    return this.arrecadacoesFiltradas.find((item) => (item.venda_id ?? item.id) === vendaId)?.id === arrecadacao.id;
   }
 
   private novoId(): string {

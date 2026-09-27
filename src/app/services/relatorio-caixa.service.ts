@@ -25,6 +25,8 @@ export interface LinhaDevedorRelatorio {
   email: string;
   telefone: string;
   total: number;
+  /** Quantas compras somam esta dívida. */
+  vendas: number;
   dataVenda: string;
   itens: string;
 }
@@ -153,10 +155,11 @@ export class RelatorioCaixaService {
       ctx.secao('Quem está devendo');
       dados.devedores.forEach((devedor) => {
         const contato = [devedor.telefone, devedor.email].filter(Boolean).join(' · ');
+        const compras = devedor.vendas > 1 ? `${devedor.vendas} compras desde` : 'venda de';
         ctx.detalhe(
           devedor.nome,
           this.formatarMoeda(devedor.total),
-          `${contato || 'sem contato cadastrado'} · ${devedor.dataVenda} · ${devedor.itens}`
+          `${contato || 'sem contato cadastrado'} · ${compras} ${devedor.dataVenda} · ${devedor.itens}`
         );
       });
     }
@@ -234,12 +237,13 @@ export class RelatorioCaixaService {
 
     if (dados.devedores.length) {
       linhas.push(['QUEM ESTÁ DEVEDO']);
-      linhas.push(['Nome', 'Telefone', 'E-mail', 'Data da venda', 'Itens', 'Total']);
+      linhas.push(['Nome', 'Telefone', 'E-mail', 'Compras', 'Data da última compra', 'Itens', 'Total']);
       dados.devedores.forEach((devedor) =>
         linhas.push([
           devedor.nome,
           devedor.telefone,
           devedor.email,
+          String(devedor.vendas),
           devedor.dataVenda,
           devedor.itens,
           moeda(devedor.total)

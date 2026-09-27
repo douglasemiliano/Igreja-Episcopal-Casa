@@ -32,6 +32,7 @@ interface ItemVenda {
   forma_pagamento: 'pix' | 'debito' | 'credito' | 'dinheiro' | 'fiado';
   status: 'pago' | 'pendente' | 'cancelado';
   data_venda: string;
+  membro_id?: string | null;
   membro?: { id: string; nome_completo: string; email?: string | null; telefone?: string | null } | null;
 }
 
@@ -46,10 +47,12 @@ interface SaidaCaixa {
 }
 
 interface LinhaDevedor {
+  chave: string;
   nome: string;
   email: string;
   telefone: string;
   total: number;
+  vendas: number;
   dataVenda: string;
   itens: string;
 }
@@ -291,7 +294,7 @@ export class RelatoriosCaixaComponent implements OnInit {
       .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
   }
 
-  /** Fiado agrupado por venda, com o contato para cobrar. */
+  /** Fiado agrupado por pessoa, com o contato para cobrar. */
   devedoresDoCaixa(caixaId: string): LinhaDevedor[] {
     const grupos = new Map<string, ItemVenda[]>();
 
@@ -299,16 +302,23 @@ export class RelatoriosCaixaComponent implements OnInit {
     // mesmo que a lista esteja filtrada para a hamburgada.
     for (const item of this.itens) {
       if (item.caixa_id !== caixaId || item.status !== 'pendente') continue;
-      grupos.set(item.venda_id, [...(grupos.get(item.venda_id) ?? []), item]);
+      // uma pessoa, uma linha: comprar fiado duas vezes não vira duas contas
+      const chave = item.membro_id ?? 'sem-membro';
+      grupos.set(chave, [...(grupos.get(chave) ?? []), item]);
     }
 
-    return [...grupos.values()]
-      .map((itens) => ({
+    return [...grupos.entries()]
+      .map(([chave, itens]) => ({
+        chave,
         nome: itens[0].membro?.nome_completo || 'Membro não identificado',
         email: itens[0].membro?.email ?? '',
         telefone: itens[0].membro?.telefone ?? '',
         total: itens.reduce((total, item) => total + Number(item.valor_total), 0),
-        dataVenda: itens[0].data_venda,
+        vendas: new Set(itens.map((item) => item.venda_id)).size,
+        dataVenda: itens.reduce(
+          (maisRecente, item) => (item.data_venda > maisRecente ? item.data_venda : maisRecente),
+          itens[0].data_venda
+        ),
         itens: itens.map((item) => `${item.quantidade}x ${item.descricao}`).join(', ')
       }))
       .sort((a, b) => b.total - a.total);
@@ -457,6 +467,7 @@ export class RelatoriosCaixaComponent implements OnInit {
         email: devedor.email,
         telefone: devedor.telefone,
         total: devedor.total,
+        vendas: devedor.vendas,
         dataVenda: this.formatarData(devedor.dataVenda),
         itens: devedor.itens
       })),
@@ -637,6 +648,7 @@ export class RelatoriosCaixaComponent implements OnInit {
         forma_pagamento: venda.forma_pagamento,
         status: venda.status,
         data_venda: venda.data_venda,
+        membro_id: venda.membro_id ?? null,
         membro: venda.membro ?? null
       }))
     );

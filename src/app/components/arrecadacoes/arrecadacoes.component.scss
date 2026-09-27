@@ -1081,8 +1081,7 @@ select:focus {
   gap: 0.8rem;
 }
 
-.pending-group,
-.sales-list {
+.pending-group {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
   border-radius: 0.7rem;
@@ -1090,8 +1089,7 @@ select:focus {
 }
 
 .pending-heading,
-.pending-item,
-.sale-item {
+.pending-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1169,8 +1167,7 @@ select:focus {
 }
 
 .pending-heading small,
-.pending-item small,
-.sale-main small {
+.pending-item small {
   display: block;
   margin-top: 0.2rem;
   color: color-mix(in srgb, var(--text-color) 58%, transparent);
@@ -1189,36 +1186,74 @@ select:focus {
   font-weight: var(--font-bold);
 }
 
-.pending-heading-actions button,
+/* A única ação de um item dentro da conta é excluir, então o botão é de
+   perigo: verde ali sugeria "confirmar", que é o que o botão de quitar faz.
+   As cores vêm do par de perigo do tema, então o contraste funciona no claro
+   e no escuro sem precisar de dois estilos. */
 .pending-item-actions button {
   padding: 0.45rem 0.65rem;
-  border: 0;
+  border: 1px solid var(--color-danger-border);
   border-radius: 0.4rem;
-  background: var(--color-success-btn);
-  color: var(--color-primary-contrast);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
   cursor: pointer;
   font: inherit;
   font-size: 0.72rem;
   font-weight: var(--font-bold);
 }
 
-.pending-item,
-.sale-item {
+.pending-item-actions button:hover {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 16%, var(--card-background));
+}
+
+.pending-item {
   border-bottom: 1px solid $fundo-fraco;
 }
 
-.pending-item:last-child,
-.sale-item:last-child {
+.pending-item:last-child {
   border-bottom: 0;
 }
 
-.pending-item-actions,
-.sale-side {
+/* Valor e "Excluir item" na mesma linha, encostados à direita: o botão fica do
+   lado do item que ele apaga, e não numa linha abaixo. */
+.pending-item-actions {
   display: flex;
-  align-items: flex-end;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.6rem;
   white-space: nowrap;
+}
+
+/* ---------- A conta: uma pessoa, várias compras ---------- */
+
+/* Uma compra da conta. O tracejado separa uma compra da outra, do mesmo jeito
+   que a borda separava os itens quando cada compra era a linha inteira. */
+.conta-venda + .conta-venda {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed color-mix(in srgb, var(--text-color) 15%, transparent);
+}
+
+.conta-venda-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0 0.3rem;
+  font-size: 0.74rem;
+  color: color-mix(in srgb, var(--text-color) 62%, transparent);
+}
+
+.conta-venda-head strong {
+  font-size: 0.85rem;
+  font-weight: var(--font-bold);
+  color: var(--text-color);
+}
+
+/* O item é a última coisa de uma compra, então a borda dele viraria uma linha
+   solta no meio da conta. */
+.conta-venda:last-child .pending-item:last-child {
+  border-bottom: 0;
 }
 
 .delete-button {
@@ -1243,6 +1278,159 @@ select:focus {
   background: color-mix(in srgb, var(--text-color) 3%, transparent);
   color: $texto-suave;
   text-align: center;
+}
+
+/* ---------- Cartões de venda ----------
+   A lista de vendas do resumo é agrupada por venda em todas as telas, então
+   estes estilos valem para o desktop também: só o que é realmente do mobile
+   fica dentro da media query mais abaixo. */
+
+.venda-cards-wrap {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.venda-cards-wrap > .eyebrow {
+  margin-bottom: 0.1rem;
+}
+
+.venda-card {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.85rem;
+  background: var(--fx-surface);
+}
+
+.venda-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.venda-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.venda-card-tags small {
+  color: var(--fx-muted);
+  font-size: 0.68rem;
+}
+
+/* Quem vai pagar. Só o nome, porque o valor e a situação já estão no card. */
+.venda-card-membro {
+  color: var(--fx-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.venda-card-total {
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.pag-pill,
+.acao-pill {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.acao-pill {
+  background: var(--fx-divider);
+  color: var(--fx-label);
+}
+
+.pag-pill--pix {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.pag-pill--debito {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.pag-pill--credito {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.pag-pill--dinheiro {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.pag-pill--fiado {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.venda-card-body {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--fx-divider);
+}
+
+.venda-card-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+  color: var(--fx-muted);
+  font-size: 0.8rem;
+}
+
+.venda-card-line strong {
+  color: var(--fx-text);
+}
+
+.venda-card-obs {
+  margin: 0.4rem 0 0;
+  color: var(--fx-label);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* O aviso de fiado é uma frase, não um botão: a conta se quita na aba Fiado. */
+.venda-card-actions .venda-card-obs {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.venda-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.venda-card-excluir {
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--fx-danger);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 /* ---------- Resumo ---------- */
@@ -1439,6 +1627,32 @@ select:focus {
   grid-template-columns: repeat(2, 1fr);
   gap: 0.65rem;
   margin: 1.25rem 0;
+}
+
+/* Quem está sendo quitado e por quanto. Sem isso, a confirmação de pagamento
+   não diz para onde o dinheiro está indo. */
+.payment-modal-conta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+}
+
+.payment-modal-conta small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--text-color) 58%, transparent);
+}
+
+.payment-modal-erro {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-danger);
 }
 
 .payment-modal-options button {
@@ -1639,16 +1853,18 @@ select:focus {
   }
 
   .pending-heading,
-  .pending-item,
-  .sale-item {
+  .pending-item {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .pending-heading-actions,
-  .pending-item-actions,
-  .sale-side {
+  .pending-heading-actions {
     align-items: flex-start;
+    width: 100%;
+  }
+
+  .pending-item-actions {
+    justify-content: flex-end;
     width: 100%;
   }
 
@@ -1759,12 +1975,6 @@ select:focus {
   .mobile-only.cart-sheet,
   .mobile-only.free-sheet {
     display: flex;
-  }
-
-  .mobile-only.venda-cards-wrap {
-    display: grid;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
   }
 
   /* ---------- Cabeçalho ---------- */
@@ -1909,13 +2119,15 @@ select:focus {
     padding-bottom: 6.5rem;
   }
 
+  /* Só o formulário de venda é escondido no celular: o carrinho e a escolha de
+     pagamento viram a folha inferior. Os cartões de resumo somam viram o
+     herói e o duo. A lista de fiado e a de vendas têm a mesma estrutura em
+     todas as telas, então continuam valendo. */
   .registrar-view .cart-panel,
   .registrar-view .register-button,
   .registrar-view .free-item-editor,
   .registrar-view .payment-field,
-  .pendentes-view .pending-groups,
-  .resumo-view .summary-cards,
-  .resumo-view .sales-list {
+  .resumo-view .summary-cards {
     display: none;
   }
 
@@ -2042,7 +2254,7 @@ select:focus {
     grid-column: 1 / -1;
   }
 
-  /* ---------- Resumo ---------- */
+/* ---------- Resumo ---------- */
 
   .summary-hero {
     padding: 1rem;
@@ -2146,146 +2358,6 @@ select:focus {
   .payment-total-list strong {
     color: var(--color-primary);
     font-size: 0.85rem;
-  }
-
-  /* ---------- Cartões de venda ---------- */
-
-  .venda-cards-wrap > .eyebrow {
-    margin-bottom: 0.1rem;
-  }
-
-  .venda-card {
-    display: block;
-    width: 100%;
-    padding: 0.85rem;
-    border: 1px solid var(--fx-border);
-    border-radius: 0.85rem;
-    background: var(--fx-surface);
-  }
-
-  .venda-card-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.6rem;
-    width: 100%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-  }
-
-  .venda-card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.3rem;
-  }
-
-  .venda-card-tags small {
-    color: var(--fx-muted);
-    font-size: 0.68rem;
-  }
-
-  .venda-card-total {
-    color: var(--color-primary);
-    font-size: 0.95rem;
-    white-space: nowrap;
-  }
-
-  .pag-pill,
-  .acao-pill {
-    padding: 0.15rem 0.55rem;
-    border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 600;
-  }
-
-  .acao-pill {
-    background: var(--fx-divider);
-    color: var(--fx-label);
-  }
-
-  .pag-pill--pix {
-    background: #dcfce7;
-    color: #16a34a;
-  }
-
-  .pag-pill--debito {
-    background: #dbeafe;
-    color: #1d4ed8;
-  }
-
-  .pag-pill--credito {
-    background: #ede9fe;
-    color: #7c3aed;
-  }
-
-  .pag-pill--dinheiro {
-    background: #fef9c3;
-    color: #854d0e;
-  }
-
-  .pag-pill--fiado {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
-
-  .venda-card-body {
-    margin-top: 0.7rem;
-    padding-top: 0.6rem;
-    border-top: 1px solid var(--fx-divider);
-  }
-
-  .venda-card-line {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.6rem;
-    padding: 0.2rem 0;
-    color: var(--fx-muted);
-    font-size: 0.8rem;
-  }
-
-  .venda-card-line strong {
-    color: var(--fx-text);
-  }
-
-  .venda-card-obs {
-    margin: 0.4rem 0 0;
-    color: var(--fx-label);
-    font-size: 0.75rem;
-    font-style: italic;
-  }
-
-  .venda-card-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.7rem;
-  }
-
-  .venda-card-pagar,
-  .venda-card-excluir {
-    padding: 0.45rem 0.6rem;
-    border: 0;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.72rem;
-    font-weight: 600;
-  }
-
-  .venda-card-pagar {
-    background: var(--color-success-btn);
-    color: var(--color-primary-contrast);
-  }
-
-  .venda-card-excluir {
-    background: transparent;
-    color: var(--fx-danger);
   }
 
   .pending-total-bar {

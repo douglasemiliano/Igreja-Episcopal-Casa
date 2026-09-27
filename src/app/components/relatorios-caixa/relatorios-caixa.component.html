@@ -178,11 +178,17 @@
                   <section class="relatorio-bloco">
                     <h3>Devedores</h3>
                     <div class="relatorio-lista">
-                      @for (devedor of devedoresDoCaixa(caixa.id); track devedor.dataVenda + devedor.total + devedor.nome) {
+                      @for (devedor of devedoresDoCaixa(caixa.id); track devedor.chave) {
                         <div class="relatorio-linha">
                           <div>
                             <strong>{{ devedor.nome }}</strong>
-                            <small>{{ devedor.itens }} · {{ formatarData(devedor.dataVenda) }}</small>
+                            <small>
+                              @if (devedor.vendas > 1) {
+                                {{ devedor.vendas }} compras · desde {{ formatarData(devedor.dataVenda) }}
+                              } @else {
+                                {{ devedor.itens }} · {{ formatarData(devedor.dataVenda) }}
+                              }
+                            </small>
                             @if (devedor.telefone || devedor.email) {
                               <small>{{ devedor.telefone || devedor.email }}</small>
                             }

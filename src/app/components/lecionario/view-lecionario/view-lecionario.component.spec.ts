@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LecionarioComponent } from './view-lecionario.component';
+import { ViewLecionarioComponent } from './view-lecionario.component';
 
-describe('LecionarioComponent', () => {
-  let component: LecionarioComponent;
-  let fixture: ComponentFixture<LecionarioComponent>;
+describe('ViewLecionarioComponent', () => {
+  let component: ViewLecionarioComponent;
+  let fixture: ComponentFixture<ViewLecionarioComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LecionarioComponent]
+      imports: [ViewLecionarioComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(LecionarioComponent);
+    fixture = TestBed.createComponent(ViewLecionarioComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

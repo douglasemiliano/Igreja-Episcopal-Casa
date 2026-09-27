@@ -1,17 +1,37 @@
 import { TestBed } from '@angular/core/testing';
-import { CanActivateFn } from '@angular/router';
+import { Router } from '@angular/router';
 
-import { authGuard } from './auth.guard';
+import { SupabaseService } from '../services/supabase.service';
+import { AuthGuard } from './auth.guard';
 
-describe('authGuard', () => {
-  const executeGuard: CanActivateFn = (...guardParameters) => 
-      TestBed.runInInjectionContext(() => authGuard(...guardParameters));
+describe('AuthGuard', () => {
+  let guard: AuthGuard;
+  let getUser: jasmine.Spy;
+  let navigate: jasmine.Spy;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    getUser = jasmine.createSpy('getUser').and.resolveTo({ id: 'u1' });
+    navigate = jasmine.createSpy('navigate');
+
+    TestBed.configureTestingModule({
+      providers: [
+        AuthGuard,
+        { provide: SupabaseService, useValue: { getUser } },
+        { provide: Router, useValue: { navigate } }
+      ]
+    });
+    guard = TestBed.inject(AuthGuard);
   });
 
-  it('should be created', () => {
-    expect(executeGuard).toBeTruthy();
+  it('libera a rota quando tem usuário', async () => {
+    await expectAsync(guard.canActivate()).toBeResolvedTo(true);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('manda para o login quando não tem usuário', async () => {
+    getUser.and.resolveTo(null);
+
+    await expectAsync(guard.canActivate()).toBeResolvedTo(false);
+    expect(navigate).toHaveBeenCalledWith(['/login']);
   });
 });

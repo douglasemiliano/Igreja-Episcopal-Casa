@@ -826,6 +826,22 @@ async removerItemArrecadacao(itemId: string, vendaId: string, totalRestante: num
 
   /** Quita a venda: status e forma de pagamento são do nível da venda. */
   marcarVendaArrecadacaoComoPaga(id: string, formaPagamento: 'pix' | 'debito' | 'credito' | 'dinheiro') {
+    return this.marcarVendasArrecadacaoComoPagas([id], formaPagamento);
+  }
+
+  /**
+   * Quita várias vendas de uma só vez.
+   *
+   * A conta de fiado de uma pessoa pode ter mais de uma venda em aberto, e
+   * quitar uma por vez obrigaria a repetir a mesma confirmação N vezes. Uma
+   * única chamada deixa o caixa inteiro no mesmo estado, mesmo que a tela feche
+   * no meio.
+   */
+  marcarVendasArrecadacaoComoPagas(ids: string[], formaPagamento: 'pix' | 'debito' | 'credito' | 'dinheiro') {
+    if (!ids.length) {
+      return Promise.resolve({ data: null, error: null });
+    }
+
     return this.supabase
       .from('vendas_arrecadacao')
       .update({
@@ -834,7 +850,7 @@ async removerItemArrecadacao(itemId: string, vendaId: string, totalRestante: num
         data_pagamento: new Date().toISOString(),
         atualizado_em: new Date().toISOString()
       })
-      .eq('id', id);
+      .in('id', ids);
   }
 
 async getCaixaAberto() {
