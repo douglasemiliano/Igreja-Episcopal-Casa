@@ -15,7 +15,7 @@ import { LoadingService } from './loading.service'; // Importando seu serviço d
  * Não é o tamanho que chega ao bucket: a foto da publicação é sempre
  * reencodeada para 1280px, então o enviado costuma ficar abaixo de 500 KB.
  * Esse teto existe só para não tentar decodificar um arquivo absurdo, e é
- * Generoso de propósito — ?" foto de celular moderno passa fácil de 10 MB, e
+ * Generoso de propósito — foto de celular moderno passa fácil de 10 MB, e
  * recusar no front só faria o usuário trocar de foto à toa.
  */
 export const TAMANHO_MAXIMO_IMAGEM_MB = 60;
@@ -129,7 +129,7 @@ export class SupabaseService {
    *
    * `sempreCompactar` inverte a escolha do fim: em vez de devolver o
    * original quando a reencode não ajudou, devolve o JPEG e falha se não
-   * conseguir. — É? o que a foto da publicação usa, para que o bucket nunca
+   * conseguir. É o que a foto da publicação usa, para que o bucket nunca
    * receba um arquivo que não passou pelo canvas.
    */
   private async compactarImagem(
@@ -426,7 +426,7 @@ deleteMembro(id: string) {
   return this.supabase.from('membros').delete().eq('id', id);
 }
 
-// --- CONFIRMAÇÕ?ÇÕ.ES ---
+// --- CONFIRMAÇÕES ---
 
 // Registrar confirmação
 confirmarMembro(membro_id: string, dadosConfirmacao: any) {
@@ -524,13 +524,12 @@ readonly rolesDisponiveis = [
   'membro'
 ];
 
-// --- PERMISSÕÃ.ES DINÕÃ,MICAS ---
-
+// --- PERMISSÕES DINÂMICAS ---
 /**
  * Capacidades do usuário corrente, resolvidas no banco por public.pode().
  *
- * É? a mesma função que as policies consultam, então o conjunto que volta aqui
- * e o que o banco aceita são o mesmo por construção — ?" não duas listas que
+ * É a mesma função que as policies consultam, então o conjunto que volta aqui
+ * e o que o banco aceita são o mesmo por construção — não duas listas que
  * precisam concordar.
  *
  * Ver docs/permissoes-dinamicas-plano.md e
@@ -658,8 +657,7 @@ excluirFeed(id: string) {
   return this.supabase.from('feed_publicacoes').delete().eq('id', id);
 }
 
-// --- FOTO DA PUBLICAÇÃ?ÇÃfO E DO EVENTO ---
-
+// --- FOTO DA PUBLICAÇÃO E DO EVENTO ---
   /** Foto da publicação do feed. */
   async enviarImagemPostagem(arquivo: File): Promise<{ url: string } | { erro: string }> {
     return this.enviarFotoParaBucket(arquivo, '');
@@ -728,7 +726,7 @@ excluirFeed(id: string) {
  * A guarda exige que a foto esteja na pasta de quem está chamando. Isso
  * protege a URL de ser adulterada para apontar para a pasta de outro, mas
  * tem uma consequência: quem troca a capa de um evento criado por outra
- * pessoa não consegue apagar o arquivo antigo — ?" ele vira órfão no bucket.
+ * pessoa não consegue apagar o arquivo antigo — ele vira órfão no bucket.
  * A alternativa (liberar remoção para qualquer autenticado) abriria espaço
  * para um usuário apagar a foto de outro, o que é bem pior.
  */

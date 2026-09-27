@@ -75,6 +75,17 @@ export class CadastrarMembroComponent implements OnInit {
         const { pessoais, adicionais, igreja } = this.membroForm.value;
         const membroData = { ...pessoais, ...adicionais, ...igreja };
 
+        // O formulário deixa os campos opcionais como string vazia. Mandar ''
+        // para uma coluna date/text é erro de dado no Postgres, não de
+        // permissão: '' não converte em data (SQLSTATE 22P02) e o PostgREST
+        // responde 400. Campo não preenchido vai como null, que é o que a
+        // coluna nullable espera.
+        for (const campo of ['email', 'telefone', 'data_nascimento', 'sexo', 'endereco', 'funcao', 'data_entrada']) {
+          if (membroData[campo] === '') {
+            membroData[campo] = null;
+          }
+        }
+
         // O supabase-js resolve { data, error } e NÃO lança. Sem destruturar o
         // error, o catch nunca dispara e a tela anunciava "Membro criado com
         // sucesso!" com a API respondendo 400 e nada gravado.
@@ -102,23 +113,26 @@ export class CadastrarMembroComponent implements OnInit {
 
   /**
    * 400 é erro de dado, não de permissão: campo que o Postgres não consegue
-   * converter, ou violateu uma restrição. O corpo do erro diz qual — e "erro
-   * genérico" só faz a pessoa repetir o cadastro sem mudar nada.
+   * converter, ou que violou uma restrição. O corpo do erro diz qual — e
+   * "erro genérico" só faz a pessoa repetir o cadastro sem mudar nada.
    */
   private mensagemDeErro(error: { message: string; code?: string; details?: string }): string {
-    const mensagem = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+    const texto = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
 
-    if (mensagem.includes('invalid input syntax') && mensagem.includes('date')) {
+    if (texto.includes('invalid input syntax') && texto.includes('date')) {
       return 'Uma das datas não é válida.';
     }
-    if (mensagem.includes('duplicate key')) {
+    if (texto.includes('duplicate key')) {
       return 'Já existe um registro com esse e-mail.';
     }
-    if (mensagem.includes('violates row-level security')) {
+    if (texto.includes('row-level security') || texto.includes('42501')) {
       return 'Você não tem permissão para cadastrar membros.';
     }
-    if (mensagem.includes('null value in column')) {
+    if (texto.includes('null value in column')) {
       return 'Falta um campo obrigatório no banco de dados.';
+    }
+    if (texto.includes('violates check constraint')) {
+      return 'Um dos valores enviados não é aceito.';
     }
 
     return 'Erro ao criar membro. Tente novamente.';
