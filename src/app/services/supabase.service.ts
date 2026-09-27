@@ -748,19 +748,21 @@ registrarSaidaCaixa(caixaId: string, saida: { valor: number; troco: number; moti
    * Corrige uma saída já registrada.
    *
    * `valor_efetivo` é coluna gerada no banco (valor - troco), então não entra
-   * aqui: o Postgres recalcula sozinho. Quem editou e quando ficam guardados,
-   * porque mexer em número de gaveta precisa ser rastreável.
+   * aqui: o Postgres recalcula sozinho.
+   *
+   * `atualizado_por` e `atualizado_em` também não entram: quem editou e quando
+   * são carimbados pelo trigger `saidas_caixa_marca_edicao`, no banco. Antes o
+   * front-end mandava os dois campos, o que quebrava a edição com PGRST204
+   * (a interface SaidaCaixa nem os declarava) e deixava a rastro de auditoria
+   * falsificável pelo próprio cliente.
    */
-  async atualizarSaidaCaixa(saidaId: string, saida: { valor: number; troco: number; motivo: string }) {
-    const { data } = await this.supabase.auth.getUser();
+  atualizarSaidaCaixa(saidaId: string, saida: { valor: number; troco: number; motivo: string }) {
     return this.supabase
       .from('saidas_caixa')
       .update({
         valor: saida.valor,
         troco: saida.troco,
-        motivo: saida.motivo,
-        atualizado_por: data.user?.id ?? null,
-        atualizado_em: new Date().toISOString()
+        motivo: saida.motivo
       })
       .eq('id', saidaId);
   }

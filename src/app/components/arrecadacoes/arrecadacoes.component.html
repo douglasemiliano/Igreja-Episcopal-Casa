@@ -19,6 +19,11 @@
     @if (erro) {
       <div class="alert" role="alert">{{ erro }}</div>
     }
+  <!--
+    A barra de abas só existe com o caixa aberto. Fechado, a tela mostra
+    apenas o convite para abrir (ver o bloco .caixa-gate mais abaixo).
+  -->
+  @if (caixaAtual) {
   <nav class="tabs" aria-label="Funcionalidades do caixa">
     <button type="button" [class.active]="abaAtiva === 'registrar'" (click)="setAba('registrar')">
       <span class="tab-icon">+</span>
@@ -36,8 +41,9 @@
       <span>Resumo</span>
     </button>
   </nav>
+  }
 
-  @if (abaAtiva === 'registrar') {
+  @if (caixaAtual && abaAtiva === 'registrar') {
     <section class="view registrar-view">
       <div class="section-heading">
         <div>
@@ -171,7 +177,7 @@
     </section>
   }
 
-  @if (abaAtiva === 'pendentes') {
+  @if (caixaAtual && abaAtiva === 'pendentes') {
     <section class="view pendentes-view">
       <div class="section-heading">
         <div>
@@ -285,7 +291,7 @@
     </section>
   }
 
-  @if (abaAtiva === 'resumo') {
+  @if (caixaAtual && abaAtiva === 'resumo') {
     <section class="view resumo-view">
       <div class="section-heading">
         <div>
@@ -498,10 +504,11 @@
   }
 
   <!--
-    Sem caixa aberto, registrar venda não faz sentido. O resto da tela continua
-    funcionando: dá para ver o resumo de ontem, o fiado e o histórico.
+    Sem caixa aberto esta é a tela inteira: nenhuma aba aparece, porque
+    nenhuma delas tem ação possível sem gaveta aberta. O guarda é só
+    `!caixaAtual` — não depende mais de abaAtiva, já que não há abas.
   -->
-  @if (!caixaAtual && abaAtiva === 'registrar') {
+  @if (!caixaAtual) {
     <section class="view">
       <div class="caixa-gate">
         <div class="caixa-gate-card">

@@ -1178,7 +1178,8 @@ async confirmarFechamentoCaixa(): Promise<void> {
   this.observacoesAberturaCaixa = '';
   this.limparCarrinho();
   this.limparFormulario();
-  // volta para Registrar, que agora mostra o convite a abrir o próximo caixa
+  // Fechado o caixa não há aba visível: a tela é só o convite a abrir o
+  // próximo. Registrar é onde a pessoa cai quando o caixa reabrir.
   this.abaAtiva = 'registrar';
   await Promise.all([this.carregarCaixa(), this.carregarDados()]);
 }
