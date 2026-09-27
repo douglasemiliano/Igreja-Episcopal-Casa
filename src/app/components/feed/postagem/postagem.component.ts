@@ -33,8 +33,10 @@ export class PostagemComponent {
   private readonly toast = inject(ToastService);
 
   @Input({ required: true }) publicacao!: any;
-  /** Autor e administrador editam; os demais veem só a leitura. */
+  /** Só o autor edita. Administrador e pastor não reescrevem post de terceiro. */
   @Input() podeEditar = false;
+  /** Excluir é mais largo: autor, administrador e pastor. */
+  @Input() podeExcluir = false;
   /** Dispara quando o conteúdo muda, para o feed recarregar a lista. */
   @Output() alterado = new EventEmitter<void>();
 
@@ -216,7 +218,7 @@ export class PostagemComponent {
   }
 
   async remover(): Promise<void> {
-    if (!this.podeEditar || this.salvando) return;
+    if (!this.podeExcluir || this.salvando) return;
     this.menuAberto = false;
     if (!confirm('Remover esta publicação do feed?')) return;
 

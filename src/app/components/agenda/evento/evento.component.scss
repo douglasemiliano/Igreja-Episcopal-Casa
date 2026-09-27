@@ -1,0 +1,190 @@
+/*
+ * Estilos do card de evento.
+ *
+ * Vivem aqui, e não no `agenda.component.scss`, porque o Angular encapsula o
+ * estilo do componente: regra do pai não alcança o conteúdo do filho. O que o
+ * pai precisa continue no pai é só a moldura da lista.
+ */
+
+.event-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent)
+}
+
+.event-card:last-child {
+    border: 0
+}
+
+/* Em modo edição o card vira formulário: a data e as ações saem de cena. */
+.event-card--editando {
+    display: block;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border-radius: .6rem;
+    background: color-mix(in srgb, var(--color-primary) 4%, transparent)
+}
+
+.event-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3.2rem;
+    padding: .5rem;
+    border-radius: .5rem;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary)
+}
+
+.event-date strong {
+    font-size: 1.3rem
+}
+
+.event-date span {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase
+}
+
+.event-content {
+    min-width: 0;
+    flex: 1
+}
+
+.tag {
+    display: inline-block;
+    margin-bottom: .35rem;
+    padding: .2rem .45rem;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    font-size: .68rem;
+    font-weight: 700
+}
+
+.event-content h3 {
+    margin: 0;
+    font-size: 1rem
+}
+
+.event-content p,
+.event-content small {
+    display: block;
+    margin: .35rem 0 0;
+    font-size: .75rem;
+    opacity: .68
+}
+
+.event-capa {
+    display: block;
+    width: 100%;
+    max-width: 22rem;
+    margin-top: .6rem;
+    border-radius: .5rem;
+    object-fit: cover
+}
+
+.event-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: .35rem
+}
+
+.event-actions button,
+.text-button {
+    border: 0;
+    border-radius: .4rem;
+    padding: .55rem .7rem;
+    background: color-mix(in srgb, var(--text-color) 8%, transparent);
+    color: var(--text-color);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700
+}
+
+/* ---------- Modo edição ---------- */
+
+.event-edit-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .9rem
+}
+
+.event-edit-head h3 {
+    margin: 0;
+    font-size: 1rem
+}
+
+.event-edit-erro {
+    margin: 0 0 .8rem;
+    padding: .55rem .7rem;
+    border-radius: .45rem;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    font-size: .75rem
+}
+
+.event-edit label {
+    display: block;
+    margin-bottom: .8rem;
+    font-size: .78rem;
+    font-weight: 700
+}
+
+.event-edit input,
+.event-edit select,
+.event-edit textarea {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: .35rem;
+    padding: .6rem;
+    border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+    border-radius: .45rem;
+    background: var(--background-color);
+    color: var(--text-color);
+    font: inherit
+}
+
+.event-edit-linha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem
+}
+
+.event-edit .primary-button {
+    width: 100%;
+    border: 0;
+    border-radius: .4rem;
+    padding: .55rem .7rem;
+    background: var(--color-primary);
+    color: var(--color-primary-contrast);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700
+}
+
+.event-edit .primary-button:disabled {
+    cursor: not-allowed;
+    opacity: .6
+}
+
+@media(max-width:600px) {
+    /* Data e ações não cabem ao lado do texto em tela estreita. */
+    .event-card {
+        flex-wrap: wrap
+    }
+
+    .event-content {
+        flex-basis: 100%;
+        order: 3
+    }
+
+    .event-edit-linha {
+        grid-template-columns: 1fr;
+        gap: 0
+    }
+}

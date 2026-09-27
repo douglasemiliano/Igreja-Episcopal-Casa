@@ -104,6 +104,7 @@
           <app-postagem
             [publicacao]="item.publicacao"
             [podeEditar]="podeEditar(item.publicacao)"
+            [podeExcluir]="podeExcluir(item.publicacao)"
             (alterado)="carregar()" />
         }
       }

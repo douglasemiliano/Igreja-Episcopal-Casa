@@ -1,3 +1,12 @@
+/*
+ * Layout da tela de agenda: moldura, formulário de criação e lista.
+ *
+ * O card do evento (`.event-card` e afins) tem estilo próprio em
+ * `evento/evento.component.scss`. O encapsulamento do Angular impede o pai de
+ * estilizar o conteúdo do filho, e o filho também não alcança o pai — daí os
+ * dois arquivos.
+ */
+
 .agenda-page {
     max-width: 1180px;
     margin: 0 auto;
@@ -83,93 +92,21 @@ h3 {
     font: inherit
 }
 
-.primary-button,
-.text-button,
-.event-actions button {
+.primary-button {
+    width: 100%;
     border: 0;
     border-radius: .4rem;
     padding: .55rem .7rem;
+    background: var(--color-primary);
+    color: var(--color-primary-contrast);
     cursor: pointer;
     font: inherit;
     font-weight: 700
 }
 
-.primary-button {
-    width: 100%;
-    background: var(--color-primary);
-    color: var(--color-primary-contrast)
-}
-
-.text-button,
-.event-actions button {
-    background: color-mix(in srgb, var(--text-color) 8%, transparent);
-    color: var(--text-color)
-}
-
-.event-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, transparent)
-}
-
-.event-card:last-child {
-    border: 0
-}
-
-.event-date {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 3.2rem;
-    padding: .5rem;
-    border-radius: .5rem;
-    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-    color: var(--color-primary)
-}
-
-.event-date strong {
-    font-size: 1.3rem
-}
-
-.event-date span {
-    font-size: .7rem;
-    font-weight: 700;
-    text-transform: uppercase
-}
-
-.event-content {
-    min-width: 0;
-    flex: 1
-}
-
-.tag {
-    display: inline-block;
-    margin-bottom: .35rem;
-    padding: .2rem .45rem;
-    border-radius: 99px;
-    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-    color: var(--color-primary);
-    font-size: .68rem;
-    font-weight: 700
-}
-
-.event-content h3 {
-    font-size: 1rem
-}
-
-.event-content p,
-.event-content small {
-    display: block;
-    margin: .35rem 0 0;
-    font-size: .75rem;
-    opacity: .68
-}
-
-.event-actions {
-    display: flex;
-    gap: .35rem
+.primary-button:disabled {
+    cursor: not-allowed;
+    opacity: .6
 }
 
 .alert {

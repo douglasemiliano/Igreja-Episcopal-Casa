@@ -111,8 +111,25 @@ export class FeedComponent implements OnInit {
     return publicacao.autor_id === this.usuarioAtualId;
   }
 
+  /**
+   * Só o autor edita o próprio post. Administrador e pastor entravam aqui
+   * antes e podiam reescrever a publicação de outra pessoa; a intenção é que
+   * editar publication signifique "corrigir o que eu escrevi".
+   */
   podeEditar(publicacao: any): boolean {
-    return this.ehAutor(publicacao) || this.roles.includes('administrador');
+    return this.ehAutor(publicacao);
+  }
+
+  /**
+   * Excluir é mais largo que editar: o autor apaga o que escreveu, e
+   * administrador e pastor podem remover qualquer post.
+   */
+  podeExcluir(publicacao: any): boolean {
+    return (
+      this.ehAutor(publicacao) ||
+      this.roles.includes('administrador') ||
+      this.roles.includes('pastor')
+    );
   }
 
   async carregar(): Promise<void> {

@@ -25,7 +25,7 @@
           {{ tempoRelativo }}
         </time>
 
-        @if (podeEditar && !editando) {
+        @if ((podeEditar || podeExcluir) && !editando) {
           <div class="post-menu">
             <button
               type="button"
@@ -38,17 +38,21 @@
 
             @if (menuAberto) {
               <div class="post-menu-dropdown" role="menu" (click)="$event.stopPropagation()">
-                <button type="button" role="menuitem" (click)="iniciarEdicao()">
-                  <mat-icon>edit</mat-icon> Editar
-                </button>
+                @if (podeEditar) {
+                  <button type="button" role="menuitem" (click)="iniciarEdicao()">
+                    <mat-icon>edit</mat-icon> Editar
+                  </button>
+                }
 
-                <button
-                  type="button"
-                  role="menuitem"
-                  class="post-menu-item--perigo"
-                  (click)="remover()">
-                  <mat-icon>delete</mat-icon> Remover
-                </button>
+                @if (podeExcluir) {
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="post-menu-item--perigo"
+                    (click)="remover()">
+                    <mat-icon>delete</mat-icon> Remover
+                  </button>
+                }
               </div>
             }
           </div>
