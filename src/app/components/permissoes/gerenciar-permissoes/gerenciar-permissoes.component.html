@@ -1,0 +1,89 @@
+<div class="permissoes-page">
+    <header class="cabecalho">
+        <p class="eyebrow">Administração</p>
+        <h1>Permissões</h1>
+        <p class="subtitulo">
+            Escolha o que cada papel pode fazer. A alteração vale na hora para quem
+            estiver com o sistema aberto.
+        </p>
+    </header>
+
+    <p class="aviso">
+        <mat-icon>info</mat-icon>
+        <span>
+            Estas caixas controlam o que a interface mostra. Quem aceita a operação de
+            verdade é o banco, e os dois leem esta mesma lista. Tirar
+            <strong>“Ver a Central”</strong> de um papel também esconde o item do menu.
+        </span>
+    </p>
+
+    @if (erro) {
+        <div class="alerta" role="alert">{{ erro }}</div>
+    }
+
+    @if (carregando) {
+        <p class="vazio">Carregando permissões...</p>
+    } @else {
+        @for (grupo of grupos; track grupo.titulo) {
+            <section class="categoria">
+                <h2>{{ grupo.titulo }}</h2>
+
+                @for (linha of grupo.linhas; track linha.chave) {
+                    <div class="linha" [class.linha--reservada]="linha.reservada">
+                        <div class="linha-texto">
+                            <strong>{{ linha.rotulo }}</strong>
+                            @if (linha.descricao) {
+                                <small>{{ linha.descricao }}</small>
+                            }
+                            <code>{{ linha.chave }}</code>
+                        </div>
+
+                        <div class="papeis">
+                            @if (linha.reservada) {
+                                <span class="cadeado">
+                                    <mat-icon>lock</mat-icon>
+                                    Somente o administrador
+                                </span>
+                            } @else {
+                                @for (papel of papeis; track papel) {
+                                    <button
+                                        type="button"
+                                        class="papel"
+                                        [class.papel--marcado]="tem(linha, papel)"
+                                        [class.papel--fixo]="papel === admin"
+                                        [disabled]="papel === admin || !!salvando"
+                                        [attr.aria-pressed]="tem(linha, papel)"
+                                        [attr.aria-label]="
+                                            rotuloPapel(papel) + ' pode ' + linha.rotulo.toLowerCase()
+                                        "
+                                        (click)="alternar(linha, papel)">
+                                        @if (estaSalvando(linha, papel)) {
+                                            <mat-icon class="girando">sync</mat-icon>
+                                        } @else {
+                                            {{ rotuloPapel(papel) }}
+                                        }
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+    }
+
+    @if (auditoria.length) {
+        <section class="categoria">
+            <h2>Alterações recentes</h2>
+            <ul class="auditoria">
+                @for (item of auditoria; track $index) {
+                    <li>
+                        <strong>{{ item.operacao === 'conceder' ? 'concedeu' : 'revogou' }}</strong>
+                        <span>{{ rotuloPapel(item.role) }} → {{ item.chave }}</span>
+                        <small>{{ dataCurta(item.feito_em) }}</small>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+</div>

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PermissaoService } from '../../services/permissao.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { EventoComponent } from './evento/evento.component';
 import { SeletorImagemComponent } from '../utils/seletor-imagem/seletor-imagem.component';
@@ -11,20 +12,25 @@ import { SeletorImagemComponent } from '../utils/seletor-imagem/seletor-imagem.c
  * Cada evento da lista é um `<app-evento>`, que cuida da própria edição e
  * exclusão em dois modos. Por isso aqui não existe `editandoId` nem "salvar"
  * que decide entre insert e update: salvar neste formulário só insere.
+ *
+ * As capacidades vêm do banco (`publicar_evento`, `editar_evento`,
+ * `excluir_evento`) e são decididas em /permissoes. Ler a agenda é livre;
+ * o que a tela esconde são os botões.
  */
 @Component({ selector: 'app-agenda', standalone: true, imports: [CommonModule, FormsModule, EventoComponent, SeletorImagemComponent], templateUrl: './agenda.component.html', styleUrl: './agenda.component.scss' })
 export class AgendaComponent implements OnInit {
   private readonly supabase = inject(SupabaseService);
+  private readonly permissao = inject(PermissaoService);
   eventos: any[] = [];
   carregando = true;
   salvando = false;
   erro = '';
   filtroTipo = '';
   form = this.novoForm();
-  tipos = ['culto', 'reuniao', 'batismo', 'casamento', 'arrecadacao', 'escala', 'ação', 'outro'];
-  // Somente pastor, secretaria e administrador podem criar/editar/excluir eventos.
-  readonly rolesPermitidos = ['administrador', 'secretaria', 'pastor'];
+  tipos = ['culto', 'reuniao', 'batismo', 'casamento', 'arrecadacao', 'escala', 'outro'];
   podeEditar = false;
+  podeExcluir = false;
+  podePublicar = false;
 
   /** Capa escolhida no formulário; só sobe para o storage ao salvar. */
   imagemArquivo: File | null = null;
@@ -35,14 +41,12 @@ export class AgendaComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.carregar();
-    try {
-      const roles = await this.supabase.getRoles();
-      this.podeEditar = this.rolesPermitidos.some((role) => roles.includes(role));
-    } catch (erro) {
-      console.error('Não foi possível carregar o perfil de acesso:', erro);
-      this.podeEditar = false;
-    }
+    await this.permissao.carregar();
+    this.podePublicar = this.permissao.pode('publicar_evento');
+    this.podeEditar = this.permissao.pode('editar_evento');
+    this.podeExcluir = this.permissao.pode('excluir_evento');
   }
+
   async carregar(): Promise<void> {
     this.carregando = true;
     const { data, error } = await this.supabase.getAgenda();
@@ -53,7 +57,7 @@ export class AgendaComponent implements OnInit {
   get eventosFiltrados(): any[] { return this.filtroTipo ? this.eventos.filter((evento) => evento.tipo === this.filtroTipo) : this.eventos; }
 
   async salvar(): Promise<void> {
-    if (!this.podeEditar || this.salvando) return;
+    if (!this.podePublicar || this.salvando) return;
     if (!this.form.titulo?.trim() || !this.form.inicio) { this.erro = 'Informe título e data de início.'; return; }
 
     this.salvando = true;

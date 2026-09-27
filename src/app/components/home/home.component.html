@@ -7,7 +7,7 @@
 
   <div class="quick-links" aria-label="Acessos rápidos">
 
-    @if (temPermissao(rolesDashboard)) {
+    @if (temPermissao('ver_dashboard')) {
     <a class="quick-link quick-link--primary" routerLink="/dashboard">
       <mat-icon>dashboard</mat-icon>
       <span>
@@ -18,7 +18,7 @@
     </a>
     }
 
-        @if (temPermissao(['administrador', 'caixa', 'tesouraria', 'pastor'])) {
+        @if (temPermissao('operar_arrecadacoes')) {
         <a class="quick-link" routerLink="/acoes">
       <mat-icon>volunteer_activism</mat-icon>
       <span>

@@ -75,7 +75,17 @@ export class CadastrarMembroComponent implements OnInit {
         const { pessoais, adicionais, igreja } = this.membroForm.value;
         const membroData = { ...pessoais, ...adicionais, ...igreja };
 
-        await this.supabaseService.addMembro(membroData);
+        // O supabase-js resolve { data, error } e NÃO lança. Sem destruturar o
+        // error, o catch nunca dispara e a tela anunciava "Membro criado com
+        // sucesso!" com a API respondendo 400 e nada gravado.
+        const { error } = await this.supabaseService.addMembro(membroData);
+
+        if (error) {
+          console.error('Erro ao criar membro:', error);
+          this.toast.erro(this.mensagemDeErro(error));
+          return;
+        }
+
         this.toast.sucesso('Membro criado com sucesso!');
         this.membroForm.reset();
         this.currentStep = 1;
@@ -88,5 +98,29 @@ export class CadastrarMembroComponent implements OnInit {
       this.membroForm.markAllAsTouched();
       this.toast.mostrar('Preencha todos os campos obrigatórios.');
     }
+  }
+
+  /**
+   * 400 é erro de dado, não de permissão: campo que o Postgres não consegue
+   * converter, ou violateu uma restrição. O corpo do erro diz qual — e "erro
+   * genérico" só faz a pessoa repetir o cadastro sem mudar nada.
+   */
+  private mensagemDeErro(error: { message: string; code?: string; details?: string }): string {
+    const mensagem = `${error.message ?? ''} ${error.details ?? ''}`.toLowerCase();
+
+    if (mensagem.includes('invalid input syntax') && mensagem.includes('date')) {
+      return 'Uma das datas não é válida.';
+    }
+    if (mensagem.includes('duplicate key')) {
+      return 'Já existe um registro com esse e-mail.';
+    }
+    if (mensagem.includes('violates row-level security')) {
+      return 'Você não tem permissão para cadastrar membros.';
+    }
+    if (mensagem.includes('null value in column')) {
+      return 'Falta um campo obrigatório no banco de dados.';
+    }
+
+    return 'Erro ao criar membro. Tente novamente.';
   }
 }

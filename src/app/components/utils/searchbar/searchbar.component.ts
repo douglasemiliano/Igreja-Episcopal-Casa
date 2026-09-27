@@ -1,11 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, HostListener, inject, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, EventEmitter, HostListener, inject, Input, OnDestroy, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { CoreService } from '../../../services/core.service';
 import { MenuItem, MenuService } from '../../../services/menu.service';
+import { PermissaoService } from '../../../services/permissao.service';
 
 /**
  * Busca do menu, usada no sidebar e no header com o mesmo comportamento:
@@ -24,7 +23,7 @@ import { MenuItem, MenuService } from '../../../services/menu.service';
 })
 export class SearchbarComponent implements OnDestroy {
   private readonly menu = inject(MenuService);
-  private readonly core = inject(CoreService);
+  private readonly permissao = inject(PermissaoService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef);
 
@@ -48,25 +47,24 @@ export class SearchbarComponent implements OnDestroy {
   resultados: MenuItem[] = [];
   indiceAtivo = -1;
   painelAberto = false;
-  roles: string[] = ['membro'];
 
   @ViewChild('campo') campo?: ElementRef<HTMLInputElement>;
 
-  private readonly inscricao: Subscription;
-
-  constructor() {
-    // Os perfis chegam pelo CoreService (header e sidebar alimentam o mesmo
-    // subject), então a busca respeita a permissão sem repetir a consulta.
-    this.inscricao = this.core.usuario$.subscribe({
-      next: (usuario) => {
-        this.roles = usuario.roles;
-        this.recalcular();
-      }
-    });
-  }
+  /**
+   * Recalcula quando o conjunto de capacidades muda, e não mais quando os
+   * perfis mudam: o menu responde a `publicar_evento` e afins, que podem
+   * mudar sem que nenhum perfil da pessoa mude.
+   *
+   * A leitura de `capacidades()` dentro do effect é o que o registra como
+   * dependência — por isso ela é feita aqui e não dentro de `recalcular`.
+   */
+  private readonly efeitoPermissoes = effect(() => {
+    this.permissao.capacidades();
+    this.recalcular();
+  });
 
   ngOnDestroy(): void {
-    this.inscricao.unsubscribe();
+    this.efeitoPermissoes.destroy();
   }
 
   /**
@@ -124,7 +122,7 @@ export class SearchbarComponent implements OnDestroy {
   }
 
   private recalcular(): void {
-    this.resultados = this.menu.buscar(this.roles, this.termo);
+    this.resultados = this.menu.buscar(this.permissao.pode, this.termo);
     this.indiceAtivo = this.resultados.length ? 0 : -1;
   }
 

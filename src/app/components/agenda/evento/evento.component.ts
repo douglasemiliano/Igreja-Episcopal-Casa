@@ -26,7 +26,10 @@ export class EventoComponent implements OnChanges {
 
   /** O evento da lista. Nunca é copiado: o rascunho vive em `form`. */
   @Input({ required: true }) evento!: any;
+  /** Capacidade `editar_evento`: abrir o formulário dentro do card. */
   @Input() podeEditar = false;
+  /** Capacidade `excluir_evento`. Mais larga que editar, como no feed. */
+  @Input() podeExcluir = false;
   /** Dispara quando o evento muda, para a agenda recarregar a lista. */
   @Output() alterado = new EventEmitter<void>();
 
@@ -168,7 +171,7 @@ export class EventoComponent implements OnChanges {
   }
 
   async excluir(): Promise<void> {
-    if (!this.podeEditar || this.salvando) return;
+    if (!this.podeExcluir || this.salvando) return;
     if (!confirm(`Excluir ${this.evento.titulo}?`)) return;
 
     const { error } = await this.supabase.deleteAgenda(this.evento.id);

@@ -60,10 +60,14 @@
       }
     </div>
 
-    @if (podeEditar) {
+    @if (podeEditar || podeExcluir) {
       <div class="event-actions">
-        <button type="button" (click)="iniciarEdicao()" aria-label="Editar evento">Editar</button>
-        <button type="button" (click)="excluir()" aria-label="Excluir evento">Excluir</button>
+        @if (podeEditar) {
+          <button type="button" (click)="iniciarEdicao()" aria-label="Editar evento">Editar</button>
+        }
+        @if (podeExcluir) {
+          <button type="button" (click)="excluir()" aria-label="Excluir evento">Excluir</button>
+        }
       </div>
     }
   }

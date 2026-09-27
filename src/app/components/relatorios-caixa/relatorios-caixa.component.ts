@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { CoreService } from '../../services/core.service';
+import { PermissaoService } from '../../services/permissao.service';
 import { DadosRelatorioCaixa, RelatorioCaixaService } from '../../services/relatorio-caixa.service';
 import { SupabaseService } from '../../services/supabase.service';
 
@@ -69,10 +70,6 @@ interface CaixaDia {
 const CATEGORIAS = ['bazar', 'hamburgada', 'feijoada'] as const;
 const FORMAS = ['pix', 'debito', 'credito', 'dinheiro', 'fiado'] as const;
 
-/** Só quem pode mexer no caixa fechado. O banco cobra isso de novo, mas não
- *  vale mostrar o botão para quem vai tomar erro. */
-const ROLES_REABERTURA = ['administrador', 'tesouraria'];
-
 const NOMES_CATEGORIA: Record<string, string> = { bazar: 'Bazar', hamburgada: 'Hamburgada', feijoada: 'Feijoada' };
 const CORES_CATEGORIA: Record<string, string> = { bazar: '#6a1b9a', hamburgada: '#f8c20a', feijoada: '#16cdc7' };
 const CORES_FORMA: Record<string, string> = { pix: '#16cdc7', debito: '#0a71f8', credito: '#f8c20a', dinheiro: '#2ca87b', fiado: '#a8651d' };
@@ -89,6 +86,7 @@ export class RelatoriosCaixaComponent implements OnInit {
   private readonly supabase = inject(SupabaseService);
   private readonly relatorioService = inject(RelatorioCaixaService);
   private readonly coreService = inject(CoreService);
+  private readonly permissao = inject(PermissaoService);
 
   readonly categorias = CATEGORIAS;
   readonly formas = FORMAS;
@@ -100,8 +98,6 @@ export class RelatoriosCaixaComponent implements OnInit {
   carregandoCaixasDia = false;
   salvando = false;
   erro = '';
-
-  roles: string[] = [];
 
   caixas: Caixa[] = [];
   caixaAberto: Caixa | null = null;
@@ -152,11 +148,9 @@ export class RelatoriosCaixaComponent implements OnInit {
   };
 
   async ngOnInit(): Promise<void> {
-    this.coreService.usuario$.subscribe({
-      next: (usuario) => {
-        this.roles = usuario.roles;
-      }
-    });
+    // `podeReabrir` lê o conjunto de capacidades, então ele precisa estar
+    // carregado antes do primeiro desenho, senão o botão some e volta.
+    await this.permissao.carregar();
 
     await this.carregarBase();
   }
@@ -352,8 +346,12 @@ export class RelatoriosCaixaComponent implements OnInit {
    * só para quem tem o perfil. As mesmas travas existem no banco; repetir aqui
    * é para o botão não aparecer quando não vai funcionar.
    */
+  /**
+   * Capacidade `reabrir_caixa`. O banco cobra isso de novo, mas não vale
+   * mostrar o botão para quem vai tomar erro.
+   */
   podeReabrir(caixa: Caixa): boolean {
-    if (!ROLES_REABERTURA.some((role) => this.roles.includes(role))) return false;
+    if (!this.permissao.pode('reabrir_caixa')) return false;
     if (this.caixaAberto) return false;
     if (caixa.status !== 'fechado') return false;
     return this.caixas[0]?.id === caixa.id;

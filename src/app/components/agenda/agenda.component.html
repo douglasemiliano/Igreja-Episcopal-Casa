@@ -7,13 +7,14 @@
         </div>
     </header>
     @if (erro) {<div class="alert">{{ erro }}</div>}
-    <section class="agenda-layout" [class.agenda-layout--list]="!podeEditar">
+    <section class="agenda-layout" [class.agenda-layout--list]="!podePublicar">
         <!--
-            Este formulário é só de criação. A edição acontece dentro do card do
-            evento (`<app-evento>`), então não existe mais "formulário de edição":
-            clicar em Editar troca o próprio card no lugar.
+            Este formulário é só de criação, e aparece para quem tem a
+            capacidade `publicar_evento`. A edição acontece dentro do card do
+            evento (`<app-evento>`), então não existe mais "formulário de
+            edição": clicar em Editar troca o próprio card no lugar.
         -->
-        @if (podeEditar) {<form class="agenda-form" (ngSubmit)="salvar()">
+        @if (podePublicar) {<form class="agenda-form" (ngSubmit)="salvar()">
             <div class="panel-heading">
                 <h2>Novo evento</h2>
             </div><label>Título<input name="titulo" [(ngModel)]="form.titulo" placeholder="Ex.: Culto de domingo"
@@ -40,7 +41,8 @@
                 </select>
             </div>@if(carregando){<p>Carregando agenda...</p>}@else if(!eventosFiltrados.length){<p class="empty">Nenhum
                 evento cadastrado.</p>}@else{@for(evento of eventosFiltrados; track evento.id){<app-evento
-                [evento]="evento" [podeEditar]="podeEditar" (alterado)="carregar()" />}}
+                [evento]="evento" [podeEditar]="podeEditar" [podeExcluir]="podeExcluir"
+                (alterado)="carregar()" />}}
         </section>
     </section>
 </div>

@@ -15,7 +15,7 @@ import { LoadingService } from './loading.service'; // Importando seu serviço d
  * Não é o tamanho que chega ao bucket: a foto da publicação é sempre
  * reencodeada para 1280px, então o enviado costuma ficar abaixo de 500 KB.
  * Esse teto existe só para não tentar decodificar um arquivo absurdo, e é
- * Generoso de propósito — foto de celular moderno passa fácil de 10 MB, e
+ * Generoso de propósito — ?" foto de celular moderno passa fácil de 10 MB, e
  * recusar no front só faria o usuário trocar de foto à toa.
  */
 export const TAMANHO_MAXIMO_IMAGEM_MB = 60;
@@ -129,7 +129,7 @@ export class SupabaseService {
    *
    * `sempreCompactar` inverte a escolha do fim: em vez de devolver o
    * original quando a reencode não ajudou, devolve o JPEG e falha se não
-   * conseguir. É o que a foto da publicação usa, para que o bucket nunca
+   * conseguir. — É? o que a foto da publicação usa, para que o bucket nunca
    * receba um arquivo que não passou pelo canvas.
    */
   private async compactarImagem(
@@ -426,7 +426,7 @@ deleteMembro(id: string) {
   return this.supabase.from('membros').delete().eq('id', id);
 }
 
-// --- CONFIRMAÇÕES ---
+// --- CONFIRMAÇÕ?ÇÕ.ES ---
 
 // Registrar confirmação
 confirmarMembro(membro_id: string, dadosConfirmacao: any) {
@@ -524,11 +524,74 @@ readonly rolesDisponiveis = [
   'membro'
 ];
 
-/** Verifica se o usuário tem ao menos uma das roles informadas. */
-async temAlgumaRole(roles: string[]): Promise<boolean> {
-  if (!roles.length) return true;
-  const minhas = await this.getRoles();
-  return roles.some((role) => minhas.includes(role));
+// --- PERMISSÕÃ.ES DINÕÃ,MICAS ---
+
+/**
+ * Capacidades do usuário corrente, resolvidas no banco por public.pode().
+ *
+ * É? a mesma função que as policies consultam, então o conjunto que volta aqui
+ * e o que o banco aceita são o mesmo por construção — ?" não duas listas que
+ * precisam concordar.
+ *
+ * Ver docs/permissoes-dinamicas-plano.md e
+ * supabase/20260927_permissoes_dinamicas.sql.
+ */
+async minhasPermissoes(): Promise<string[]> {
+  const { data, error } = await this.supabase.rpc('minhas_permissoes');
+  if (error) throw error;
+  return Array.isArray(data) ? (data as string[]) : [];
+}
+
+/**
+ * Catálogo e concessões, para a tela de permissões do administrador.
+ *
+ * Uma chamada só porque as duas tabelas têm nome diferente; a tela monta o
+ * cruzamento de chave x papel.
+ */
+async carregarMatrizPermissoes(): Promise<{ catalogo: any[]; concessoes: any[] }> {
+  const [catalogo, concessoes] = await Promise.all([
+    this.supabase
+      .from('permissoes')
+      .select('chave, rotulo, descricao, categoria, ordenacao, reservada')
+      .order('ordenacao', { ascending: true }),
+    this.supabase.from('permissoes_roles').select('chave, role')
+  ]);
+
+  if (catalogo.error) throw catalogo.error;
+  if (concessoes.error) throw concessoes.error;
+
+  return {
+    catalogo: catalogo.data ?? [],
+    concessoes: concessoes.data ?? []
+  };
+}
+
+/** Concede uma capacidade a um papel. Regra nova, não há id para revogar. */
+async concederPermissao(chave: string, role: string): Promise<void> {
+  const { error } = await this.supabase.rpc('conceder_permissao', {
+    alvo_chave: chave,
+    alvo_role: role
+  });
+  if (error) throw error;
+}
+
+async revogarPermissao(chave: string, role: string): Promise<void> {
+  const { error } = await this.supabase.rpc('revogar_permissao', {
+    alvo_chave: chave,
+    alvo_role: role
+  });
+  if (error) throw error;
+}
+
+/** Rastro de quem alterou qual permissão. Só o administrador enxerga. */
+async carregarAuditoriaPermissoes(limite = 50): Promise<any[]> {
+  const { data, error } = await this.supabase
+    .from('permissoes_auditoria')
+    .select('chave, role, operacao, feito_por, feito_em')
+    .order('feito_em', { ascending: false })
+    .limit(limite);
+  if (error) throw error;
+  return data ?? [];
 }
 
 listUsuarios() {
@@ -595,7 +658,7 @@ excluirFeed(id: string) {
   return this.supabase.from('feed_publicacoes').delete().eq('id', id);
 }
 
-// --- FOTO DA PUBLICAÇÃO E DO EVENTO ---
+// --- FOTO DA PUBLICAÇÃ?ÇÃfO E DO EVENTO ---
 
   /** Foto da publicação do feed. */
   async enviarImagemPostagem(arquivo: File): Promise<{ url: string } | { erro: string }> {
@@ -665,7 +728,7 @@ excluirFeed(id: string) {
  * A guarda exige que a foto esteja na pasta de quem está chamando. Isso
  * protege a URL de ser adulterada para apontar para a pasta de outro, mas
  * tem uma consequência: quem troca a capa de um evento criado por outra
- * pessoa não consegue apagar o arquivo antigo — ele vira órfão no bucket.
+ * pessoa não consegue apagar o arquivo antigo — ?" ele vira órfão no bucket.
  * A alternativa (liberar remoção para qualquer autenticado) abriria espaço
  * para um usuário apagar a foto de outro, o que é bem pior.
  */

@@ -8,6 +8,7 @@ import { NavbarComponent } from './components/utils/navbar/navbar.component';
 import { ToastContainerComponent } from './components/utils/toast/toast.component';
 import { CaixaService } from './services/caixa.service';
 import { CoreService } from './services/core.service';
+import { PermissaoService } from './services/permissao.service';
 import { SupabaseService } from './services/supabase.service';
 
 @Component({
@@ -25,6 +26,7 @@ export class App implements OnInit {
   isExpanded = true;
 
   private coreService = inject(CoreService);
+  private readonly permissao = inject(PermissaoService);
 
 
   constructor(private router: Router, private renderer: Renderer2, private supabase: SupabaseService, private caixaService: CaixaService){
@@ -61,6 +63,13 @@ export class App implements OnInit {
 
     this.supabase.onAuthChange((_event, session) => {
       this.isLoggedIn = !!session;
+
+      if (session) {
+        // Login vindo de outra aba: o conjunto do usuário anterior não vale.
+        void this.permissao.carregar(true);
+      } else {
+        this.permissao.limpar();
+      }
     });
 
     this.caixaService.carregarCaixa();
@@ -93,6 +102,16 @@ export class App implements OnInit {
   @HostListener('window:resize')
   onResize() {
     this.checkScreenSize();
+  }
+
+  /**
+   * O administrador pode mudar as permissões de quem está com a aba aberta,
+   * e a pessoa só descobre quando a tela esconde algum botão. Voltar para a
+   * aba é a hora barata de conferir, e o próprio serviço segura o throttle.
+   */
+  @HostListener('document:visibilitychange')
+  onVisibilidade() {
+    void this.permissao.aoVoltarParaAba();
   }
 
     private checkScreenSize() {

@@ -54,10 +54,12 @@ export class CoreService {
     this.setUsuario({ nome });
   }
 
-  temAlgumaRole(roles: string[]): boolean {
-    if (!roles.length) return true;
-    return roles.some((role) => this.usuarioAtual.roles.includes(role));
-  }
+  /*
+   * `temAlgumaRole` saiu daqui junto com o RoleGuard: decidir permissão por
+   * array de papéis é o que as permissões dinâmicas substituíram, e manter o
+   * método disponível seria só um convite a reintroduzir o caminho errado.
+   * Quem responde agora é `PermissaoService.pode(chave)`.
+   */
 
   private getStoredTheme(): string {
     return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';

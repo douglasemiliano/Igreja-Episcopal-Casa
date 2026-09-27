@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 import { CoreService } from '../../services/core.service';
+import { PermissaoService } from '../../services/permissao.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { ToastService } from '../../services/toast.service';
 import { SeletorImagemComponent } from '../utils/seletor-imagem/seletor-imagem.component';
@@ -37,13 +38,10 @@ export class FeedComponent implements OnInit {
   private readonly supabase = inject(SupabaseService);
   private readonly toast = inject(ToastService);
   private readonly core = inject(CoreService);
-
-  /** Somente administrador e líder publicam. */
-  readonly rolesPublicadores = ['administrador', 'lider'];
+  private readonly permissao = inject(PermissaoService);
 
   /** Eventos futuros ficam no topo; publicações vêm por recência. */
   itens: ItemFeed[] = [];
-  roles: string[] = ['membro'];
   usuarioAtualId = '';
   minhaFoto = '';
 
@@ -92,15 +90,12 @@ export class FeedComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.carregar();
-    try {
-      this.roles = await this.supabase.getRoles();
-    } catch (erro) {
-      console.error('Não foi possível carregar os perfis:', erro);
-    }
+    await this.permissao.carregar();
   }
 
+  /** Capacidade `publicar_publicacao`. Quem tem, vê o composer. */
   get podePublicar(): boolean {
-    return this.rolesPublicadores.some((role) => this.roles.includes(role));
+    return this.permissao.pode('publicar_publicacao');
   }
 
   get totalEventos(): number {
@@ -112,24 +107,21 @@ export class FeedComponent implements OnInit {
   }
 
   /**
-   * Só o autor edita o próprio post. Administrador e pastor entravam aqui
-   * antes e podiam reescrever a publicação de outra pessoa; a intenção é que
-   * editar publication signifique "corrigir o que eu escrevi".
+   * Só o autor edita o próprio post, e esta parte não vem de permissão: é
+   * posse da linha. `public.pode()` responde por papel, então a policy
+   * continua sendo `autor_id = auth.uid()` sem a chamada de `pode()`.
    */
   podeEditar(publicacao: any): boolean {
     return this.ehAutor(publicacao);
   }
 
   /**
-   * Excluir é mais largo que editar: o autor apaga o que escreveu, e
-   * administrador e pastor podem remover qualquer post.
+   * Excluir é mais largo que editar: o autor apaga o que escreveu, e quem tem
+   * `excluir_publicacao` remove qualquer post. A policy do banco soma as duas
+   * coisas com OR, igual aqui.
    */
   podeExcluir(publicacao: any): boolean {
-    return (
-      this.ehAutor(publicacao) ||
-      this.roles.includes('administrador') ||
-      this.roles.includes('pastor')
-    );
+    return this.ehAutor(publicacao) || this.permissao.pode('excluir_publicacao');
   }
 
   async carregar(): Promise<void> {

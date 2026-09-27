@@ -1,0 +1,254 @@
+/*
+ * Permissões: uma linha por capacidade, com os papéis como fichas marcáveis.
+ *
+ * As fichas em vez de uma grade de checkbox porque a lista de papéis é
+ * comprida e muda com o tempo; uma ficha por papel quebra em uma linha só e
+ * sobrevive no mobile sem media query.
+ */
+
+.permissoes-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    color: var(--text-color)
+}
+
+.cabecalho {
+    margin-bottom: 1.2rem
+}
+
+.eyebrow {
+    margin: 0 0 .35rem;
+    color: var(--color-primary);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase
+}
+
+h1,
+h2 {
+    margin: 0
+}
+
+.subtitulo {
+    margin: .5rem 0 0;
+    opacity: .7
+}
+
+.aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin: 0 0 1.2rem;
+    padding: .8rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+    border-radius: .6rem;
+    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+    font-size: .8rem;
+    line-height: 1.45
+}
+
+.aviso mat-icon {
+    flex-shrink: 0;
+    font-size: 1.15rem;
+    width: 1.15rem;
+    height: 1.15rem
+}
+
+.alerta {
+    margin-bottom: 1rem;
+    padding: .7rem 1rem;
+    border-radius: .5rem;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text)
+}
+
+.vazio {
+    padding: 2rem;
+    text-align: center;
+    opacity: .65
+}
+
+/* ---------- Categorias e linhas ---------- */
+
+.categoria {
+    margin-bottom: 1.4rem;
+    padding: 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--text-color) 12%, transparent);
+    border-radius: .7rem;
+    background: var(--card-background)
+}
+
+.categoria h2 {
+    margin-bottom: .9rem;
+    font-size: 1.05rem
+}
+
+.linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .8rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent)
+}
+
+.linha:first-of-type {
+    border-top: 0;
+    padding-top: 0
+}
+
+.linha-texto {
+    min-width: 0
+}
+
+.linha-texto strong {
+    display: block;
+    font-size: .92rem
+}
+
+.linha-texto small {
+    display: block;
+    margin-top: .2rem;
+    font-size: .76rem;
+    opacity: .65
+}
+
+.linha-texto code {
+    display: inline-block;
+    margin-top: .35rem;
+    padding: .1rem .3rem;
+    border-radius: .25rem;
+    background: color-mix(in srgb, var(--text-color) 8%, transparent);
+    font-size: .68rem;
+    opacity: .6
+}
+
+/* ---------- Fichas de papel ---------- */
+
+.papeis {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .35rem;
+    flex-shrink: 0
+}
+
+.papel {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    border: 1px solid color-mix(in srgb, var(--text-color) 18%, transparent);
+    border-radius: 99px;
+    padding: .3rem .65rem;
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    font: inherit;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap
+}
+
+.papel:hover:not(:disabled) {
+    border-color: var(--color-primary)
+}
+
+.papel--marcado {
+    border-color: transparent;
+    background: var(--color-primary);
+    color: var(--color-primary-contrast)
+}
+
+/* O bypass do administrador é do banco: a ficha fica marcada e travada. */
+.papel--fixo {
+    cursor: not-allowed;
+    opacity: .75
+}
+
+.papel:disabled {
+    cursor: not-allowed
+}
+
+.cadeado {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .3rem .65rem;
+    border-radius: 99px;
+    background: color-mix(in srgb, var(--text-color) 8%, transparent);
+    font-size: .75rem;
+    font-weight: 600;
+    opacity: .8
+}
+
+.cadeado mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem
+}
+
+.girando {
+    animation: girar 1s linear infinite
+}
+
+@keyframes girar {
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+@media(prefers-reduced-motion:reduce) {
+    .girando {
+        animation: none
+    }
+}
+
+/* ---------- Auditoria ---------- */
+
+.auditoria {
+    margin: 0;
+    padding: 0;
+    list-style: none
+}
+
+.auditoria li {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .45rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--text-color) 8%, transparent);
+    font-size: .8rem
+}
+
+.auditoria li:first-child {
+    border-top: 0
+}
+
+.auditoria small {
+    margin-left: auto;
+    font-size: .72rem;
+    opacity: .55
+}
+
+/* ---------- Mobile ---------- */
+
+@media(max-width:800px) {
+    .linha {
+        flex-direction: column;
+        align-items: stretch
+    }
+
+    .papeis {
+        justify-content: flex-start
+    }
+
+    .auditoria li {
+        flex-wrap: wrap
+    }
+
+    .auditoria small {
+        width: 100%;
+        margin-left: 0
+    }
+}

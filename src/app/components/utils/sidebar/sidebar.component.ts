@@ -6,6 +6,7 @@ import { Router, RouterModule } from '@angular/router';
 import { SearchbarComponent } from '../searchbar/searchbar.component';
 import { CoreService } from '../../../services/core.service';
 import { GrupoMenu, MenuItem, MenuService } from '../../../services/menu.service';
+import { PermissaoService } from '../../../services/permissao.service';
 import { SupabaseService } from '../../../services/supabase.service';
 
 @Component({
@@ -26,6 +27,7 @@ export class SidebarComponent implements OnDestroy, OnInit {
   private coreService: CoreService = inject(CoreService);
   private supabaseService: SupabaseService = inject(SupabaseService);
   private menuService: MenuService = inject(MenuService);
+  private readonly permissao = inject(PermissaoService);
  
   fotoUsuario: string = '';
   /** URL que já falhou ao carregar; o Google às vezes responde 429. */
@@ -59,12 +61,12 @@ export class SidebarComponent implements OnDestroy, OnInit {
 
   /** Itens do menu que o usuário atual pode ver. */
   get itensVisiveis(): MenuItem[] {
-    return this.menuService.disponiveis(this.roles);
+    return this.menuService.disponiveis(this.permissao.pode);
   }
 
   /** Mesmo menu, em blocos, para o sidebar escrever os cabeçalhos. */
   get gruposVisiveis(): GrupoMenu[] {
-    return this.menuService.grupos(this.roles);
+    return this.menuService.grupos(this.permissao.pode);
   }
   isMobile: boolean;
  

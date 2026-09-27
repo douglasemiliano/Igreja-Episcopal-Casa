@@ -2,8 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
-import { SupabaseService } from '../../services/supabase.service';
+import { PermissaoService } from '../../services/permissao.service';
 
+/**
+ * Central de atalhos.
+ *
+ * Os atalhos que exigem alguma coisa perguntam a capacidade correspondente,
+ * e não a uma lista de papéis. É a mesma chave que protege a rota em
+ * app.routes.ts, então atalho e rota não podem divergir.
+ */
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -12,18 +19,13 @@ import { SupabaseService } from '../../services/supabase.service';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
-  roles: string[] = ['membro'];
-
-  /** Espelha o `data.roles` de /dashboard em app.routes.ts. */
-  readonly rolesDashboard = ['administrador', 'pastor', 'secretaria', 'tesouraria'];
-
-  private readonly supabase = inject(SupabaseService);
+  private readonly permissao = inject(PermissaoService);
 
   async ngOnInit(): Promise<void> {
-    this.roles = await this.supabase.getRoles();
+    await this.permissao.carregar();
   }
 
-  temPermissao(roles: string[]): boolean {
-    return roles.some((role) => this.roles.includes(role));
+  temPermissao(chave: string): boolean {
+    return this.permissao.pode(chave);
   }
 }
