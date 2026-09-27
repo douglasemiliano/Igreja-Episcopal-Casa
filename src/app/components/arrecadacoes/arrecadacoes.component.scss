@@ -16,13 +16,6 @@ $texto-apagado: color-mix(in srgb, var(--text-color) 55%, transparent);
 $texto-suave: color-mix(in srgb, var(--text-color) 62%, transparent);
 $fundo-fraco: color-mix(in srgb, var(--text-color) 9%, transparent);
 
-.caixa-page {
-  width: 100%;
-  max-width: 1380px;
-  margin: 0 auto;
-  color: var(--text-color);
-}
-
 /* ---------- Cabeçalho ---------- */
 
 .caixa-header {
@@ -57,13 +50,6 @@ $fundo-fraco: color-mix(in srgb, var(--text-color) 9%, transparent);
   transform: translateY(1.9rem);
   color: color-mix(in srgb, var(--text-color) 58%, transparent);
   font-size: 0.7rem;
-}
-
-.caixa-header > .caixa-fechar-button {
-  position: absolute;
-  top: 1rem;
-  right: 1.25rem;
-  transform: translateY(3.4rem);
 }
 
 .eyebrow,
@@ -160,7 +146,6 @@ h3 {
   background: var(--color-success-bg);
 }
 
-.caixa-badge--fechado,
 .caixa-badge--historico {
   color: var(--color-danger);
   background: var(--color-danger-bg);
@@ -331,8 +316,7 @@ h3 {
   color: var(--color-primary);
 }
 
-.conferencia-resultado,
-.reabertura-aviso {
+.conferencia-resultado {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -342,8 +326,7 @@ h3 {
   font-size: 0.78rem;
 }
 
-.conferencia-resultado span,
-.reabertura-aviso span {
+.conferencia-resultado span {
   color: color-mix(in srgb, var(--text-color) 65%, transparent);
 }
 
@@ -355,17 +338,8 @@ h3 {
   background: color-mix(in srgb, var(--color-danger) 10%, var(--card-background));
 }
 
-.conferencia-resultado--positiva,
-.reabertura-aviso {
+.conferencia-resultado--positiva {
   background: color-mix(in srgb, var(--color-warning) 14%, var(--card-background));
-}
-
-.reabertura-aviso {
-  margin-bottom: 0.9rem;
-}
-
-.reabertura-aviso--fiado {
-  background: color-mix(in srgb, var(--color-danger) 9%, var(--card-background));
 }
 
 .field-hint {
@@ -375,131 +349,8 @@ h3 {
   color: $texto-apagado;
 }
 
-/* ---------- Histórico ---------- */
-
-.historico-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.historico-item {
-  padding: 1rem;
-  border: 1px solid $borda-suave;
-  border-radius: 0.7rem;
-  background: var(--card-background);
-}
-
-.historico-item--aberto {
-  border-color: color-mix(in srgb, var(--color-success) 45%, transparent);
-}
-
-.historico-item-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.historico-item-head h3 {
-  margin: 0.3rem 0 0.1rem;
-  font-size: 1rem;
-  font-weight: var(--font-bold);
-}
-
-.historico-item-head small,
-.historico-item-valores span,
-.historico-acoes small {
-  font-size: 0.72rem;
-  color: $texto-apagado;
-}
-
-.status-pill {
-  display: inline-block;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  background: $fundo-fraco;
-  font-size: 0.65rem;
-  font-weight: var(--font-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.status-pill--aberto {
-  color: var(--color-success);
-  background: var(--color-success-bg);
-}
-
-.historico-item-valores {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.2rem;
-}
-
-.historico-item-valores div {
-  text-align: right;
-}
-
-.historico-item-valores span {
-  display: block;
-  font-size: 0.65rem;
-}
-
-.historico-item-valores strong {
-  font-size: 0.95rem;
-}
-
-.historico-fiado,
-.historico-conferencia,
-.historico-observacao {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 0.7rem 0 0;
-  font-size: 0.78rem;
-  color: color-mix(in srgb, var(--text-color) 70%, transparent);
-}
-
-.fiado-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--color-danger);
-}
-
-.historico-observacao {
-  font-style: italic;
-}
-
-.historico-acoes {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.9rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid $borda-suave;
-}
-
-@media (max-width: 640px) {
-  .historico-item-head {
-    flex-direction: column;
-  }
-
-  .historico-item-valores {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .historico-item-valores div {
-    text-align: left;
-  }
-}
-
 /* ---------- Botões ---------- */
 
-.caixa-fechar-button,
 .caixa-abrir-button,
 .register-button {
   border: 0;
@@ -512,19 +363,16 @@ h3 {
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 
-.caixa-fechar-button,
 .caixa-abrir-button {
   padding: 0.55rem 0.9rem;
 }
 
-.caixa-fechar-button:hover,
 .caixa-abrir-button:hover,
 .register-button:hover:not(:disabled) {
   filter: brightness(1.06);
   box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
-.caixa-fechar-button:active,
 .caixa-abrir-button:active,
 .register-button:active:not(:disabled) {
   transform: translateY(1px);
@@ -1750,8 +1598,7 @@ select:focus {
   }
 
   .caixa-header > .caixa-badge,
-  .caixa-header > small,
-  .caixa-header > .caixa-fechar-button {
+  .caixa-header > small {
     position: static;
     transform: none;
   }
@@ -1762,10 +1609,6 @@ select:focus {
 
   .caixa-header > small {
     margin-top: -0.65rem;
-  }
-
-  .caixa-header > .caixa-fechar-button {
-    width: fit-content;
   }
 
   .header-total {
