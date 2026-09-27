@@ -1,100 +1,162 @@
-<div class="card-container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Membros</h2>
+<div class="membros">
+
+  <header class="cabecalho">
+    <div>
+      <h2>Membros</h2>
+      <p class="contagem">
+        @if (carregando) {
+          Carregando...
+        } @else if (totalEncontrados() === membros.length) {
+          {{ membros.length }} {{ membros.length === 1 ? 'pessoa cadastrada' : 'pessoas cadastradas' }}
+        } @else {
+          {{ totalEncontrados() }} de {{ membros.length }}
+        }
+      </p>
+    </div>
+
+    @if (podeCadastrar) {
+      <a class="btn cadastro-btn" routerLink="/membros/cadastrar">
+        <mat-icon>person_add</mat-icon> Cadastrar
+      </a>
+    }
+  </header>
+
+  <div class="filtros">
+    <div class="busca">
+      <mat-icon>search</mat-icon>
+      <input
+        type="search"
+        placeholder="Buscar por nome, e-mail, telefone ou função"
+        (keyup)="applyFilter($event)"
+        aria-label="Buscar membros">
+    </div>
+
+    <div class="abas" role="group" aria-label="Filtrar por confirmação">
+      <button type="button" [class.ativa]="status === 'todos'" (click)="applyStatus('todos')">Todos</button>
+      <button type="button" [class.ativa]="status === 'confirmados'" (click)="applyStatus('confirmados')">Confirmados</button>
+      <button type="button" [class.ativa]="status === 'pendentes'" (click)="applyStatus('pendentes')">Pendentes</button>
+    </div>
   </div>
-  <div class="card px-5 py-4 mb-3">
-    <div class="d-flex justify-content-between align-items-center">
-      <input type="text" class="form-control w-25" placeholder="Pesquisar..." (keyup)="applyFilter($event)" #input>
-      @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
-      <button class="btn cadastro-btn" routerLink="/membros/cadastrar" type="button">
-        <mat-icon>add</mat-icon> Cadastrar
-      </button>
+
+  @if (carregando) {
+    <div class="grade">
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+        <div class="cartao esqueleto" aria-hidden="true"></div>
+      }
+    </div>
+  } @else if (membrosPaginados().length === 0) {
+    <div class="vazio">
+      <mat-icon>group</mat-icon>
+      <p>{{ filtro || status !== 'todos' ? 'Nenhum membro encontrado.' : 'Nenhum membro cadastrado ainda.' }}</p>
+    </div>
+  } @else {
+    <div class="grade">
+      @for (membro of membrosPaginados(); track membro.id) {
+        <article class="cartao">
+          <a class="identidade" [routerLink]="['/membros', membro.id]">
+            <span class="avatar" [style.--matiz]="matizDe(membro)" aria-hidden="true">
+              {{ iniciais(membro) }}
+            </span>
+            <span class="nomes">
+              <strong>{{ membro.nome_completo }}</strong>
+              <small>{{ membro.funcao || 'Membro da comunidade' }}</small>
+            </span>
+          </a>
+
+          <span class="selo" [class.confirmado]="eConfirmado(membro)" [class.pendente]="!eConfirmado(membro)">
+            <mat-icon>{{ eConfirmado(membro) ? 'verified' : 'schedule' }}</mat-icon>
+            {{ eConfirmado(membro) ? 'Confirmado' : 'Pendente' }}
+          </span>
+
+          <dl class="contatos">
+            @if (membro.email) {
+              <div><mat-icon>mail</mat-icon><dd>{{ membro.email }}</dd></div>
+            }
+            @if (membro.telefone) {
+              <div><mat-icon>call</mat-icon><dd>{{ membro.telefone }}</dd></div>
+            }
+            @if (membro.data_entrada) {
+              <div>
+                <mat-icon>calendar_month</mat-icon>
+                <dd>
+                  Membro desde {{ membro.data_entrada | date:'MM/yyyy' }}
+                  @if (anosDeIgreja(membro); as anos) {
+                    <span class="anos">há {{ anos }} {{ anos === 1 ? 'ano' : 'anos' }}</span>
+                  }
+                </dd>
+              </div>
+            }
+          </dl>
+
+          <footer class="acoes">
+            <a class="acao" [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes de {{ membro.nome_completo }}">
+              <mat-icon>visibility</mat-icon> Perfil
+            </a>
+
+            @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
+              <button
+                type="button"
+                class="acao"
+                (click)="confirmarMembro(membro)"
+                [disabled]="eConfirmado(membro)"
+                [attr.aria-label]="'Confirmar ' + membro.nome_completo">
+                <mat-icon>how_to_reg</mat-icon> Confirmar
+              </button>
+              <button
+                type="button"
+                class="acao perigo"
+                (click)="deletarMembro(membro)"
+                [attr.aria-label]="'Excluir ' + membro.nome_completo">
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </footer>
+        </article>
       }
     </div>
 
-  </div>
+    @if (totalEncontrados() > itensPorPagina) {
+      <div class="rodape">
+        <select
+          class="form-select form-select-sm w-auto"
+          [ngModel]="itensPorPagina"
+          (ngModelChange)="itensPorPagina = $event; mudarTamanhoPagina()"
+          aria-label="Membros por página">
+          @for (opcao of opcoesPagina; track opcao) {
+            <option [value]="opcao">{{ opcao }} por página</option>
+          }
+        </select>
 
-  <div class="card p-5">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Telefone</th>
-            <th>Função</th>
-            <th class="text-center">Confirmado</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (membro of membrosPaginados(); track membro.id) {
-          <tr>
-            <td>{{ membro.nome_completo }}</td>
-            <td>{{ membro.email }}</td>
-            <td>{{ membro.telefone }}</td>
-            <td>{{ membro.funcao }}</td>
-            <td class="text-center">
-              @if(membro.confirmacao) {
-              <span class="badge bg-success">Sim</span>
+        <nav aria-label="Paginação">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="pagina === 1">
+              <button class="page-link" (click)="mudarPagina(pagina - 1)" [disabled]="pagina === 1" aria-label="Página anterior">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+            </li>
+            @for (p of numerosPaginas(); track $index) {
+              @if (p === '…') {
+                <li class="page-item desabilitado"><span class="page-link">…</span></li>
               } @else {
-              <span class="badge bg-secondary">Não</span>
+                <li class="page-item" [class.active]="p === pagina">
+                  <button class="page-link" (click)="mudarPagina(p)" [attr.aria-current]="p === pagina ? 'page' : null">{{ p }}</button>
+                </li>
               }
-            </td>
-            <td>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-primary" [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-
-                @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
-                <button class="btn btn-sm btn-outline-success" (click)="confirmarMembro(membro)" [disabled]="membro.confirmacao" aria-label="Confirmar">
-                  <mat-icon>done</mat-icon>
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="deletarMembro(membro)" aria-label="Excluir">
-                  <mat-icon>delete</mat-icon>
-                </button>
-                }
-              </div>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="6" class="text-center text-muted">Nenhum membro encontrado.</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-
-    @if (membrosFiltrados().length > 0) {
-    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-      <select
-        class="form-select form-select-sm w-auto"
-        [ngModel]="itensPorPagina"
-        (ngModelChange)="itensPorPagina = $event; mudarTamanhoPagina()"
-        aria-label="Itens por página">
-        @for (opcao of opcoesPagina; track opcao) {
-        <option [value]="opcao">{{ opcao }} por página</option>
-        }
-      </select>
-
-      <nav aria-label="Paginação">
-        <ul class="pagination mb-0">
-          <li class="page-item" [class.disabled]="pagina === 1">
-            <button class="page-link" (click)="mudarPagina(pagina - 1)" [disabled]="pagina === 1">Anterior</button>
-          </li>
-          @for (p of numerosPaginas(); track p) {
-          <li class="page-item" [class.active]="p === pagina">
-            <button class="page-link" (click)="mudarPagina(p)">{{ p }}</button>
-          </li>
-          }
-          <li class="page-item" [class.disabled]="pagina === totalPaginas()">
-            <button class="page-link" (click)="mudarPagina(pagina + 1)" [disabled]="pagina === totalPaginas()">Próxima</button>
-          </li>
-        </ul>
-      </nav>
-    </div>
+            }
+            <li class="page-item" [class.disabled]="pagina === totalPaginas()">
+              <button class="page-link" (click)="mudarPagina(pagina + 1)" [disabled]="pagina === totalPaginas()" aria-label="Próxima página">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
     }
-  </div>
+  }
+
+  @if (podeCadastrar) {
+    <a class="fab" routerLink="/membros/cadastrar" aria-label="Cadastrar membro">
+      <mat-icon>person_add</mat-icon>
+    </a>
+  }
 </div>
