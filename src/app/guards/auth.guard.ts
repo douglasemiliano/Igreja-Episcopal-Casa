@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { SupabaseService } from '../services/supabase.service';
 import { PermissaoService } from '../services/permissao.service';
 import { MembroVinculoService } from '../services/membro-vinculo.service';
@@ -13,7 +13,12 @@ export class AuthGuard implements CanActivate {
   private readonly vinculo = inject(MembroVinculoService);
   private readonly router = inject(Router);
 
-  async canActivate(rota: ActivatedRouteSnapshot, estado: RouterStateSnapshot): Promise<boolean | any> {
+  /*
+   * O tipo é `boolean | UrlTree`, e não `boolean | any`: com `any` no meio, o
+   * TypeScript aceita qualquer retorno e o `UrlTree` do fim deixa de ser
+   * conferido — que é justamente o retorno que faz o router navegar.
+   */
+  async canActivate(rota: ActivatedRouteSnapshot, estado: RouterStateSnapshot): Promise<boolean | UrlTree> {
     const user = await this.supabase.getUser();
     if (!user) {
       await this.router.navigate(['/login']);

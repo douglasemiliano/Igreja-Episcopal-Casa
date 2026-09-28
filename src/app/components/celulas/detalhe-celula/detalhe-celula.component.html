@@ -1,0 +1,161 @@
+<div class="detalhe">
+
+  <a class="voltar" routerLink="/celulas">
+    <mat-icon>arrow_back</mat-icon> Células
+  </a>
+
+  @if (carregando()) {
+    <div class="cabecalho esqueleto" aria-hidden="true"></div>
+  } @else if (erro()) {
+    <div class="vazio">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ erro() }}</p>
+      <a class="btn" routerLink="/celulas">Voltar para a lista</a>
+    </div>
+  } @else if (detalhe(); as dados) {
+    <header class="cabecalho">
+      <div class="titulo">
+        <h2>{{ dados.celula.nome }}</h2>
+        <p class="resumo">{{ quando() }}</p>
+        @if (!dados.celula.ativa) {
+          <span class="selo inativa"><mat-icon>pause_circle</mat-icon> Célula inativa</span>
+        }
+        @if (dados.sou_lider) {
+          <span class="selo lider"><mat-icon>star</mat-icon> Você lidera esta célula</span>
+        }
+      </div>
+
+      @if (podeEditar()) {
+        <div class="acoes-topo">
+          <a class="btn" [routerLink]="['/celulas', dados.celula.id, 'editar']">
+            <mat-icon>edit</mat-icon> Editar
+          </a>
+          <button type="button" class="btn perigo" (click)="excluir()">
+            <mat-icon>delete</mat-icon> Excluir
+          </button>
+        </div>
+      }
+    </header>
+
+    <section class="ficha">
+      @if (dados.celula.local) {
+        <div class="campo">
+          <span>Local</span>
+          <strong>{{ dados.celula.local }}</strong>
+        </div>
+      }
+      @if (dados.celula.descricao) {
+        <div class="campo descricao">
+          <span>Descrição</span>
+          <strong>{{ dados.celula.descricao }}</strong>
+        </div>
+      }
+      <div class="campo">
+        <span>Participantes</span>
+        <strong>{{ participantes().length }}</strong>
+      </div>
+    </section>
+
+    <section class="grupo">
+      <div class="grupo-topo">
+        <h3>Membros da célula</h3>
+
+        @if (podeFormar()) {
+          <button type="button" class="btn" (click)="alternarFormacao()">
+            <mat-icon>person_add</mat-icon>
+            {{ mostrarFormacao() ? 'Fechar' : 'Adicionar membro' }}
+          </button>
+        }
+      </div>
+
+      @if (mostrarFormacao() && podeFormar()) {
+        <div class="formacao">
+          @if (livres().length === 0) {
+            <p class="sem-livres">Todo mundo da lista de membros já está em alguma célula.</p>
+          } @else {
+            <label class="seletor">
+              <span>Membro</span>
+              <select [ngModel]="escolhido()" (ngModelChange)="escolhido.set($event)">
+                <option value="">Escolha uma pessoa</option>
+                @for (membro of livres(); track membro.id) {
+                  <option [value]="membro.id">{{ membro.nome }}</option>
+                }
+              </select>
+            </label>
+
+            <button
+              type="button"
+              class="btn primario"
+              [disabled]="!escolhido() || adicionando()"
+              (click)="adicionar()">
+              <mat-icon>add</mat-icon> Adicionar
+            </button>
+          }
+        </div>
+      }
+
+      @if (participantes().length === 0) {
+        <div class="vazio pequeno">
+          <mat-icon>group_off</mat-icon>
+          <p>Ninguém participa desta célula ainda.</p>
+        </div>
+      } @else {
+        @if (lideres().length) {
+          <h4 class="sub">Liderança</h4>
+          <ul class="participantes">
+            @for (participante of lideres(); track participante.membro_id) {
+              <li class="participante lider">
+                <span class="avatar" aria-hidden="true"><mat-icon>star</mat-icon></span>
+                <span class="nomes">
+                  <strong>{{ nomeCurto(participante) }}</strong>
+                  @if (participante.telefone) {
+                    <small>{{ participante.telefone }}</small>
+                  }
+                </span>
+
+                @if (podeFormar()) {
+                  <span class="acoes">
+                    <button type="button" class="acao" (click)="promover(participante)">
+                      <mat-icon>star_outline</mat-icon> Tirar a liderança
+                    </button>
+                    <button type="button" class="acao perigo" (click)="remover(participante)">
+                      <mat-icon>person_remove</mat-icon> Remover
+                    </button>
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        @if (outros().length) {
+          <h4 class="sub">{{ lideres().length ? 'Participantes' : 'Membros' }}</h4>
+          <ul class="participantes">
+            @for (participante of outros(); track participante.membro_id) {
+              <li class="participante">
+                <span class="avatar neutro" aria-hidden="true"><mat-icon>person</mat-icon></span>
+                <span class="nomes">
+                  <strong>{{ nomeCurto(participante) }}</strong>
+                  @if (participante.telefone) {
+                    <small>{{ participante.telefone }}</small>
+                  }
+                </span>
+
+                @if (podeFormar()) {
+                  <span class="acoes">
+                    <button type="button" class="acao" (click)="promover(participante)">
+                      <mat-icon>star</mat-icon> Tornar líder
+                    </button>
+                    <button type="button" class="acao perigo" (click)="remover(participante)">
+                      <mat-icon>person_remove</mat-icon> Remover
+                    </button>
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  }
+</div>

@@ -8,6 +8,8 @@ import { MembroVinculoService } from '../../services/membro-vinculo.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { ToastService } from '../../services/toast.service';
 import { MembroVinculo } from '../../model/membro.model';
+import { MinhaCelula } from '../../model/celula.model';
+import { CelulaService } from '../../services/celula.service';
 
 @Component({
   selector: 'app-perfil',
@@ -21,6 +23,15 @@ export class PerfilComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly coreService = inject(CoreService);
   private readonly vinculo = inject(MembroVinculoService);
+  private readonly celulas = inject(CelulaService);
+
+  /**
+   * Células da conta logada, para o bloco "Minha célula".
+   *
+   * Fica em signal porque `minhasCelulas()` engole o erro e devolve lista
+   * vazia: a tela não pode quebrar por causa do bloco da célula.
+   */
+  readonly minhasCelulas = signal<MinhaCelula[]>([]);
 
   fotoUsuario = '';
   nomeUsuario = 'Usuário';
@@ -102,13 +113,15 @@ export class PerfilComponent implements OnInit {
   @ViewChild('inputFoto') inputFoto?: ElementRef<HTMLInputElement>;
 
   async ngOnInit(): Promise<void> {
-    const [sessao, roles, membro] = await Promise.all([
+    const [sessao, roles, membro, celulas] = await Promise.all([
       this.supabase.getSession(),
       this.supabase.getRoles(),
-      this.vinculo.meuMembro()
+      this.vinculo.meuMembro(),
+      this.celulas.minhasCelulas()
     ]);
 
     this.membro.set(membro);
+    this.minhasCelulas.set(celulas);
 
     const user = sessao.data?.session?.user;
     if (user) {

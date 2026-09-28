@@ -1,0 +1,454 @@
+/* Detalhe da célula. O vocabulário (campo, selo, ação) é o mesmo da listagem de
+   membros, para as telas não parecerem de dois sistemas diferentes. */
+
+.detalhe {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+
+  mat-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 1.1rem;
+  }
+}
+
+/* ---------- cabeçalho ---------- */
+
+.cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &.esqueleto {
+    height: 6rem;
+    border-radius: 1rem;
+    background: linear-gradient(100deg,
+      var(--surface-soft) 30%,
+      var(--surface-hover) 50%,
+      var(--surface-soft) 70%);
+    background-size: 220% 100%;
+    animation: brilho 1.3s ease-in-out infinite;
+  }
+}
+
+@keyframes brilho {
+  from { background-position: -40% 0; }
+  to { background-position: 40% 0; }
+}
+
+.titulo {
+  /* Sem isto, o nome longo da célula estica a linha e empurra os botões para
+     fora do cartão. */
+  min-width: 0;
+
+  h2 {
+    margin: 0;
+    color: var(--color-primary);
+    font-weight: var(--font-bold);
+    font-size: 1.6rem;
+    overflow-wrap: break-word;
+  }
+}
+
+.resumo {
+  margin: 0.3rem 0 0.5rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.acoes-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-right: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background-color: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: var(--font-medium);
+
+  mat-icon {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+
+  &.lider {
+    background-color: var(--color-light-primary);
+    color: var(--color-primary);
+  }
+
+  &.inativa {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning-text);
+  }
+}
+
+/* ---------- botões ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.7rem;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+
+  mat-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 1.1rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &.primario {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-primary-contrast);
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-primary-hover);
+      color: var(--color-primary-contrast);
+    }
+  }
+
+  &.perigo {
+    border-color: var(--color-danger);
+    color: var(--color-danger-text);
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-danger-bg);
+      border-color: var(--color-danger);
+    }
+  }
+}
+
+/* ---------- ficha ---------- */
+
+.ficha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+.campo {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 0.85rem;
+
+  span {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  strong {
+    font-weight: var(--font-medium);
+    overflow-wrap: break-word;
+  }
+
+  /* Descrição pode ser um parágrafo, e cortar com reticências esconde
+     justamente o que a secretaria escreveu. */
+  &.descricao strong {
+    font-weight: var(--font-regular);
+    color: var(--text-muted);
+  }
+}
+
+/* ---------- grupo ---------- */
+
+.grupo {
+  padding: 1.15rem;
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+}
+
+.grupo-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+
+  h3 {
+    margin: 0;
+    font-weight: var(--font-semibold);
+  }
+}
+
+.sub {
+  margin: 1.1rem 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.formacao {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.9rem;
+  margin-bottom: 0.75rem;
+  background-color: var(--surface-soft);
+  border: 1px solid var(--border-color);
+  border-radius: 0.85rem;
+}
+
+.seletor {
+  flex: 1 1 18rem;
+  min-width: 0;
+
+  span {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.55rem 0.6rem;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.55rem;
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+.sem-livres {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-small);
+}
+
+.participantes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.participante {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--surface-soft);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+
+  &.lider {
+    border-color: var(--color-primary);
+  }
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  background-color: var(--color-light-primary);
+  color: var(--color-primary);
+
+  mat-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    font-size: 1.2rem;
+  }
+
+  &.neutro {
+    background-color: var(--surface-hover);
+    color: var(--text-muted);
+  }
+}
+
+.nomes {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+
+  strong {
+    font-weight: var(--font-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+  }
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+
+  mat-icon {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &.perigo:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger-text);
+  }
+}
+
+/* ---------- vazio ---------- */
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  background-color: var(--card-background);
+  border: 1px dashed var(--border-color);
+  border-radius: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+
+  &.pequeno {
+    padding: 1.75rem 1rem;
+  }
+
+  mat-icon {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 2.2rem;
+    color: var(--text-soft);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 768px) {
+  .cabecalho {
+    align-items: stretch;
+  }
+
+  .acoes-topo {
+    .btn {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
+
+  /* Botão e nome lado a lado não cabem em 320px, e espremer o nome entre os
+     dois botões o deixa ilegível. */
+  .participante {
+    flex-wrap: wrap;
+  }
+
+  .nomes {
+    flex-basis: calc(100% - 3.05rem);
+  }
+
+  .acoes {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 3.05rem;
+  }
+
+  .formacao {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -223,11 +223,45 @@ export class ListarMembrosComponent implements OnInit {
     return anos > 0 ? anos : null;
   }
 
-  async confirmarMembro(membro: Membro): Promise<void> {
+  /*
+   * O oficiante era uma string fixa no código ("Hermany Soares"). Isso grava no
+   * histórico de `confirmacoes_membros` o nome de uma pessoa específica sempre
+   * que alguém clica em Confirmar, mesmo em churches onde a confirmação é feita
+   * por outra pessoa — e o registro fica errado sem nenhum aviso.
+   *
+   * Agora o nome é perguntado. A tela de confirmação de batismo já pede o bispo
+   * num campo do próprio formulário, então segue o mesmo caminho.
+   */
+  /** Membro cuja confirmação está aberta, ou null quando nenhuma está. */
+  confirmando: Membro | null = null;
+  oficiante = '';
+  salvandoConfirmacao = false;
+
+  abrirConfirmacao(membro: Membro): void {
+    this.oficiante = '';
+    this.confirmando = membro;
+  }
+
+  fecharConfirmacao(): void {
+    this.confirmando = null;
+    this.oficiante = '';
+  }
+
+  async confirmarMembro(): Promise<void> {
+    const membro = this.confirmando;
+    if (!membro || this.salvandoConfirmacao) return;
+
+    const nome = this.oficiante.trim();
+    if (!nome) {
+      this.toast.erro('Informe quem está oficializando a confirmação.');
+      return;
+    }
+
+    this.salvandoConfirmacao = true;
     try {
       const { error } = await this.supabaseService.confirmarMembro(membro.id, {
         data_confirmacao: new Date().toISOString(),
-        oficiante: 'Hermany Soares',
+        oficiante: nome,
         observacoes: ''
       });
 
@@ -238,10 +272,13 @@ export class ListarMembrosComponent implements OnInit {
       }
 
       this.toast.sucesso(`${membro.nome_completo} foi confirmado(a).`);
+      this.fecharConfirmacao();
       this.carregarMembros(true);
     } catch (erro) {
       console.error(erro);
       this.toast.erro('Erro ao confirmar membro.');
+    } finally {
+      this.salvandoConfirmacao = false;
     }
   }
 

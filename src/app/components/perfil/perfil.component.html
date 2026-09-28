@@ -84,6 +84,26 @@
           <span>Perfil de acesso</span>
           <strong>{{ labels.length ? labels.join(' · ') : 'Membro' }}</strong>
         </div>
+
+        <div class="profile-field celula-campo">
+          <span>Minha célula</span>
+          @if (minhasCelulas().length === 0) {
+            <strong>Não informado</strong>
+          } @else {
+            <div class="celulas">
+              @for (celula of minhasCelulas(); track celula.id) {
+                <a class="celula" [routerLink]="['/celulas', celula.id]">
+                  <mat-icon>{{ celula.papel === 'lider' ? 'star' : 'groups' }}</mat-icon>
+                  <span class="celula-nome">{{ celula.nome }}</span>
+                  <mat-icon class="seta">chevron_right</mat-icon>
+                </a>
+                @if (celula.papel === 'lider') {
+                  <span class="selo-lider">Você é líder</span>
+                }
+              }
+            </div>
+          }
+        </div>
       </div>
     } @else {
       <div class="profile-edit">

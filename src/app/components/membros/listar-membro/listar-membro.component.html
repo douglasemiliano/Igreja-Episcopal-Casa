@@ -97,7 +97,7 @@
               <button
                 type="button"
                 class="acao"
-                (click)="confirmarMembro(membro)"
+                (click)="abrirConfirmacao(membro)"
                 [disabled]="eConfirmado(membro)"
                 [attr.aria-label]="'Confirmar ' + membro.nome_completo">
                 <mat-icon>how_to_reg</mat-icon> Confirmar
@@ -113,6 +113,38 @@
               </button>
             }
           </footer>
+
+          @if (confirmando?.id === membro.id) {
+            <div class="confirmar">
+              <label [for]="'oficiante-' + membro.id">Quem está oficializando?</label>
+              <input
+                [id]="'oficiante-' + membro.id"
+                type="text"
+                name="oficiante"
+                placeholder="Nome de quem conduz a confirmação"
+                [(ngModel)]="oficiante"
+                (keydown.enter)="confirmarMembro()"
+                [disabled]="salvandoConfirmacao">
+
+              <div class="confirmar-acoes">
+                <button
+                  type="button"
+                  class="acao"
+                  (click)="fecharConfirmacao()"
+                  [disabled]="salvandoConfirmacao">
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  class="acao primario"
+                  (click)="confirmarMembro()"
+                  [disabled]="salvandoConfirmacao">
+                  <mat-icon>how_to_reg</mat-icon>
+                  {{ salvandoConfirmacao ? 'Confirmando...' : 'Confirmar' }}
+                </button>
+              </div>
+            </div>
+          }
         </article>
       }
     </div>

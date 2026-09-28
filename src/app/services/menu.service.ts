@@ -55,6 +55,10 @@ export class MenuService {
       grupo: 'Caixa'
     },
     { path: '/membros', label: 'Membros', icon: 'groups', chave: '', grupo: 'Comunidade' },
+    // Células ficam sem chave de propósito: quem entra na igreja precisa saber
+    // em que célula está, e o /perfil aponta para o detalhe. O papel `membro`
+    // não tem nenhuma permissão no catálogo e mesmo assim enxerga este item.
+    { path: '/celulas', label: 'Células', icon: 'diversity_1', chave: '', grupo: 'Comunidade' },
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard', chave: 'ver_dashboard', grupo: 'Comunidade' },
     {
       path: '/certificado',

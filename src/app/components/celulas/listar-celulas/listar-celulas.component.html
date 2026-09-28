@@ -1,0 +1,115 @@
+<div class="celulas">
+
+  <header class="cabecalho">
+    <div>
+      <h2>Células</h2>
+      <p class="contagem">
+        @if (carregando()) {
+          Carregando...
+        } @else if (filtradas().length === celulas().length) {
+          {{ celulas().length }} {{ celulas().length === 1 ? 'célula cadastrada' : 'células cadastradas' }}
+        } @else {
+          {{ filtradas().length }} de {{ celulas().length }}
+        }
+      </p>
+    </div>
+
+    @if (podeGerenciar()) {
+      <a class="btn cadastro-btn" routerLink="/celulas/cadastrar">
+        <mat-icon>add_circle</mat-icon> Cadastrar
+      </a>
+    }
+  </header>
+
+  <div class="filtros">
+    <div class="busca">
+      <mat-icon>search</mat-icon>
+      <input
+        type="search"
+        placeholder="Buscar por nome, dia, local ou líder"
+        [ngModel]="filtro()"
+        (ngModelChange)="filtro.set($event)"
+        aria-label="Buscar células">
+    </div>
+
+    @if (podeGerenciar()) {
+      <button
+        type="button"
+        class="alternar"
+        [class.ativa]="mostrarInativas()"
+        (click)="alternarInativas()">
+        <mat-icon>{{ mostrarInativas() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        {{ mostrarInativas() ? 'Só ativas' : 'Mostrar inativas' }}
+      </button>
+    }
+  </div>
+
+  @if (carregando()) {
+    <div class="grade">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="cartao esqueleto" aria-hidden="true"></div>
+      }
+    </div>
+  } @else if (erro()) {
+    <div class="vazio">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ erro() }}</p>
+      <button type="button" class="btn" (click)="carregar()">Tentar de novo</button>
+    </div>
+  } @else if (filtradas().length === 0) {
+    <div class="vazio">
+      <mat-icon>diversity_1</mat-icon>
+      <p>{{ filtro() ? 'Nenhuma célula encontrada.' : 'Nenhuma célula cadastrada ainda.' }}</p>
+    </div>
+  } @else {
+    <div class="grade">
+      @for (celula of filtradas(); track celula.id) {
+        <article class="cartao">
+          <a class="identidade" [routerLink]="['/celulas', celula.id]">
+            <span class="avatar" aria-hidden="true">
+              <mat-icon>diversity_1</mat-icon>
+            </span>
+            <span class="nomes">
+              <strong>{{ celula.nome }}</strong>
+              <small>{{ quando(celula) }}</small>
+            </span>
+          </a>
+
+          @if (celula.local) {
+            <p class="local">
+              <mat-icon>location_on</mat-icon>
+              <span>{{ celula.local }}</span>
+            </p>
+          }
+
+          <div class="resumo">
+            <span class="selo">
+              <mat-icon>group</mat-icon>
+              {{ celula.total_membros ?? 0 }}
+              {{ (celula.total_membros ?? 0) === 1 ? 'pessoa' : 'pessoas' }}
+            </span>
+
+            @if (celula.lideres?.length) {
+              <span class="selo lider">
+                <mat-icon>star</mat-icon>
+                {{ celula.lideres?.join(', ') }}
+              </span>
+            }
+          </div>
+
+          @if (!celula.ativa) {
+            <span class="selo inativa">
+              <mat-icon>pause_circle</mat-icon> Inativa
+            </span>
+          }
+
+          <footer class="acoes">
+            <a class="acao" [routerLink]="['/celulas', celula.id]" aria-label="Abrir a célula {{ celula.nome }}">
+              <mat-icon>visibility</mat-icon> Abrir
+            </a>
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</div>

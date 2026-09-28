@@ -1,0 +1,103 @@
+<div class="cadastro">
+
+  <a class="voltar" [routerLink]="editando() ? ['/celulas', celulaId()] : ['/celulas']">
+    <mat-icon>arrow_back</mat-icon> Células
+  </a>
+
+  <header>
+    <h2>{{ editando() ? 'Editar célula' : 'Nova célula' }}</h2>
+    <p>
+      @if (editando()) {
+        Alterar os dados da célula. Quem participa é gerenciado no detalhe dela.
+      } @else {
+        Cadastre a célula e depois adicione os participantes.
+      }
+    </p>
+  </header>
+
+  @if (carregando()) {
+    <div class="formulario esqueleto" aria-hidden="true"></div>
+  } @else {
+    <form class="formulario" (ngSubmit)="salvar()">
+
+      <!-- Sem `required`: com ele o Angular trava o submit em silêncio quando o
+           nome está vazio, e a pessoa não recebe nenhum aviso. A validação fica
+           no serviço, que devolve a mensagem e mostra no toast. -->
+      <label class="campo">
+        <span>Nome da célula *</span>
+        <input
+          type="text"
+          name="nome"
+          maxlength="80"
+          placeholder="Célula do bairro X"
+          [ngModel]="form().nome"
+          (ngModelChange)="atualizar('nome', $event)">
+      </label>
+
+      <label class="campo">
+        <span>Dia da semana</span>
+        <input
+          type="text"
+          name="diaSemana"
+          maxlength="60"
+          placeholder="Terças, ou quarta e sexta"
+          [ngModel]="form().dia_semana"
+          (ngModelChange)="atualizar('dia_semana', $event)">
+        <small>Texto livre: a igreja pode escrever "terças" ou "quarta e sexta".</small>
+      </label>
+
+      <div class="dupla">
+        <label class="campo">
+          <span>Horário</span>
+          <input
+            type="time"
+            name="horario"
+            [ngModel]="form().horario"
+            (ngModelChange)="atualizar('horario', $event)">
+        </label>
+
+        <label class="campo">
+          <span>Local</span>
+          <input
+            type="text"
+            name="local"
+            maxlength="160"
+            placeholder="Rua, bairro ou ponto de encontro"
+            [ngModel]="form().local"
+            (ngModelChange)="atualizar('local', $event)">
+        </label>
+      </div>
+
+      <label class="campo">
+        <span>Descrição</span>
+        <textarea
+          name="descricao"
+          rows="3"
+          maxlength="500"
+          placeholder="O que a célula faz, como encontra, o que esperar"
+          [ngModel]="form().descricao"
+          (ngModelChange)="atualizar('descricao', $event)"></textarea>
+      </label>
+
+      <label class="checkbox">
+        <input
+          type="checkbox"
+          name="ativa"
+          [ngModel]="form().ativa"
+          (ngModelChange)="atualizar('ativa', $event)">
+        <span>
+          Célula ativa
+          <small>Inativa continua no histórico, mas some da listagem e do perfil dos membros.</small>
+        </span>
+      </label>
+
+      <footer class="acoes">
+        <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
+        <button type="submit" class="btn primario" [disabled]="salvando()">
+          <mat-icon>check</mat-icon>
+          {{ salvando() ? 'Salvando...' : (editando() ? 'Salvar alterações' : 'Cadastrar célula') }}
+        </button>
+      </footer>
+    </form>
+  }
+</div>

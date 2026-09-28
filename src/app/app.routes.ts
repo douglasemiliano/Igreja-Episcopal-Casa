@@ -29,6 +29,22 @@ export const routes: Routes = [
     { path: 'membros', loadComponent: () => import('./components/membros/listar-membro/listar-membro.component').then(c => c.ListarMembrosComponent), canActivate: [AuthGuard] },
     { path: 'membros/:id', loadComponent: () => import('./components/membros/detalhe-membro/detalhe-membro.component').then(c => c.DetalheMembroComponent), canActivate: [AuthGuard] },
     /*
+     * Células. A lista e o detalhe ficam abertos a qualquer conta
+     * autenticada — quem entra na igreja precisa saber em que célula está, e
+     * é isso que o /perfil aponta. O que é fechado é criar e editar a célula,
+     * por `gerenciar_celulas`. forming o grupo NÃO tem guard: o líder da
+     * célula monta a própria célula sem ter a chave, e a regra é a mesma da
+     * policy em supabase/20260930_celulas.sql, avaliada dentro da tela.
+     *
+     * A ordem importa: `/celulas/cadastrar` antes de `/celulas/:id`, senão o
+     * router casa "cadastrar" como id e o detalhe abre procurando uma célula
+     * com esse id.
+     */
+    { path: 'celulas', loadComponent: () => import('./components/celulas/listar-celulas/listar-celulas.component').then(c => c.ListarCelulasComponent), canActivate: [AuthGuard] },
+    { path: 'celulas/cadastrar', loadComponent: () => import('./components/celulas/cadastrar-celula/cadastrar-celula.component').then(c => c.CadastrarCelulaComponent), canActivate: [AuthGuard, PermissaoGuard], data: { chave: 'gerenciar_celulas' } },
+    { path: 'celulas/:id/editar', loadComponent: () => import('./components/celulas/cadastrar-celula/cadastrar-celula.component').then(c => c.CadastrarCelulaComponent), canActivate: [AuthGuard, PermissaoGuard], data: { chave: 'gerenciar_celulas' } },
+    { path: 'celulas/:id', loadComponent: () => import('./components/celulas/detalhe-celula/detalhe-celula.component').then(c => c.DetalheCelulaComponent), canActivate: [AuthGuard] },
+    /*
      * Onboarding de quem entrou por conta própria. A checagem do cadastro
      * incompleto mora no AuthGuard, e não como guard desta linha: assim ela
      * não pode ser esquecida na próxima rota que alguém adicionar.
