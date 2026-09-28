@@ -64,8 +64,8 @@
   } @else {
     <div class="grade">
       @for (celula of filtradas(); track celula.id) {
-        <article class="cartao">
-          <a class="identidade" [routerLink]="['/celulas', celula.id]">
+        <a class="cartao" [routerLink]="['/celulas', celula.id]" [attr.aria-label]="'Abrir a célula ' + celula.nome">
+          <span class="identidade">
             <span class="avatar" aria-hidden="true">
               <mat-icon>diversity_1</mat-icon>
             </span>
@@ -73,7 +73,7 @@
               <strong>{{ celula.nome }}</strong>
               <small>{{ quando(celula) }}</small>
             </span>
-          </a>
+          </span>
 
           @if (celula.local) {
             <p class="local">
@@ -82,7 +82,7 @@
             </p>
           }
 
-          <div class="resumo">
+          <span class="resumo">
             <span class="selo">
               <mat-icon>group</mat-icon>
               {{ celula.total_membros ?? 0 }}
@@ -95,20 +95,14 @@
                 {{ celula.lideres?.join(', ') }}
               </span>
             }
-          </div>
+          </span>
 
           @if (!celula.ativa) {
             <span class="selo inativa">
               <mat-icon>pause_circle</mat-icon> Inativa
             </span>
           }
-
-          <footer class="acoes">
-            <a class="acao" [routerLink]="['/celulas', celula.id]" aria-label="Abrir a célula {{ celula.nome }}">
-              <mat-icon>visibility</mat-icon> Abrir
-            </a>
-          </footer>
-        </article>
+        </a>
       }
     </div>
   }

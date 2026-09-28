@@ -25,7 +25,15 @@ interface ErroSupabase {
 interface LinhaParticipante {
   papel: string;
   criado_em?: string | null;
-  membros: { id: string; nome_completo: string; telefone?: string | null; email?: string | null } | null;
+  membros: {
+    id: string;
+    nome_completo: string;
+    telefone?: string | null;
+    email?: string | null;
+    funcao?: string | null;
+    data_entrada?: string | null;
+    confirmacao?: { id: string }[] | { id: string } | null;
+  } | null;
 }
 
 /** `celula_membros` chega como array quando há relação, null quando não há. */
@@ -109,7 +117,8 @@ export class CelulaService {
       .from('celulas')
       .select(
         `id, nome, descricao, dia_semana, local, horario, ativa, criado_em,
-         celula_membros(papel, criado_em, membros(id, nome_completo, telefone, email))`
+         celula_membros(papel, criado_em, membros(id, nome_completo, telefone, email, funcao, data_entrada,
+           confirmacao:confirmacoes_membros(id)))`
       )
       .eq('id', celulaId)
       .maybeSingle();
@@ -130,6 +139,11 @@ export class CelulaService {
         papel: normalizarPapel(linha.papel),
         telefone: linha.membros!.telefone ?? null,
         email: linha.membros!.email ?? null,
+        funcao: linha.membros!.funcao ?? null,
+        data_entrada: linha.membros!.data_entrada ?? null,
+        // `confirmarMembro` grava confirmações, e a listagem de membros lê o
+        // mesmo shape: array quando há mais de uma, objeto quando é uma só.
+        confirmado: this.temConfirmacao(linha.membros!.confirmacao),
         criado_em: linha.criado_em ?? null
       }))
       .sort((a, b) => {
@@ -155,6 +169,12 @@ export class CelulaService {
       participantes,
       sou_lider: !!meuId && participantes.some((p) => p.membro_id === meuId && p.papel === 'lider')
     };
+  }
+
+  /** Uma pessoa é "confirmada" quando existe ao menos uma confirmação. */
+  private temConfirmacao(confirmacao: NonNullable<LinhaParticipante['membros']>['confirmacao']): boolean {
+    if (!confirmacao) return false;
+    return Array.isArray(confirmacao) ? confirmacao.length > 0 : true;
   }
 
   /**
@@ -286,6 +306,33 @@ export class CelulaService {
     return ((membros ?? []) as { id: string; nome_completo: string }[])
       .filter((membro) => !emAlgumaCelula.has(membro.id))
       .map((membro) => ({ id: membro.id, nome: membro.nome_completo }));
+  }
+
+  /**
+   * A célula de um membro específico — não a da conta logada, mas de quem o
+   * perfil está exibindo. O detalhe do membro usa para mostrar "participa de X".
+   *
+   * O índice único em `membro_id` garante no máximo uma célula por pessoa, por
+   * isso o `maybeSingle`. Sem contato com célula não é erro: a pessoa só não
+   * participa de nenhuma, e a tela mostra isso.
+   */
+  async celulaDoMembro(membroId: string): Promise<{ id: string; nome: string; papel: PapelCelula } | null> {
+    const { data, error } = await this.supabase.supabase
+      .from('celula_membros')
+      .select('papel, celulas(id, nome)')
+      .eq('membro_id', membroId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[celulas] celulaDoMembro falhou:', error.code, error.message);
+      return null;
+    }
+    if (!data) return null;
+
+    const linha = data as unknown as { papel: string; celulas: { id: string; nome: string } | null };
+    if (!linha.celulas) return null;
+
+    return { id: linha.celulas.id, nome: linha.celulas.nome, papel: normalizarPapel(linha.papel) };
   }
 
   /**

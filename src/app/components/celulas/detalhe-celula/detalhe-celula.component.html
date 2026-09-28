@@ -100,61 +100,67 @@
           <p>Ninguém participa desta célula ainda.</p>
         </div>
       } @else {
-        @if (lideres().length) {
-          <h4 class="sub">Liderança</h4>
-          <ul class="participantes">
-            @for (participante of lideres(); track participante.membro_id) {
-              <li class="participante lider">
-                <span class="avatar" aria-hidden="true"><mat-icon>star</mat-icon></span>
-                <span class="nomes">
-                  <strong>{{ nomeCurto(participante) }}</strong>
-                  @if (participante.telefone) {
-                    <small>{{ participante.telefone }}</small>
-                  }
+        <div class="grade">
+          @for (participante of participantes(); track participante.membro_id) {
+            <article class="cartao" [class.lider]="participante.papel === 'lider'">
+              <a class="identidade" [routerLink]="['/membros', participante.membro_id]" [queryParams]="{ origem: '/celulas/' + dados.celula.id }" [attr.aria-label]="'Abrir perfil de ' + participante.nome">
+                <span class="avatar" [style.--matiz]="matizDe(participante)" aria-hidden="true">
+                  {{ iniciais(participante) }}
                 </span>
+                <span class="nomes">
+                  <strong>{{ participante.nome }}</strong>
+                  <small>{{ participante.funcao || 'Membro da comunidade' }}</small>
+                </span>
+              </a>
+
+              <div class="selos">
+                <span class="selo" [class.confirmado]="participante.confirmado" [class.pendente]="!participante.confirmado">
+                  <mat-icon>{{ participante.confirmado ? 'verified' : 'schedule' }}</mat-icon>
+                  {{ participante.confirmado ? 'Confirmado' : 'Pendente' }}
+                </span>
+                @if (participante.papel === 'lider') {
+                  <span class="selo lider"><mat-icon>star</mat-icon> Líder</span>
+                }
+              </div>
+
+              <dl class="contatos">
+                @if (participante.email) {
+                  <div><mat-icon>mail</mat-icon><dd>{{ participante.email }}</dd></div>
+                }
+                @if (participante.telefone) {
+                  <div><mat-icon>call</mat-icon><dd>{{ participante.telefone }}</dd></div>
+                }
+                @if (participante.data_entrada) {
+                  <div>
+                    <mat-icon>calendar_month</mat-icon>
+                    <dd>
+                      Membro desde {{ participante.data_entrada | date:'MM/yyyy' }}
+                      @if (anosDeIgreja(participante); as anos) {
+                        <span class="anos">há {{ anos }} {{ anos === 1 ? 'ano' : 'anos' }}</span>
+                      }
+                    </dd>
+                  </div>
+                }
+              </dl>
+
+              <footer class="acoes">
+                <a class="acao" [routerLink]="['/membros', participante.membro_id]" [queryParams]="{ origem: '/celulas/' + dados.celula.id }" aria-label="Ver perfil de {{ participante.nome }}">
+                  <mat-icon>visibility</mat-icon> Perfil
+                </a>
 
                 @if (podeFormar()) {
-                  <span class="acoes">
-                    <button type="button" class="acao" (click)="promover(participante)">
-                      <mat-icon>star_outline</mat-icon> Tirar a liderança
-                    </button>
-                    <button type="button" class="acao perigo" (click)="remover(participante)">
-                      <mat-icon>person_remove</mat-icon> Remover
-                    </button>
-                  </span>
+                  <button type="button" class="acao" (click)="promover(participante)">
+                    <mat-icon>{{ participante.papel === 'lider' ? 'star_outline' : 'star' }}</mat-icon>
+                    {{ participante.papel === 'lider' ? 'Tirar liderança' : 'Tornar líder' }}
+                  </button>
+                  <button type="button" class="acao perigo" (click)="remover(participante)">
+                    <mat-icon>person_remove</mat-icon> Remover
+                  </button>
                 }
-              </li>
-            }
-          </ul>
-        }
-
-        @if (outros().length) {
-          <h4 class="sub">{{ lideres().length ? 'Participantes' : 'Membros' }}</h4>
-          <ul class="participantes">
-            @for (participante of outros(); track participante.membro_id) {
-              <li class="participante">
-                <span class="avatar neutro" aria-hidden="true"><mat-icon>person</mat-icon></span>
-                <span class="nomes">
-                  <strong>{{ nomeCurto(participante) }}</strong>
-                  @if (participante.telefone) {
-                    <small>{{ participante.telefone }}</small>
-                  }
-                </span>
-
-                @if (podeFormar()) {
-                  <span class="acoes">
-                    <button type="button" class="acao" (click)="promover(participante)">
-                      <mat-icon>star</mat-icon> Tornar líder
-                    </button>
-                    <button type="button" class="acao perigo" (click)="remover(participante)">
-                      <mat-icon>person_remove</mat-icon> Remover
-                    </button>
-                  </span>
-                }
-              </li>
-            }
-          </ul>
-        }
+              </footer>
+            </article>
+          }
+        </div>
       }
     </section>
   }

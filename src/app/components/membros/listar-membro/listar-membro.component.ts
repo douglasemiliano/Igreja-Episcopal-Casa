@@ -8,11 +8,9 @@ import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ConfirmacaoMembro, Membro } from '../../../model/membro.model';
 import { ModalConfirmacaoService } from '../../utils/modal-confirmacao/modal-confirmacao.service';
+import { iniciaisDe, matizDe as matizDeAvatar, anosDeIgreja as anosDeIgrejaAvatar } from '../../../utils/avatar';
 
 type FiltroStatus = 'todos' | 'confirmados' | 'pendentes';
-
-/** Matizes espalhados o bastante para dois nomes vizinhos não sairem iguais. */
-const MATIZES = [212, 262, 340, 22, 44, 158, 190, 286];
 
 @Component({
   selector: 'app-listar-membro',
@@ -185,42 +183,17 @@ export class ListarMembrosComponent implements OnInit {
 
   /** Iniciais para o avatar. `membros` não tem foto, então o nome é a âncora. */
   iniciais(membro: Membro): string {
-    const partes = (membro.nome_completo ?? '').trim().split(/\s+/).filter(Boolean);
-    if (!partes.length) return '?';
-    if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
-
-    const meio = partes.length > 2
-      ? partes.find((parte, i) => i > 0 && i < partes.length - 1 && parte.length > 2)
-      : undefined;
-
-    return (partes[0].charAt(0) + (meio ?? partes[partes.length - 1]).charAt(0)).toUpperCase();
+    return iniciaisDe(membro.nome_completo ?? '');
   }
 
-  /**
-   * Matiz estável por pessoa: o mesmo nome sai sempre na mesma cor, e nomes
-   * parecidos não colidem, porque a soma é feita sobre o texto inteiro.
-   */
+  /** Matiz estável por pessoa (mesma cor em todas as telas). */
   matizDe(membro: Membro): number {
-    const nome = membro.nome_completo ?? membro.id;
-    let soma = 0;
-    for (let i = 0; i < nome.length; i++) {
-      soma = (soma * 31 + nome.charCodeAt(i)) % 100000;
-    }
-    return MATIZES[soma % MATIZES.length];
+    return matizDeAvatar(membro.nome_completo ?? '', membro.id);
   }
 
   /** Anos completos desde a entrada. `null` quando não há data. */
   anosDeIgreja(membro: Membro): number | null {
-    if (!membro.data_entrada) return null;
-    const entrada = new Date(membro.data_entrada);
-    if (isNaN(entrada.getTime())) return null;
-
-    const hoje = new Date();
-    let anos = hoje.getFullYear() - entrada.getFullYear();
-    const aindaFaltam = hoje.getMonth() < entrada.getMonth()
-      || (hoje.getMonth() === entrada.getMonth() && hoje.getDate() < entrada.getDate());
-    if (aindaFaltam) anos--;
-    return anos > 0 ? anos : null;
+    return anosDeIgrejaAvatar(membro.data_entrada);
   }
 
   /*

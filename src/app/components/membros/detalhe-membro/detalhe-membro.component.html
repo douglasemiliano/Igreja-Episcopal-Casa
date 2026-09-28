@@ -1,7 +1,35 @@
 <div class="member-detail">
-  <a routerLink="/membros" class="back-link"><mat-icon>arrow_back</mat-icon> Voltar para membros</a>
-  @if (carregando) { <p>Carregando histórico...</p> } @else if (erro) { <div class="alert">{{ erro }}</div> } @else {
-    <header class="member-header"><div><p class="eyebrow">Cadastro de membro</p><h1>{{ membro.nome_completo }}</h1><p>{{ membro.funcao || 'Membro da comunidade' }}</p></div><div class="member-contact"><span>{{ membro.email || 'Sem e-mail' }}</span><span>{{ membro.telefone || 'Sem telefone' }}</span></div></header>
+  <a [routerLink]="voltar" class="back-link"><mat-icon>arrow_back</mat-icon> {{ rotuloVoltar }}</a>
+  @if (carregando) { <p>Carregando histórico...</p> } @else if (erro) { <div class="alert">{{ erro }}</div> } @else if (membro) {
+    <header class="member-header">
+      <div class="member-identidade">
+        @if (foto) {
+          <img class="member-foto" [src]="foto" [alt]="'Foto de ' + membro.nome_completo" referrerpolicy="no-referrer">
+        } @else {
+          <span class="member-foto iniciais" aria-hidden="true">{{ iniciais() }}</span>
+        }
+        <div>
+          <p class="eyebrow">Cadastro de membro</p>
+          <h1>{{ membro.nome_completo }}</h1>
+          <p>{{ membro.funcao || 'Membro da comunidade' }}</p>
+        </div>
+      </div>
+      <div class="member-contact">
+        <span>{{ membro.email || 'Sem e-mail' }}</span>
+        <span>{{ membro.telefone || 'Sem telefone' }}</span>
+        @if (celula) {
+          <a class="member-celula" [routerLink]="['/celulas', celula.id]" [attr.aria-label]="'Célula: ' + celula.nome">
+            <mat-icon>diversity_1</mat-icon>
+            <span>Célula · {{ celula.nome }}</span>
+            @if (celula.papel === 'lider') {
+              <span class="selo-lider">líder</span>
+            }
+          </a>
+        } @else {
+          <span class="member-celula sem-celula"><mat-icon>diversity_1</mat-icon><span>Não participa de nenhuma célula</span></span>
+        }
+      </div>
+    </header>
     <section class="history-grid">
       <article class="history-panel"><h2>Dados pessoais</h2><dl><dt>Data de nascimento</dt><dd>{{ membro.data_nascimento ? (membro.data_nascimento | date:'dd/MM/yyyy') : 'Não informado' }}</dd><dt>Endereço</dt><dd>{{ membro.endereco || 'Não informado' }}</dd><dt>Entrada na igreja</dt><dd>{{ membro.data_entrada ? (membro.data_entrada | date:'dd/MM/yyyy') : 'Não informado' }}</dd></dl></article>
       <article class="history-panel"><h2>Confirmações</h2>@if (!confirmacoes.length) {<p class="muted">Nenhuma confirmação registrada.</p>} @for (item of confirmacoes; track item.id) {<div class="history-row"><strong>{{ item.data_confirmacao | date:'dd/MM/yyyy' }}</strong><span>{{ item.oficiante || 'Oficiante não informado' }}</span></div>}</article>

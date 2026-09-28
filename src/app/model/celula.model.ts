@@ -45,6 +45,14 @@ export interface Participante {
   telefone?: string | null;
   email?: string | null;
   criado_em?: string | null;
+  /**
+   * Mesmos campos que a listagem de membros usa no cartão, para a lista da
+   * célula não perder os dados que a lista geral mostra. `funcao` e entrada
+   * vêm de `membros`; `confirmado` sai do embed de confirmações.
+   */
+  funcao?: string | null;
+  data_entrada?: string | null;
+  confirmado?: boolean;
 }
 
 /** O detalhe da célula: os dados dela e quem participa. */

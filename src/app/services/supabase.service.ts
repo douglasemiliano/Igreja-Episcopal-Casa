@@ -645,6 +645,32 @@ getMembro(id: string) {
   return this.supabase.from('membros').select('*').eq('id', id).single();
 }
 
+/**
+ * Foto do membro pelo `user_id` (id da conta/auth) dele.
+ *
+ * `membros` não guarda foto: o avatar mora em `profiles.foto`, e o vínculo é
+ * `membros.user_id = profiles.id`. A policy de leitura de `profiles` é
+ * `using (true)` para autenticados (20260925_roles_multiplas_e_feed.sql), então
+ * o perfil de qualquer membro pode mostrar a foto. Devolve null/com vazio
+ * quando a pessoa nunca enviou avatar — quem monta o perfil cai no fallback de
+ * iniciais.
+ */
+async getFotoMembro(userId: string): Promise<string | null> {
+  if (!userId) return null;
+  const { data, error } = await this.supabase
+    .from('profiles')
+    .select('foto')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[membros] getFotoMembro falhou:', error.code, error.message);
+    return null;
+  }
+  const foto = (data as { foto?: string | null } | null)?.foto;
+  return foto || null;
+}
+
 getHistoricoMembro(id: string) {
   return Promise.all([
     this.supabase.from('confirmacoes_membros').select('*').eq('membro_id', id).order('data_confirmacao', { ascending: false }),

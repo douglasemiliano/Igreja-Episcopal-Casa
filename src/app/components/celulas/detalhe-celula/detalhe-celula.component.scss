@@ -225,13 +225,7 @@
   }
 }
 
-.sub {
-  margin: 1.1rem 0 0.5rem;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
+/* ---------- formação: adicionar membro ---------- */
 
 .formacao {
   display: flex;
@@ -282,93 +276,109 @@
   font-size: var(--font-size-small);
 }
 
-.participantes {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* ---------- grade de participantes (mesmos cartões da listagem de membros) ---------- */
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
 }
 
-.participante {
+.cartao {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-  padding: 0.6rem 0.75rem;
-  background-color: var(--surface-soft);
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.15rem;
+  background-color: var(--card-background);
   border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 
+  /* Item de grid tem `min-width: auto`, e o piso do tamanho dele é o
+     min-content. Com o nome em `nowrap`, esse piso era o nome inteiro, então
+     o card esticava para fora da coluna e a grade vazava da tela no mobile.
+     Zerando aqui, o nome passa a ser cortado de verdade pelo `overflow` do
+     `.nomes strong` em vez de empurrar o card. */
+  min-width: 0;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Liderança destacada: a borda primária marca quem conduz, sem trocar a
+     estrutura do cartão. */
   &.lider {
     border-color: var(--color-primary);
   }
+}
+
+.identidade {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
 }
 
 .avatar {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 2.3rem;
-  height: 2.3rem;
+  width: 3.1rem;
+  height: 3.1rem;
   border-radius: 50%;
-  background-color: var(--color-light-primary);
-  color: var(--color-primary);
-
-  mat-icon {
-    width: 1.2rem;
-    height: 1.2rem;
-    font-size: 1.2rem;
-  }
-
-  &.neutro {
-    background-color: var(--surface-hover);
-    color: var(--text-muted);
-  }
+  font-weight: var(--font-semibold);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  /* O 210 e o fallback: se o binding inline falhar, o avatar continua
+     aparecendo em vez de sair com background transparente. */
+  background-color: hsl(var(--matiz, 210) 62% 92%);
+  color: hsl(var(--matiz, 210) 55% 28%);
 }
 
 .nomes {
   display: flex;
   flex-direction: column;
-  flex: 1;
   min-width: 0;
 
   strong {
-    font-weight: var(--font-medium);
+    font-weight: var(--font-semibold);
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: break-word;
   }
 
   small {
     color: var(--text-muted);
-    font-size: 0.78rem;
+    font-size: var(--font-size-small);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
-.acoes {
+.selos {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-shrink: 0;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  gap: 0.35rem;
 }
 
-.acao {
+.selo {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.55rem;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: inherit;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
   font-size: 0.78rem;
-  cursor: pointer;
-  transition: color 0.18s ease, border-color 0.18s ease;
+  font-weight: var(--font-medium);
 
   mat-icon {
     width: 1rem;
@@ -376,12 +386,105 @@
     font-size: 1rem;
   }
 
-  &:hover {
+  &.confirmado {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+  }
+
+  &.pendente {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning-text);
+  }
+
+  &.lider {
+    background-color: var(--color-light-primary);
+    color: var(--color-primary);
+  }
+}
+
+.contatos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding-top: 0.2rem;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  mat-icon {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 1.1rem;
+    color: var(--text-soft);
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .anos {
+    display: block;
+    color: var(--text-soft);
+    font-size: 0.75rem;
+  }
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+
+  mat-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 1.1rem;
+  }
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-light-primary);
     border-color: var(--color-primary);
     color: var(--color-primary);
   }
 
-  &.perigo:hover {
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &.perigo:hover:not(:disabled) {
+    background-color: var(--color-danger-bg);
     border-color: var(--color-danger);
     color: var(--color-danger-text);
   }
@@ -431,24 +534,96 @@
     }
   }
 
-  /* Botão e nome lado a lado não cabem em 320px, e espremer o nome entre os
-     dois botões o deixa ilegível. */
-  .participante {
-    flex-wrap: wrap;
+  .grade {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .cartao {
+    position: relative;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 0.6rem;
+    text-align: center;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .identidade {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .avatar {
+    width: 3.4rem;
+    height: 3.4rem;
+    font-size: 1.1rem;
   }
 
   .nomes {
-    flex-basis: calc(100% - 3.05rem);
+    align-items: center;
+    width: 100%;
+
+    strong {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      white-space: normal;
+      overflow: hidden;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+
+    small {
+      font-size: 0.72rem;
+    }
+  }
+
+  .selos,
+  .selo {
+    align-self: center;
+    justify-content: center;
+  }
+
+  .selo {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .contatos {
+    display: none;
   }
 
   .acoes {
     width: 100%;
-    justify-content: flex-start;
-    padding-left: 3.05rem;
+    justify-content: center;
   }
 
   .formacao {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+@media (max-width: 380px) {
+  .grade {
+    gap: 0.5rem;
+  }
+
+  .cartao {
+    padding: 0.75rem 0.45rem;
+  }
+
+  .avatar {
+    width: 2.9rem;
+    height: 2.9rem;
+    font-size: 1rem;
+  }
+
+  .nomes strong {
+    font-size: 0.8rem;
   }
 }

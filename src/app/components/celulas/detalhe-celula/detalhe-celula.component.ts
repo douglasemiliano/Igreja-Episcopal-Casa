@@ -8,7 +8,7 @@ import { PermissaoService } from '../../../services/permissao.service';
 import { ToastService } from '../../../services/toast.service';
 import { ModalConfirmacaoService } from '../../utils/modal-confirmacao/modal-confirmacao.service';
 import { DetalheCelula, Participante, PapelCelula } from '../../../model/celula.model';
-import { nomeExibicao } from '../../../utils/nome-exibicao';
+import { iniciaisDe, matizDe as matizDeAvatar, anosDeIgreja as anosDeIgrejaAvatar } from '../../../utils/avatar';
 
 /**
  * Detalhe da célula: os dados, quem participa e a formação do grupo.
@@ -57,8 +57,6 @@ export class DetalheCelulaComponent implements OnInit {
   readonly temChaveFormacao = signal<boolean>(false);
 
   readonly participantes = computed<Participante[]>(() => this.detalhe()?.participantes ?? []);
-  readonly lideres = computed(() => this.participantes().filter((p) => p.papel === 'lider'));
-  readonly outros = computed(() => this.participantes().filter((p) => p.papel !== 'lider'));
 
   /** Quem mexe no grupo: a chave, ou ser líder desta célula. */
   readonly podeFormar = computed(() => this.temChaveFormacao() || this.detalhe()?.sou_lider === true);
@@ -224,8 +222,18 @@ export class DetalheCelulaComponent implements OnInit {
     return horario ? horario.slice(0, 5) : '';
   }
 
-  /** Rótulo curto do participante, para a linha não estourar o cartão. */
-  nomeCurto(participante: Participante): string {
-    return nomeExibicao(participante.nome);
+  /** Iniciais para o avatar, como na listagem de membros. */
+  iniciais(participante: Participante): string {
+    return iniciaisDe(participante.nome);
+  }
+
+  /** Matiz estável por pessoa, igual ao da listagem de membros. */
+  matizDe(participante: Participante): number {
+    return matizDeAvatar(participante.nome, participante.membro_id);
+  }
+
+  /** Anos completos desde a entrada; `null` quando não há data. */
+  anosDeIgreja(participante: Participante): number | null {
+    return anosDeIgrejaAvatar(participante.data_entrada);
   }
 }
