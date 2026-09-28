@@ -1,10 +1,12 @@
 <app-loading></app-loading>
 <app-toast-container></app-toast-container>
+<!--
+  O navbar (e o <router-outlet> que mora dentro dele) existem sempre.
+  Antes isto era um @if(isLoggedIn): o outlet do login renderizava a rota,
+  o AuthGuard rodava, o FeedComponent nascia — e quando isLoggedIn virava
+  true o @if destruía tudo aquilo e o navbar recriava a rota do zero, com
+  guard, componente e todas as queries de novo. Um outlet só, sempre vivo.
+-->
 <div class="app-container" [class.logged-in]="isLoggedIn">
-
-  @if(isLoggedIn){
-    <app-navbar></app-navbar>
-  } @else {
-    <router-outlet></router-outlet>
-  }
+  <app-navbar [isLoggedIn]="isLoggedIn"></app-navbar>
 </div>

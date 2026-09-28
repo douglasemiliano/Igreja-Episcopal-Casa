@@ -44,6 +44,15 @@ app-header {
   padding: 1rem;
 }
 
+/*
+ * Login e confirmação de certificado não são conteúdo do app: são telas
+ * de tela cheia, com o próprio fundo e o próprio `min-height: 100vh`.
+ * O padding do wrapper empurraria a rolagem e o fundo da página.
+ */
+.content-wrapper--guest {
+  padding: 0;
+}
+
 /* --- REGRAS PARA MOBILE (Telas até 768px) --- */
 @media (max-width: 768px) {
   .sidebar-backdrop--visible {

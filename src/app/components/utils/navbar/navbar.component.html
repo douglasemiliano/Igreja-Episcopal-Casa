@@ -1,24 +1,32 @@
-<button
-  class="sidebar-backdrop"
-  [class.sidebar-backdrop--visible]="!sidebarCollapsed"
-  type="button"
-  aria-label="Fechar menu lateral"
-  (click)="closeSidebar()">
-</button>
+<!--
+  Só o chrome some quando não há sessão. O <router-outlet> fica sempre no
+  lugar: se ele entrasse no mesmo @if do resto, trocar o estado de login
+  destruiria a rota ativa e o router a reconstruiria inteira.
+-->
+@if(isLoggedIn()){
+  <button
+    class="sidebar-backdrop"
+    [class.sidebar-backdrop--visible]="!sidebarCollapsed"
+    type="button"
+    aria-label="Fechar menu lateral"
+    (click)="closeSidebar()">
+  </button>
 
-<app-sidebar
-  [collapsed]="sidebarCollapsed"
-  (sidenavToggle)="closeSidebar()">
-</app-sidebar>
-
-<!-- NOVO: Contêiner que agrupa a parte da direita -->
-<div class="main-container">
-  <app-header
+  <app-sidebar
     [collapsed]="sidebarCollapsed"
-    (toggleSidebar)="toggleSidebar()">
-  </app-header>
-  
-  <main class="content-wrapper">
+    (sidenavToggle)="closeSidebar()">
+  </app-sidebar>
+}
+
+<div class="main-container">
+  @if(isLoggedIn()){
+    <app-header
+      [collapsed]="sidebarCollapsed"
+      (toggleSidebar)="toggleSidebar()">
+    </app-header>
+  }
+
+  <main class="content-wrapper" [class.content-wrapper--guest]="!isLoggedIn()">
     <router-outlet></router-outlet>
   </main>
 </div>

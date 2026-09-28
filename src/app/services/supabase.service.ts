@@ -35,6 +35,19 @@ import {
  */
 export const TAMANHO_MAXIMO_IMAGEM_MB = 60;
 
+/**
+ * Janela de reaproveitamento do usuário e dos papéis.
+ *
+ * Curta de propósito: só precisa cobrir a rajada da abertura do app, em que
+ * AuthGuard, header, sidebar e a tela pedem o mesmo dado quase no mesmo
+ * instante. Passou disso, quem quiser dado novo paga a consulta — trocar de
+ * conta ou ganhar permissão continua aparecendo sem recarregar a página.
+ */
+const TTL_USUARIO_MS = 60_000;
+
+/** Quantas publicações o mural carrega por vez. */
+const LIMITE_FEED = 50;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -42,6 +55,11 @@ export class SupabaseService {
   public supabase: SupabaseClient;
 
   private loadingService: LoadingService = inject(LoadingService);
+
+  private usuarioCache: User | null = null;
+  private usuarioCacheEm = 0;
+  private usuarioEmVoo: Promise<User | null> | null = null;
+  private rolesCache: { id: string; roles: string[]; em: number } | null = null;
 
   constructor() {
     this.supabase = createClient(
@@ -108,6 +126,7 @@ export class SupabaseService {
   }
 
   signOut() {
+    this.esquecerUsuario();
     return this.supabase.auth.signOut();
   }
 
@@ -368,6 +387,13 @@ export class SupabaseService {
 
   onAuthChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
     this.supabase.auth.onAuthStateChange((_event, session) => {
+      /*
+       * Só troca de conta e saída invalidam o cache. O SDK dispara
+       * INITIAL_SESSION em todo carregamento de página e TOKEN_REFRESHED de
+       * hora em hora, sempre com o mesmo usuário: limpar nesses casos faria a
+       * próxima tela pagar outra consulta sem nenhum dado novo por trás.
+       */
+      if (session?.user?.id !== this.usuarioCache?.id) this.esquecerUsuario();
       callback(_event, session);
     });
   }
@@ -375,29 +401,75 @@ export class SupabaseService {
   /**
    * Usuário logado, ou null.
    *
+   * `auth.getUser()` vai ao servidor a cada chamada, e o número de chamadas
+   * na abertura do app era o dobro do necessário: AuthGuard, o `getRoles()`
+   * de dois serviços e o próprio componente de tela. O cache abaixo corta
+   * isso para uma ida.
+   *
+   * Só o resultado positivo é cacheado. Guardar também o `null` faria o
+   * primeiro `getUser()` antes do login travar o app inteiro por TTL.
+   *
    * Nunca rejeita: o SDK usa `navigator.locks` para proteger o token de auth
    * e, com múltiplas abas do app abertas, o lock pode falhar
    * (NavigatorLockAcquireTimeoutError). Nesse caso caímos na sessão local,
    * que é suficiente para checagens de UI, em vez de derrubar a tela.
    */
   async getUser(): Promise<User | null> {
+    if (this.usuarioCache && Date.now() - this.usuarioCacheEm < TTL_USUARIO_MS) {
+      return this.usuarioCache;
+    }
+
+    // Duas chamadas no mesmo instante (guard + componente) compartilham a ida.
+    if (this.usuarioEmVoo) return this.usuarioEmVoo;
+
+    this.usuarioEmVoo = this.consultarUsuario();
+    try {
+      return await this.usuarioEmVoo;
+    } finally {
+      this.usuarioEmVoo = null;
+    }
+  }
+
+  private async consultarUsuario(): Promise<User | null> {
     try {
       const { data, error } = await this.supabase.auth.getUser();
       if (error || !data?.user) return null;
-      return data.user;
+      return this.lembrarUsuario(data.user);
     } catch (erro) {
       console.warn('Falha ao consultar o usuário autenticado:', erro);
       try {
         const { data } = await this.supabase.auth.getSession();
-        return data?.session?.user ?? null;
+        const user = data?.session?.user ?? null;
+        return user ? this.lembrarUsuario(user) : null;
       } catch {
         return null;
       }
     }
   }
 
+  private lembrarUsuario(user: User): User {
+    this.usuarioCache = user;
+    this.usuarioCacheEm = Date.now();
+    return user;
+  }
+
+  /** Some com o usuário e os papéis em cache. */
+  private esquecerUsuario(): void {
+    this.usuarioCache = null;
+    this.usuarioCacheEm = 0;
+    this.rolesCache = null;
+  }
+
   getUserResult() {
-    return this.supabase.auth.getUser();
+    return this.supabase.auth.getUser().then((resposta) => {
+      /*
+       * O app abre com esta chamada para distinguir "sem sessão" de "erro ao
+       * ler a sessão". Aproximar o usuário daqui faz o `getUser()` do
+       * AuthGuard, que roda logo em seguida, sair de graça.
+       */
+      if (resposta.data?.user) this.lembrarUsuario(resposta.data.user);
+      return resposta;
+    });
   }
 
   updateLectionary(id: number, entry: any) {
@@ -752,30 +824,46 @@ deleteAgenda(id: string) {
   return this.supabase.from('agenda_igreja').delete().eq('id', id);
 }
 
-/** Todas as roles do usuário. Nunca retorna lista vazia (fallback: membro). */
-async getRoles(): Promise<string[]> {
-  const user = await this.getUser();
-  if (!user) return ['membro'];
+  /**
+   * Todas as roles do usuário. Nunca retorna lista vazia (fallback: membro).
+   *
+   * O resultado é cacheado por usuário porque `CoreService` e
+   * `MembroVinculoService` chamam isto na mesma abertura, e cada chamada
+   * sozinha é um `auth.getUser()` mais um SELECT em `profiles`.
+   */
+  async getRoles(forcar = false): Promise<string[]> {
+    const user = await this.getUser();
+    if (!user) return ['membro'];
 
-  const { data } = await this.supabase
-    .from('profiles')
-    .select('roles')
-    .eq('id', user.id)
-    .maybeSingle();
+    if (
+      !forcar &&
+      this.rolesCache?.id === user.id &&
+      Date.now() - this.rolesCache.em < TTL_USUARIO_MS
+    ) {
+      return this.rolesCache.roles;
+    }
 
-  const fromPerfil: string[] = Array.isArray(data?.roles) ? data.roles : [];
-  const fromMetadata: string[] = Array.isArray(user.user_metadata?.['roles'])
-    ? user.user_metadata['roles']
-    : user.user_metadata?.['role']
-      ? [user.user_metadata['role']]
-      : [];
+    const { data } = await this.supabase
+      .from('profiles')
+      .select('roles')
+      .eq('id', user.id)
+      .maybeSingle();
 
-  const roles = [...fromPerfil, ...fromMetadata]
-    .map((role) => (role === 'leitor' ? 'membro' : role)) // perfil antigo
-    .filter((role, indice, lista) => lista.indexOf(role) === indice);
+    const fromPerfil: string[] = Array.isArray(data?.roles) ? data.roles : [];
+    const fromMetadata: string[] = Array.isArray(user.user_metadata?.['roles'])
+      ? user.user_metadata['roles']
+      : user.user_metadata?.['role']
+        ? [user.user_metadata['role']]
+        : [];
 
-  return roles.length ? roles : ['membro'];
-}
+    const roles = [...fromPerfil, ...fromMetadata]
+      .map((role) => (role === 'leitor' ? 'membro' : role)) // perfil antigo
+      .filter((role, indice, lista) => lista.indexOf(role) === indice);
+
+    const final = roles.length ? roles : ['membro'];
+    this.rolesCache = { id: user.id, roles: final, em: Date.now() };
+    return final;
+  }
 
 /** Roles conhecidas pelo sistema, em ordem de permissão. */
 readonly rolesDisponiveis = [
@@ -875,7 +963,15 @@ atualizarRolesUsuario(id: string, roles: string[]) {
 
 // --- FEED / MURAL ---
 
-getFeed() {
+/**
+ * Publicações do mural, mais recentes primeiro.
+ *
+ * O limite não é cosmético: sem ele a tela baixa a tabela inteira, com o
+ * join em `profiles` linha a linha, e o custo só aparece quando a igreja
+ * acumula post. O mural é uma janela do agora, e o histórico não tem tela
+ * que o mostre.
+ */
+getFeed(limite = LIMITE_FEED) {
   return this.supabase
     .from('feed_publicacoes')
     .select(`
@@ -887,7 +983,8 @@ getFeed() {
       autor_id,
       autor:profiles!feed_publicacoes_autor_id_fkey(id, nome, roles, email, foto)
     `)
-    .order('criado_em', { ascending: false });
+    .order('criado_em', { ascending: false })
+    .limit(limite);
 }
 
 async publicarFeed(conteudo: string, imagemUrl?: string | null) {

@@ -90,15 +90,6 @@ export class DashboardComponent implements OnInit {
   }
 
 
-      async carregarCaixa(): Promise<void> {
-  const { data, error } = await this.supabase.getCaixaAberto();
-  if (error) {
-    console.error(error);
-    return;
-  }
-  this.caixaAtual = data ?? null;
-}
-
   moeda(valor: number): string { return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
   temPermissao(roles: string[]): boolean {

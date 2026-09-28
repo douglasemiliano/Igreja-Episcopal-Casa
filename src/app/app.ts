@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject, OnInit, Renderer2, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router } from '@angular/router';
 import { LoadingComponent } from './components/utils/loading/loading.component';
 import { NavbarComponent } from './components/utils/navbar/navbar.component';
 import { ToastContainerComponent } from './components/utils/toast/toast.component';
@@ -14,7 +14,7 @@ import { SupabaseService } from './services/supabase.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterOutlet, MatIconModule, LoadingComponent, NavbarComponent, ToastContainerComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatIconModule, LoadingComponent, NavbarComponent, ToastContainerComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
@@ -27,9 +27,10 @@ export class App implements OnInit {
 
   private coreService = inject(CoreService);
   private readonly permissao = inject(PermissaoService);
+  private readonly caixaService = inject(CaixaService);
 
 
-  constructor(private router: Router, private renderer: Renderer2, private supabase: SupabaseService, private caixaService: CaixaService){
+  constructor(private router: Router, private renderer: Renderer2, private supabase: SupabaseService){
     this.checkScreenSize();
   }
 
@@ -65,14 +66,20 @@ export class App implements OnInit {
       this.isLoggedIn = !!session;
 
       if (session) {
-        // Login vindo de outra aba: o conjunto do usuário anterior não vale.
-        void this.permissao.carregar(true);
+        /*
+         * Login vindo de outra aba: o conjunto do usuário anterior não vale,
+         * e `limpar()` já zerou o cache no logout. Não precisa de `forcar`
+         * aqui — forçar aqui punia o INITIAL_SESSION, que o SDK dispara em
+         * todo recarregamento de página e ia custar uma consulta a mais.
+         */
+        void this.permissao.carregar();
       } else {
+        // Nada aqui sobrevive para a próxima conta que logar nesta aba.
         this.permissao.limpar();
+        this.coreService.limpar();
+        this.caixaService.limpar();
       }
     });
-
-    this.caixaService.carregarCaixa();
   }
 
   mudouData() { this.router.navigateByUrl("/lecionario") }

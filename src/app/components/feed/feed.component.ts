@@ -78,14 +78,14 @@ export class FeedComponent implements OnInit {
   }
 
   constructor() {
+    // `CoreService` já tem o usuário resolvido (o AuthGuard passou por ele),
+    // então ler daqui evita um `auth.getUser()` que voltaria à rede de novo.
     this.core.usuario$.subscribe({
-      next: (usuario) => (this.minhaFoto = usuario.foto)
+      next: (usuario) => {
+        this.minhaFoto = usuario.foto;
+        this.usuarioAtualId = usuario.id;
+      }
     });
-
-    void this.supabase
-      .getUser()
-      .then((user) => (this.usuarioAtualId = user?.id ?? ''))
-      .catch(() => undefined);
   }
 
   async ngOnInit(): Promise<void> {

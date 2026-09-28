@@ -98,11 +98,17 @@ export class PermissaoService {
    *
    * É o ponto que faz a tela de permissões servir para alguma coisa: ela pode
    * mudar as permissões de quem está logado, e a pessoa só descobre na
-   * próxima tela. Throttle de 30s, mesmo criterio de `carregar()`.
+   * próxima tela.
+   *
+   * A chamada NÃO é forçada, e é aqui que isso importa. Como o app é um PWA
+   * instalado, alternar entre abas dispara `visibilitychange` o dia inteiro;
+   * forçar transformava cada troca de aba numa consulta, que é exatamente o
+   * que a janela de 30s de `carregar()` existe para evitar. Passados 30s sem
+   * lookup, a próxima volta de aba já traz o conjunto novo.
    */
   async aoVoltarParaAba(): Promise<void> {
     if (document.visibilityState !== 'visible') return;
-    await this.carregar(true);
+    await this.carregar();
   }
 
   /**

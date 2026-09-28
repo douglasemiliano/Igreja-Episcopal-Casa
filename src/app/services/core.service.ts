@@ -5,6 +5,7 @@ import { SupabaseService } from './supabase.service';
 import { nomeExibicao } from '../utils/nome-exibicao';
 
 export interface UsuarioApp {
+  id: string;
   nome: string;
   email: string;
   foto: string;
@@ -30,6 +31,7 @@ export class CoreService {
    * aparece em todos os lugares sem recarregar a página.
    */
   private usuarioSubject = new BehaviorSubject<UsuarioApp>({
+    id: '',
     nome: 'Usuário',
     email: 'Email não informado',
     foto: '',
@@ -37,8 +39,13 @@ export class CoreService {
   });
   usuario$ = this.usuarioSubject.asObservable();
 
-  /** Evita duas idas ao banco quando header e sidebar montam juntos. */
+  /**
+   * Evita duas idas ao banco quando header e sidebar montam juntos, e segura
+   * o resultado por uma janela para que remontar a casca (navegar, rotacionar
+   * a tela) não refaça o mesmo lote de consultas.
+   */
   private carregandoUsuario: Promise<void> | null = null;
+  private usuarioCarregadoEm = 0;
 
   constructor() {
     this.updateScreen();
@@ -87,6 +94,7 @@ export class CoreService {
    */
   async carregarUsuario(forcar = false): Promise<void> {
     if (!forcar && this.carregandoUsuario) return this.carregandoUsuario;
+    if (!forcar && Date.now() - this.usuarioCarregadoEm < 30_000) return;
 
     this.carregandoUsuario = this.buscarUsuario();
     try {
@@ -94,6 +102,22 @@ export class CoreService {
     } finally {
       this.carregandoUsuario = null;
     }
+  }
+
+  /**
+   * Esquece o usuário guardado, para o próximo login não herdar o nome, a
+   * foto e os papéis de quem saiu. Quem chama no logout é o app, que já
+   * ouve o evento de auth.
+   */
+  limpar(): void {
+    this.usuarioSubject.next({
+      id: '',
+      nome: 'Usuário',
+      email: 'Email não informado',
+      foto: '',
+      roles: ['membro']
+    });
+    this.usuarioCarregadoEm = 0;
   }
 
   private async buscarUsuario(): Promise<void> {
@@ -107,11 +131,14 @@ export class CoreService {
       const user = sessao.data?.session?.user;
       if (!user) return;
 
+      this.usuarioCarregadoEm = Date.now();
+
       const metadata = user.user_metadata ?? {};
       const nome =
         membro.nome || metadata['name'] || metadata['full_name'] || user.email || '';
 
       this.setUsuario({
+        id: user.id,
         nome: nomeExibicao(nome) || 'Usuário',
         email: user.email || 'Email não informado',
         // `uploadAvatar` grava a foto nos dois lugares, então a metadata já

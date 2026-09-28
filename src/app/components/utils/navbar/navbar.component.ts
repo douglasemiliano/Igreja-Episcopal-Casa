@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, inject, input, OnDestroy } from '@angular/core';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { RouterOutlet } from '@angular/router';
@@ -12,6 +12,13 @@ import { Subscription } from 'rxjs';
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnDestroy {
+
+  /**
+   * Controla apenas o que é chrome (sidebar e header). O componente e o
+   * outlet existem desde o primeiro render justamente para a rota ativa não
+   * ser destruída quando a sessão é restaurada.
+   */
+  readonly isLoggedIn = input(false);
 
   sidebarCollapsed = window.innerWidth <= 768;
   isMobile = window.innerWidth <= 768;
