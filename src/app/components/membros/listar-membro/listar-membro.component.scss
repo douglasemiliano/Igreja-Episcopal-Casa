@@ -572,9 +572,54 @@
     padding: 0.15rem 0.5rem;
   }
 
-  /* Os dados e as ações não cabem em duas colunas; o perfil tem tudo. */
-  .contatos,
+  /* Os dados de contato não cabem em duas colunas, e o perfil tem todos. */
+  .contatos {
+    display: none;
+  }
+
+  /*
+   * As AÇÕES voltam, e é uma correção, não um ajuste de layout.
+   *
+   * Esconder `.acoes` junto com `.contatos` deixava a secretaria sem
+   * Confirmar e sem Excluir no celular — e o comentário antigo dizia "o perfil
+   * tem tudo", o que é verdade para o telefone e falso para estes dois botões:
+   * não existe nenhum lugar da interface onde a pessoa os faça. O card inteiro
+   * já é link para o perfil (o `.identidade::after`, mais acima), então o
+   * botão de Perfil é redundante aqui e some no mobile.
+   *
+   * `position: relative` + `z-index` não é enfeite: o `.identidade::after` é
+   * posicionado e cobre o card inteiro para fazer o link clicável, e elemento
+   * posicionado pinta por cima de elemento estático. Sem isto, os botões ficam
+   * visíveis e o toque vai para o link do perfil.
+   */
   .acoes {
+    position: relative;
+    z-index: 1;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    margin-top: 0.2rem;
+    padding-top: 0.5rem;
+  }
+
+  /* Só o ícone: o card tem ~140px e dois botões com texto não cabem. O
+     `aria-label` de cada um já diz o que é, então o toque continua nomeado. */
+  .acoes .acao {
+    /* Alvo de toque de 44px, o mínimo confortável no celular. O Excluir já é
+       só ícone nos dois tamanhos de tela, e sem isto ficaria com 32px. */
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.45rem;
+    justify-content: center;
+    border-radius: 0.55rem;
+  }
+
+  /* O botão de Perfil some aqui: o card inteiro já é link para o perfil. */
+  .acao.so-mobile-oculto {
+    display: none;
+  }
+
+  .acao.rotulo-oculto span {
     display: none;
   }
 

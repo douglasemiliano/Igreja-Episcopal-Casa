@@ -58,6 +58,26 @@ export class GerenciarPermissoesComponent implements OnInit {
    */
   readonly papeis = this.supabase.rolesDisponiveis.filter((role) => role !== 'leitor');
 
+  /**
+   * Concessões que a tela não oferece, porque o banco não vai obedecer.
+   *
+   * A chave `vincular_membros_celula` é global por natureza: quem a tem forma
+   * o grupo de QUALQUER célula. O líder de célula não entra nessa conta — ele
+   * forma a célula que ele lidera, e a essa parte ele chega pelo
+   * `celula_membros`, não pelo catálogo. Deixar a caixa marcável para
+   * `lider` e `membro` seria o botão de mentira da seção 2 de
+   * docs/permissoes-dinamicas-plano.md: o administrador marcava, o banco
+   * ignorava, e ninguém sabia qual dos dois estava mentindo.
+   *
+   * A trava que garante isso não está aqui — está em
+   * public.pode_vincular_esta_celula(), de
+   * supabase/20261001_lider_escopo_celula.sql. Esta lista é só o espelho: para
+   * a tela parar de oferecer o que o banco já recusa.
+   */
+  private readonly escopoFixo: Record<string, string[]> = {
+    vincular_membros_celula: ['lider', 'membro']
+  };
+
   readonly rotulosPapeis: Record<string, string> = {
     administrador: 'Administrador',
     secretaria: 'Secretaria',
@@ -136,6 +156,23 @@ export class GerenciarPermissoesComponent implements OnInit {
     return linha.papeis.includes(role);
   }
 
+  /**
+   * `true` quando marcar esta caixa não mudaria nada, porque a regra da chave é
+   * mais estreita do que a lista de papéis sugere.
+   */
+  escopoFixoEm(linha: LinhaPermissao, role: string): boolean {
+    return (this.escopoFixo[linha.chave] ?? []).includes(role);
+  }
+
+  /** Texto do `title` das caixas travadas: por que elas não destravam. */
+  motivoDoBloqueio(linha: LinhaPermissao, role: string): string {
+    if (!this.escopoFixoEm(linha, role)) return '';
+    return (
+      `${this.rotuloPapel(role)} não pode formar o grupo de outra célula. ` +
+      'Esta chave vale para quem cuida de todas; o líder já forma a célula que ele lidera.'
+    );
+  }
+
   rotuloPapel(role: string): string {
     return this.rotulosPapeis[role] ?? role;
   }
@@ -150,6 +187,15 @@ export class GerenciarPermissoesComponent implements OnInit {
    */
   async alternar(linha: LinhaPermissao, role: string): Promise<void> {
     if (linha.reservada || this.salvando) return;
+
+    // A caixa está desabilitada na tela; a checagem aqui é para o caminho que
+    // não passa pelo botão (teclado, teste, chamada direta do método). Conceder
+    // seria aceito pelo banco e ignorado pela RLS, então o efeito seria uma
+    // concessão na matriz que não existe.
+    if (this.escopoFixoEm(linha, role)) {
+      this.toast.erro(this.motivoDoBloqueio(linha, role));
+      return;
+    }
 
     const estavaMarcado = this.tem(linha, role);
     this.aplicarLocal(linha, role, !estavaMarcado);

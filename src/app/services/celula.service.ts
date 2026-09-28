@@ -47,9 +47,11 @@ interface CelulaComRelacao extends Celula {
  * Células: listagem, detalhe e formação do grupo.
  *
  * As escritas vão direto pelo cliente do PostgREST e são barradas pela RLS de
- * supabase/20260930_celulas.sql — não há RPC de escrita. A exceção é a leitura
- * da célula da própria conta no perfil, que vem da função
- * public.minhas_celulas() e devolve jsonb.
+ * supabase/20260930_celulas.sql — não há RPC de escrita. As duas exceções são
+ * leituras que precisam do `auth.uid()`, que o PostgREST não enxerga: a célula
+ * da própria conta no perfil (public.minhas_celulas()) e a resposta "posso
+ * formar o grupo DESTA célula?" (public.pode_vincular_esta_celula(), de
+ * supabase/20261001_lider_escopo_celula.sql).
  *
  * Uma regra que a interface não pode ignorar: o índice único em
  * `celula_membros (membro_id)` faz o banco recusar o segundo vínculo da mesma
@@ -356,17 +358,34 @@ export class CelulaService {
   }
 
   /**
-   * `true` quando quem está logado pode formar o grupo de alguma célula.
+   * `true` quando quem está logado pode formar o grupo DESTA célula.
    *
-   * A chave `vincular_membros_celula` responde a maior parte dos casos, mas o
-   * líder de uma célula também monta a própria célula sem ser da secretaria, e
-   * essa informação não está no catálogo: sai das participações da pessoa. Por
-   * isso é método assíncrono e não um getter como `podeGerenciar`.
+   * A pergunta é por célula, e não "tem a chave?", porque a chave
+   * `vincular_membros_celula` é global: ela cobre pastor, administrador e
+   * secretaria, enquanto o líder de célula cobre só a dele. Quem pergunta
+   * "posso formar esta célula?" no detalhe precisa da resposta específica, e a
+   * resposta específica mora no banco.
+   *
+   * Delegar para public.pode_vincular_esta_celula() é o ponto. Reimplementar
+   * aqui a regra seria duplicar a lista de papéis de direção em TypeScript,
+   * e as duas cópias divergiriam no dia em que alguém adicionasse um papel —
+   * com a tela mostrando botão que o banco recusa, que é o que a seção 2 de
+   * docs/permissoes-dinamicas-plano.md trata de "botão de mentira".
+   *
+   * Falha aqui é `false`, não exceção: quem não forma grupo é o caso comum
+   * (qualquer membro abre o detalhe de uma célula para ver quando se reúne), e
+   * esse chamado não pode virar erro de tela.
    */
-  async podeVincular(): Promise<boolean> {
-    if (this.permissao.pode('vincular_membros_celula')) return true;
-    const minhas = await this.minhasCelulas();
-    return minhas.some((celula) => celula.papel === 'lider');
+  async podeFormarNa(celulaId: string): Promise<boolean> {
+    const { data, error } = await this.supabase.supabase.rpc('pode_vincular_esta_celula', {
+      alvo_celula: celulaId
+    });
+
+    if (error) {
+      console.error('[celulas] pode_vincular_esta_celula falhou:', error.code, error.message);
+      return false;
+    }
+    return data === true;
   }
 
   /** Id do membro ligado à conta logada, ou null se a conta não tem cadastro. */

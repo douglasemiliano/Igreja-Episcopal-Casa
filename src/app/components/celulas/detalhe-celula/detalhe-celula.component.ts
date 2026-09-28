@@ -16,11 +16,13 @@ import { iniciaisDe, matizDe as matizDeAvatar, anosDeIgreja as anosDeIgrejaAvata
  * Três coisas nesta tela, e nenhuma delas é a mesma:
  *
  *   * `podeEditar` — `gerenciar_celulas`: mudar os dados da célula, desativar,
- *     excluir. É configuração da igreja.
- *   * `podeFormar` — `vincular_membros_celula` OU liderar ESTA célula. Quem
- *     forma o grupo não precisa poder editá-lo: o líder da célula monta a
- *     própria célula e não mexe no cadastro dela. É a mesma regra da policy.
- *   * `sou_lider`   — só para rotular quem conduz.
+ *     excluir. É configuração da igreja. O líder da célula não mexe aqui: ele
+ *     monta o grupo, não edita o cadastro.
+ *   * `podeFormar` — quem pode mexer no grupo DESTA célula: o papel de direção
+ *     (pastor, administrador, secretaria) formando qualquer uma, ou o líder
+ *     formando a própria. Vem de public.pode_vincular_esta_celula(), a mesma
+ *     função que a RLS consulta, então a tela e o banco não têm como divergir.
+ *   * `sou_lider`   — só para rotular quem conduz, e não para autorizar nada.
  */
 @Component({
   selector: 'app-detalhe-celula',
@@ -49,21 +51,23 @@ export class DetalheCelulaComponent implements OnInit {
   readonly adicionando = signal<boolean>(false);
 
   readonly podeEditar = signal<boolean>(false);
+
   /**
-   * A chave de formação, lida antes do detalhe carregar: quem tem a chave pode
-   * formar em qualquer célula, e a tela não pode esperar a consulta terminar
-   * para saber se mostra o botão.
+   * Quem mexe no grupo DESTA célula: o papel de direção, ou o líder dela.
+   *
+   * É signal e não computed porque a resposta vem do banco. Um computed sobre
+   * a chave `vincular_membros_celula` seria mais simples e estaria errado: a
+   * chave é global, e quem a tem por concessão indevida não deveria ver o
+   * botão em célula nenhuma. O banco é quem sabe.
+   *
+   * Começa `false`: enquanto não responde, ninguém mexe em grupo nenhum.
    */
-  readonly temChaveFormacao = signal<boolean>(false);
+  readonly podeFormar = signal<boolean>(false);
 
   readonly participantes = computed<Participante[]>(() => this.detalhe()?.participantes ?? []);
 
-  /** Quem mexe no grupo: a chave, ou ser líder desta célula. */
-  readonly podeFormar = computed(() => this.temChaveFormacao() || this.detalhe()?.sou_lider === true);
-
   async ngOnInit(): Promise<void> {
     this.permissao.carregar();
-    this.temChaveFormacao.set(this.permissao.pode('vincular_membros_celula'));
     this.podeEditar.set(this.celulasService.podeGerenciar);
 
     const id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -84,6 +88,7 @@ export class DetalheCelulaComponent implements OnInit {
 
     try {
       this.detalhe.set(await this.celulasService.detalhe(this.celulaId()));
+      this.podeFormar.set(await this.celulasService.podeFormarNa(this.celulaId()));
 
       if (this.podeFormar()) {
         this.livres.set(await this.celulasService.membrosLivres());
@@ -113,6 +118,14 @@ export class DetalheCelulaComponent implements OnInit {
     const membroId = this.escolhido();
     if (!membroId) {
       this.toast.erro('Escolha uma pessoa para adicionar.');
+      return;
+    }
+
+    // A RLS já recusaria, e a recusa apareceria como erro genérico de banco. A
+    // guarda existe para a pessoa entender o motivo, que é diferente do erro
+    // de dado: o líder que caiu aqui está numa célula que não é dele.
+    if (!this.podeFormar()) {
+      this.toast.erro('Você só pode adicionar membros na célula que você lidera.');
       return;
     }
 

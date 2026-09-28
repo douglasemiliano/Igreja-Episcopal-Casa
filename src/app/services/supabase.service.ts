@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import {
   AuthChangeEvent,
   createClient,
+  PostgrestError,
   Session,
   SupabaseClient,
   User
@@ -606,9 +607,52 @@ addMembro(membro: any) {
     });
 
     if (error) {
-      return { status: 'erro', mensagem: 'Não foi possível excluir o membro.' };
+      // Registra o erro inteiro, e não só o "não foi possível". A função
+      // devolve jsonb com `mensagem` em todos os caminhos de erro que ela
+      // controla — permissão, membro inexistente, conta própria — e nenhum
+      // deles chega aqui como `error`. Então um `error` significa que o
+      // PostgREST recusou a CHAMADA, antes do corpo rodar: cache de schema
+      // velho, assinatura diferente, ou execute revogado. Sem este log, a tela
+      // mostra "Não foi possível excluir o membro" e a causa morre aqui.
+      console.error('[membros] excluir_membro_e_conta falhou:', error.code, error.message, error.details);
+
+      return {
+        status: 'erro',
+        mensagem: this.mensagemDeErroPostgRest(error),
+      };
     }
     return (data ?? { status: 'erro', mensagem: 'Resposta inesperada do banco.' }) as ResultadoExclusaoMembro;
+  }
+
+  /**
+   * Traduz um `error` do PostgREST numa frase que a pessoa entende e que
+   * serve de diagnóstico.
+   *
+   * A função devolve `status: 'erro'` com mensagem própria em todo caminho que
+   * ela controla, então um `error` aqui é sempre o PostgREST recusando a
+   * chamada antes do corpo rodar. A mensagem que ele devolve NÃO é texto para
+   * o usuário final — é o diagnóstico. "Could not find the function
+   * public.excluir_membro_e_conta(p_membro_id) in the schema cache" diz
+   * exatamente o que está errado de um jeito que "Não foi possível excluir o
+   * membro" esconde, e era por isso que o 400 sumia sem deixar rastro.
+   *
+   * As duas exceções continuam amigáveis: falta de permissão (42501) e sessão
+   * ausente são situações previstas, com tradução própria.
+   */
+  private mensagemDeErroPostgRest(error: PostgrestError): string {
+    const bruto = `${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`;
+
+    if (bruto.includes('42501')) {
+      return 'Você não tem permissão para excluir membros.';
+    }
+    if (bruto.includes('JWT') || bruto.includes('token')) {
+      return 'Sessão ausente ou expirada. Entre novamente.';
+    }
+
+    const detalhe = [error.code, error.message, error.hint].filter(Boolean).join(' — ');
+    return detalhe
+      ? `Não foi possível excluir o membro. Detalhe do banco: ${detalhe}`
+      : 'Não foi possível excluir o membro.';
   }
 
 /*

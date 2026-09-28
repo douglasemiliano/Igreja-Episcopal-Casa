@@ -89,18 +89,24 @@
           </dl>
 
           <footer class="acoes">
-            <a class="acao" [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes de {{ membro.nome_completo }}">
+            <!--
+              O card inteiro já é link para o perfil no celular (o
+              `.identidade::after` cobre tudo), então este botão é redundante
+              lá e some no mobile. Confirmar e Excluir não: não têm outro
+              lugar na interface.
+            -->
+            <a class="acao so-mobile-oculto" [routerLink]="['/membros', membro.id]" aria-label="Ver detalhes de {{ membro.nome_completo }}">
               <mat-icon>visibility</mat-icon> Perfil
             </a>
 
             @if (temPermissao(['administrador', 'secretaria', 'pastor'])) {
               <button
                 type="button"
-                class="acao"
+                class="acao rotulo-oculto"
                 (click)="abrirConfirmacao(membro)"
                 [disabled]="eConfirmado(membro)"
                 [attr.aria-label]="'Confirmar ' + membro.nome_completo">
-                <mat-icon>how_to_reg</mat-icon> Confirmar
+                <mat-icon>how_to_reg</mat-icon> <span>Confirmar</span>
               </button>
             }
             @if (podeExcluir) {

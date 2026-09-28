@@ -166,6 +166,18 @@ h2 {
     opacity: .75
 }
 
+/*
+ * A regra da chave é mais estreita do que a lista de papéis sugere: marcar
+ * aqui não mudaria nada, porque o banco filtra antes. A borda tracejada diz
+ * "fora do alcance desta chave" sem parecer erro — a ficha nunca esteve
+ * marcada, e é essa ficha que explica por que o líder forma a célula dele.
+ */
+.papel--escopo-fixo {
+    border-style: dashed;
+    border-color: color-mix(in srgb, var(--text-color) 12%, transparent);
+    opacity: .4
+}
+
 .papel:disabled {
     cursor: not-allowed
 }

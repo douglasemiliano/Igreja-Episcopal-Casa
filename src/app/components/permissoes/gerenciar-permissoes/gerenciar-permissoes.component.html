@@ -51,7 +51,9 @@
                                         class="papel"
                                         [class.papel--marcado]="tem(linha, papel)"
                                         [class.papel--fixo]="papel === admin"
-                                        [disabled]="papel === admin || !!salvando"
+                                        [class.papel--escopo-fixo]="escopoFixoEm(linha, papel)"
+                                        [disabled]="papel === admin || escopoFixoEm(linha, papel) || !!salvando"
+                                        [attr.title]="motivoDoBloqueio(linha, papel) || null"
                                         [attr.aria-pressed]="tem(linha, papel)"
                                         [attr.aria-label]="
                                             rotuloPapel(papel) + ' pode ' + linha.rotulo.toLowerCase()

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-modal-confirmacao',
@@ -7,7 +7,7 @@ import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, View
   templateUrl: './modal-confirmacao.component.html',
   styleUrls: ['./modal-confirmacao.component.scss']
 })
-export class ModalConfirmacaoComponent implements AfterViewInit {
+export class ModalConfirmacaoComponent implements AfterViewInit, OnDestroy {
   @Input() mensagem = '';
 
   /**
@@ -30,21 +30,39 @@ export class ModalConfirmacaoComponent implements AfterViewInit {
 
   private resultado = false;
   private modal: any;
+  private aoEsconder = () => this.fechado.emit(this.resultado);
 
   ngAfterViewInit(): void {
     const Bootstrap = (window as any).bootstrap;
-    if (!Bootstrap) return;
+
+    if (!Bootstrap) {
+      // Sem o Bootstrap na página não existe modal, e sem modal não existe
+      // clique. Emitir aqui, e não em silêncio, é o que impede o `await` de
+      // quem chamou de ficar pendurado para sempre — que para o usuário
+      // parece exatamente a tela travada.
+      //
+      // O setTimeout existe porque o `fechado` é assinado DEPOIS do
+      // detectChanges que dispara este ngAfterViewInit: um emit síncrono
+      // ninguém escuta e o mesmo travamento volta por outro caminho.
+      setTimeout(() => this.fechado.emit(false), 0);
+      return;
+    }
 
     this.modal = new Bootstrap.Modal(this.modalElement.nativeElement, {
       backdrop: 'static',
       keyboard: false
     });
 
-    this.modalElement.nativeElement.addEventListener('hidden.bs.modal', () => {
-      this.fechado.emit(this.resultado);
-    });
+    this.modalElement.nativeElement.addEventListener('hidden.bs.modal', this.aoEsconder);
 
     this.modal.show();
+  }
+
+  ngOnDestroy(): void {
+    // O listener vive no elemento do Bootstrap, que sobrevive a este
+    // componente se algo destruir a view antes da animação terminar. Sem tirar
+    // o listener, o `fechado` dispara sobre um componente morto.
+    this.modalElement?.nativeElement?.removeEventListener('hidden.bs.modal', this.aoEsconder);
   }
 
   confirmar(): void {
