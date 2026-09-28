@@ -15,7 +15,9 @@
     <header class="post-head">
       <div class="post-identity">
         <strong>{{ autorNome }}</strong>
-        @if (autorRoles.length) {
+        @if (autorRemovido) {
+          <small class="post-roles">O texto foi preservado, mas a conta não existe mais</small>
+        } @else if (autorRoles.length) {
           <small class="post-roles">{{ autorRoles.join(' · ') }}</small>
         }
       </div>

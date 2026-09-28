@@ -16,8 +16,7 @@ import { HomeComponent } from './components/home/home.component';
 export const routes: Routes = [
     { path: 'home', loadComponent: () => import('./components/feed/feed.component').then(c => c.FeedComponent), data: { animation: 'home' }, canActivate: [AuthGuard] },
     { path: 'central', component: HomeComponent, canActivate: [AuthGuard, PermissaoGuard], data: { chave: 'ver_central' } },
-    { path: 'perfil', loadComponent: () => import('./components/perfil/perfil.component').then(c => c.PerfilComponent), canActivate: [AuthGuard] },
-    { path: 'lecionario', loadComponent: () => import('./components/lecionario/view-lecionario/view-lecionario.component').then(c => c.ViewLecionarioComponent), canActivate: [AuthGuard] },
+    { path: 'perfil', loadComponent: () => import('./components/perfil/perfil.component').then(c => c.PerfilComponent), canActivate: [AuthGuard] },    { path: 'lecionario', loadComponent: () => import('./components/lecionario/view-lecionario/view-lecionario.component').then(c => c.ViewLecionarioComponent), canActivate: [AuthGuard] },
     { path: 'lecionario/listar', loadComponent: () => import('./components/lecionario/listar-lecionario/listar-lecionario.component').then(c => c.ListarLecionarioComponent), canActivate: [AuthGuard, PermissaoGuard], data: { chave: 'gerenciar_lecionario' } },
     { path: '', redirectTo: '/home', pathMatch: 'full' },
     { path: 'mural', redirectTo: '/home', pathMatch: 'full' },
@@ -29,6 +28,12 @@ export const routes: Routes = [
     { path: 'membros/cadastrar', loadComponent: () => import('./components/membros/cadastrar-membro/cadastrar-membro.component').then(c => c.CadastrarMembroComponent), canActivate: [AuthGuard, PermissaoGuard], data: { chave: 'cadastrar_membros' } },
     { path: 'membros', loadComponent: () => import('./components/membros/listar-membro/listar-membro.component').then(c => c.ListarMembrosComponent), canActivate: [AuthGuard] },
     { path: 'membros/:id', loadComponent: () => import('./components/membros/detalhe-membro/detalhe-membro.component').then(c => c.DetalheMembroComponent), canActivate: [AuthGuard] },
+    /*
+     * Onboarding de quem entrou por conta própria. A checagem do cadastro
+     * incompleto mora no AuthGuard, e não como guard desta linha: assim ela
+     * não pode ser esquecida na próxima rota que alguém adicionar.
+     */
+    { path: 'completar-cadastro', loadComponent: () => import('./components/membros/completar-cadastro/completar-cadastro.component').then(c => c.CompletarCadastroComponent), canActivate: [AuthGuard] },
     /*
      * A agenda fica aberta a todos autenticados: o SELECT da tabela é
      * liberado, e o que é restrito são os botões, guardado por

@@ -186,9 +186,16 @@
     text-transform: uppercase;
   }
 
+  // `tel`, `date` e `select` entraram com os campos do cadastro do membro.
+  // Sem listar os tipos aqui eles ficariam com o estilo nativo do navegador,
+  // ao lado de inputs que seguem o tema — visível como dois formulários
+  // diferentes na mesma tela.
   input[type='text'],
   input[type='email'],
-  input[type='password'] {
+  input[type='password'],
+  input[type='tel'],
+  input[type='date'],
+  select {
     box-sizing: border-box;
     width: 100%;
     padding: 0.6rem 0.7rem;
@@ -210,6 +217,21 @@
     margin-top: 0.35rem;
     color: var(--text-muted);
     font-size: 0.75rem;
+  }
+}
+
+/*
+ * Par de campos na mesma linha. `minmax(0, 1fr)` e não `1fr`: sem o 0, o
+ * input de data tem largura mínima do navegador e empurra a coluna, abrindo
+ * rolagem lateral no mobile.
+ */
+.dupla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+
+  .edit-field {
+    min-width: 0;
   }
 }
 
@@ -356,6 +378,12 @@
   }
 
   .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dupla {
+    /* Uma coluna só: em 320px o par de telefone e data de nascimento deixa
+       os dois campos estreitos demais para o teclado do celular. */
     grid-template-columns: 1fr;
   }
 

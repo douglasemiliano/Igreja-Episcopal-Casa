@@ -1,0 +1,159 @@
+<div class="concluir">
+  <div class="cartao">
+    @if (carregando()) {
+      <div class="carregando">
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        Verificando seu cadastro...
+      </div>
+    } @else if (bloqueado() === 'ambiguo') {
+      <mat-icon class="marca alerta">help_outline</mat-icon>
+      <h2>Precisamos confirmar quem você é</h2>
+      <p>
+        Existem mais de um cadastro em aberto com o mesmo e-mail
+        <strong>{{ emailConta() }}</strong>. Por segurança o sistema não escolhe
+        um sozinho, porque isso poderia ligar a sua conta à pessoa errada.
+      </p>
+      <p class="observacao">
+        Fale com a secretaria da igreja informando o seu nome completo. Eles
+        resolvem o cadastro e você entra normalmente na próxima vez.
+      </p>
+      <button type="button" class="btn btn-outline-secondary" (click)="sair()">Sair da conta</button>
+    } @else if (bloqueado() === 'sem_email') {
+      <mat-icon class="marca alerta">mail_outline</mat-icon>
+      <h2>Sua conta não tem e-mail</h2>
+      <p>
+        O cadastro de membros é ligado pelo e-mail, e a sua conta foi criada sem
+        um. Fale com a secretaria para ajustar o e-mail da conta e depois volte
+        aqui.
+      </p>
+      <button type="button" class="btn btn-outline-secondary" (click)="sair()">Sair da conta</button>
+    } @else if (bloqueado() === 'erro') {
+      <mat-icon class="marca alerta">error_outline</mat-icon>
+      <h2>Não foi possível verificar seu cadastro</h2>
+      <p>
+        O sistema não respondeu a tempo. Isso costuma ser a conexão com o banco
+        ou uma atualização que ainda não foi aplicada.
+      </p>
+      <p class="observacao">
+        Se preferir não esperar, pode entrar assim mesmo e conferir seus dados
+        depois pelo perfil.
+      </p>
+      <button type="button" class="btn btn-primary" (click)="recarregar()">Tentar de novo</button>
+      <button type="button" class="btn btn-link pular" (click)="entrarAssim()">
+        Entrar mesmo assim
+      </button>
+      <button type="button" class="btn btn-link pular" (click)="sair()">Sair da conta</button>
+    } @else {
+      <mat-icon class="marca">how_to_reg</mat-icon>
+
+      @if (ehPreCadastro()) {
+        <h2>Complete seu cadastro</h2>
+      } @else {
+        <h2>Confira seus dados</h2>
+      }
+
+      <p class="subtitulo">
+        Você entrou com
+        @if (emailConta()) {
+          <span class="email">{{ emailConta() }}</span>
+        } @else {
+          a sua conta
+        }
+        @if (ehPreCadastro()) {
+          e já abrimos seu registro na lista de membros, ainda como pendente.
+          São só os dados que só você tem.
+        } @else {
+          e acabamos de ligar a sua conta a ele. O que a secretaria preencheu
+          aparece abaixo: confira e complete o que estiver faltando.
+        }
+      </p>
+
+      <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+        <div class="campo">
+          <label class="form-label" for="nome">Nome completo</label>
+          <input
+            id="nome"
+            type="text"
+            class="form-control"
+            formControlName="nome"
+            autocomplete="name">
+          @if (form.controls.nome.touched && form.controls.nome.invalid) {
+            <small class="erro">
+              @if (form.controls.nome.hasError('required')) {
+                O nome completo é obrigatório.
+              } @else {
+                Use pelo menos 3 letras.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="dupla">
+          <div class="campo">
+            <label class="form-label" for="telefone">Telefone</label>
+            <input
+              id="telefone"
+              type="tel"
+              class="form-control"
+              formControlName="telefone"
+              autocomplete="tel"
+              placeholder="(00) 00000-0000">
+          </div>
+
+          <div class="campo">
+            <label class="form-label" for="nascimento">Data de nascimento</label>
+            <input id="nascimento" type="date" class="form-control" formControlName="dataNascimento">
+          </div>
+        </div>
+
+        <div class="dupla">
+          <div class="campo">
+            <label class="form-label" for="sexo">Sexo</label>
+            <select id="sexo" class="form-select" formControlName="sexo">
+              <option value="">Selecione</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label class="form-label" for="funcao">Função na igreja</label>
+            <input
+              id="funcao"
+              type="text"
+              class="form-control"
+              formControlName="funcao"
+              placeholder="Ex.: Diaconisa, Membro">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label class="form-label" for="endereco">Endereço</label>
+          <input
+            id="endereco"
+            type="text"
+            class="form-control"
+            formControlName="endereco"
+            autocomplete="street-address">
+        </div>
+
+        <p class="observacao">
+          Data de entrada e o restante dos dados do registro ficam com a
+          secretaria.
+        </p>
+
+        <button type="submit" class="btn btn-primary enviar" [disabled]="enviando()">
+          @if (enviando()) {
+            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+          }
+          {{ ehPreCadastro() ? 'Concluir cadastro' : 'Salvar meus dados' }}
+        </button>
+
+        <button type="button" class="btn btn-link pular" [disabled]="enviando()" (click)="pular()">
+          Agora não, fazer depois
+        </button>
+      </form>
+    }
+  </div>
+</div>

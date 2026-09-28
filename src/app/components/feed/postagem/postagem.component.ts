@@ -72,8 +72,20 @@ export class PostagemComponent {
     leitor: 'Membro'
   };
 
+  /**
+   * `autor` vem nulo quando `feed_publicacoes.autor_id` é NULL, o que acontece
+   * depois que a conta do autor é excluída (a FK é `on delete set null`, para
+   * o texto da publicação sobreviver). Nesse caso o texto original do autor
+   * não está mais em lugar nenhum do banco, então o rótulo tem que dizer
+   * isso — "Usuário" sugeriria que a publicação ficou órfã por engano.
+   */
+  get autorRemovido(): boolean {
+    return !this.publicacao.autor;
+  }
+
   get autorNome(): string {
-    return this.publicacao.autor?.nome || this.publicacao.autor?.email || 'Usuário';
+    if (this.autorRemovido) return 'Conta removida';
+    return this.publicacao.autor.nome || this.publicacao.autor.email || 'Usuário';
   }
 
   /** Avatar do autor; vazio quando não há foto, caindo nas iniciais. */

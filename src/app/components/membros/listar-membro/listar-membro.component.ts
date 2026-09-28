@@ -6,24 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-
-interface Confirmacao {
-  id: string;
-  data_confirmacao: string;
-  oficiante?: string;
-}
-
-interface Membro {
-  id: string;
-  nome_completo: string;
-  email?: string | null;
-  telefone?: string | null;
-  funcao?: string | null;
-  data_entrada?: string | null;
-  data_nascimento?: string | null;
-  /** PostgREST devolve `null` sem relação e um array com relação. */
-  confirmacao?: Confirmacao[] | Confirmacao | null;
-}
+import { ConfirmacaoMembro, Membro } from '../../../model/membro.model';
+import { ModalConfirmacaoService } from '../../utils/modal-confirmacao/modal-confirmacao.service';
 
 type FiltroStatus = 'todos' | 'confirmados' | 'pendentes';
 
@@ -40,6 +24,7 @@ export class ListarMembrosComponent implements OnInit {
   private readonly supabaseService = inject(SupabaseService);
   private readonly permissao = inject(PermissaoService);
   private readonly toast = inject(ToastService);
+  private readonly confirmacao = inject(ModalConfirmacaoService);
 
   membros: Membro[] = [];
   /** Resultado do filtro, guardado em vez de recalculado no template. */
@@ -66,12 +51,18 @@ export class ListarMembrosComponent implements OnInit {
   /**
    * A tela de cadastro tem chave no catálogo, então decide por ela.
    *
-   * As ações de confirmar e excluir ainda dependem de roles, porque não existe
-   * chave que as descreva — é uma das pendências da seção 3.3 do plano de
-   * permissões. Quando as chaves existirem, é aqui que o papel sai.
+   * Confirmar ainda depende de roles, porque não existe chave que a descreva.
+   * Excluir passou a ter a chave `excluir_membros`
+   * (supabase/20260927_excluir_membro_e_conta.sql) — a operação derruba a
+   * conta de login, e botão escondido não é proteção: quem chamar a função
+   * direto é barrado no banco pela mesma chave.
    */
   get podeCadastrar(): boolean {
     return this.permissao.pode('cadastrar_membros');
+  }
+
+  get podeExcluir(): boolean {
+    return this.permissao.pode('excluir_membros') || this.temPermissao(['administrador', 'secretaria']);
   }
 
   async carregarMembros(preservarPagina = false) {
@@ -143,7 +134,7 @@ export class ListarMembrosComponent implements OnInit {
     return Boolean(membro.confirmacao);
   }
 
-  confirmacoesDe(membro: Membro): Confirmacao[] {
+  confirmacoesDe(membro: Membro): ConfirmacaoMembro[] {
     if (Array.isArray(membro.confirmacao)) return membro.confirmacao;
     return membro.confirmacao ? [membro.confirmacao] : [];
   }
@@ -254,18 +245,58 @@ export class ListarMembrosComponent implements OnInit {
     }
   }
 
+  /**
+   * Exclui o membro e derruba a conta dele.
+   *
+   * O `confirm()` nativo foi trocado pelo modal do projeto porque a operação
+   * parou de ser reversível: junto com a conta vai o perfil, e a pessoa não
+   * consegue mais entrar. O modal lista o que vai acontecer antes de perguntar.
+   */
   async deletarMembro(membro: Membro): Promise<void> {
-    if (!confirm(`Tem certeza que deseja deletar o membro ${membro.nome_completo}?`)) return;
+    const previa = await this.supabaseService.previaExclusaoMembro(membro.id);
 
-    const { error } = await this.supabaseService.deleteMembro(membro.id);
-    if (error) {
-      console.error('Erro ao deletar:', error);
-      this.toast.erro('Erro ao deletar membro.');
+    const detalhes: string[] = [
+      'O registro sai da lista de membros.',
+    ];
+
+    if (previa.temConta) {
+      detalhes.push('A conta de login é excluída. A pessoa não consegue mais entrar.');
+      if (previa.publicacoes > 0) {
+        const plural = previa.publicacoes === 1 ? 'publicação fica' : 'publicações ficam';
+        detalhes.push(
+          `${previa.publicacoes} ${plural} no mural ${previa.publicacoes === 1 ? 'fica' : 'ficam'} ` +
+            'sem autor. O texto é preservado, mas o nome some.'
+        );
+      }
+      detalhes.push('Não dá para desfazer.');
+    } else {
+      detalhes.push('Esta pessoa nunca entrou no sistema, então não há conta a excluir.');
+    }
+
+    const confirmou = await this.confirmacao.confirmar(
+      previa.temConta
+        ? `Excluir ${membro.nome_completo} e a conta de login dela?`
+        : `Remover ${membro.nome_completo} da lista de membros?`,
+      {
+        titulo: previa.temConta ? 'Excluir membro e conta' : 'Remover da lista',
+        detalhes,
+        textoConfirmar: previa.temConta ? 'Excluir tudo' : 'Remover',
+        perigo: previa.temConta,
+      }
+    );
+
+    if (!confirmou) return;
+
+    const resultado = await this.supabaseService.excluirMembroEConta(membro.id);
+    if (resultado.status !== 'ok') {
+      this.toast.erro(resultado.mensagem ?? 'Erro ao excluir membro.');
       return;
     }
 
     this.membros = this.membros.filter((m) => m.id !== membro.id);
     this.refiltrar(true);
-    this.toast.sucesso('Membro removido.');
+    this.toast.sucesso(
+      resultado.conta_excluida ? 'Membro e conta excluídos.' : 'Membro removido.'
+    );
   }
 }

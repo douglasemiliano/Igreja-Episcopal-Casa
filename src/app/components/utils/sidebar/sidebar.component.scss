@@ -39,10 +39,12 @@
 .link-text,
 .user-name {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   opacity: 1;
   visibility: visible;
   transition: opacity 0.2s ease, visibility 0.2s ease;
-}
+ }
 
 .sidebar.collapsed .brand-text,
 .sidebar.collapsed .link-text,
@@ -375,7 +377,18 @@ ul.nav li .nav-link {
   }
 
 
-  .user-name {
+/* `min-width: 0` é o que permite o nome encolher dentro da linha: sem ele o
+   item flex usa o tamanho do texto como piso e o nome nowrap empurra o
+   conteúdo para fora da barra. Trocou as utilitárias `d-flex flex-column` do
+   template porque `min-width` não existe como utilitária do Bootstrap. */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.user-name {
     font-size: 14px;
 
     font-weight: 600;

@@ -93,24 +93,7 @@ export class SidebarComponent implements OnDestroy, OnInit {
   }
 
   private async carregarUsuario(): Promise<void> {
-    try {
-      const [session, roles] = await Promise.all([
-        this.supabaseService.getSession(),
-        this.supabaseService.getRoles()
-      ]);
-
-      const user = session.data?.session?.user;
-      if (!user) return;
-
-      const metadata = user.user_metadata ?? {};
-      this.coreService.setUsuario({
-        nome: metadata['name'] || metadata['full_name'] || 'Você',
-        foto: metadata['avatar_url'] || '',
-        roles
-      });
-    } catch (erro) {
-      console.error('Não foi possível obter a sessão:', erro);
-    }
+    await this.coreService.carregarUsuario();
   }
  
   ngOnDestroy(): void {

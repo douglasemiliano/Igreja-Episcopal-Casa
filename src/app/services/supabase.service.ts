@@ -6,8 +6,22 @@ import {
   SupabaseClient,
   User
 } from '@supabase/supabase-js';
-import { environment } from '../../environments/environments.development';
+// O build de desenvolvimento substitui este arquivo pelo
+// environments.development.ts (fileReplacements em angular.json). Importar o
+// de desenvolvimento direto aqui fazia o bundle de production apontar para
+// localhost.
+import { environment } from '../../environments/environments';
 import { LoadingService } from './loading.service'; // Importando seu serviço de loading
+import {
+  DadosCompletarCadastro,
+  DadosPerfilMembro,
+  MembroVinculo,
+  normalizarStatus,
+  PreviaExclusao,
+  ResultadoExclusaoMembro,
+  ResultadoOperacao,
+  StatusVinculoResposta,
+} from '../model/membro.model';
 
 /**
  * Teto do arquivo escolhido pelo usuário, antes da compactação.
@@ -332,16 +346,22 @@ export class SupabaseService {
     return { erro: null };
   }
 
-    // Login com Google
-signInWithGoogle() {
-  return this.supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      // Usando template string para garantir a rota /dashboard correta
-      redirectTo: `${environment.REDIRECT_URL}/dashboard` 
-    }
-  });
-}
+  // Login com Google
+  //
+  // O redirect vai para /home e nao para /dashboard de proposito: /dashboard
+  // exige a chave ver_dashboard, e quem nao tem caia num redirect do
+  // PermissaoGuard para /home sem nenhuma explicacao. Assumindo /home, quem
+  // precisa de outra coisa e levado pelo CadastroGuard, que sabe o motivo.
+  signInWithGoogle() {
+    // Barra final no REDIRECT_URL viraria barra dupla na concatenacao.
+    const base = environment.REDIRECT_URL.replace(/\/+$/, '');
+    return this.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${base}/home`
+      }
+    });
+  }
 
 
 
@@ -416,15 +436,189 @@ addMembro(membro: any) {
   return this.supabase.from('membros').insert([membro]);
 }
 
-// Atualizar membro
-updateMembro(id: string, membro: any) {
-  return this.supabase.from('membros').update(membro).eq('id', id);
-}
+  // Atualizar membro
+  updateMembro(id: string, membro: any) {
+    return this.supabase.from('membros').update(membro).eq('id', id);
+  }
 
-// Deletar membro
-deleteMembro(id: string) {
-  return this.supabase.from('membros').delete().eq('id', id);
-}
+  // --------------------------------------------------------------------------
+  // Vinculo entre a conta de login e o registro em membros.
+  //
+  // Estas tres funcoes sao SECURITY DEFINER no banco (20260927_vincular_membros.sql).
+  // Nao ha policy de INSERT em membros para o proprio usuario de proposito: a
+  // escrita passa pela funcao, que so aceita mexer na linha apontada pelo
+  // user_id do proprio auth.uid().
+  // --------------------------------------------------------------------------
+
+  /**
+   * Idempotente. Procura membro pelo email normalizado e, se nao achar,
+   * abre um pre-cadastro. Chamar em toda navegacao nao faz mal.
+   */
+  async entrarNoMembro(): Promise<StatusVinculoResposta> {
+    const { data, error } = await this.supabase.rpc('entrar_no_membro');
+    if (error) {
+      return { status: 'erro', mensagem: 'Não foi possível verificar seu cadastro.' };
+    }
+
+    const resposta = normalizarStatus(data);
+
+    /*
+     * `verificado` chega como timestamptz, e portanto como TEXTO
+     * ("2026-09-28T01:30:00+00:00"), não como booleano. A tela de cadastro
+     * compara com `!== true`, então uma string não Null — mesmo já preenchida
+     * — contava como "nunca conferiu". O efeito era um laço sem saída: a
+     * pessoa concluía, o banco gravava o carimbo, e o guard a devolvia para a
+     * mesma tela, porque o carimbo era lido no formato errado.
+     *
+     * Traduzir aqui, e não no consumidor, porque a regra "o que o front precisa
+     * é um sim ou não" vale para toda chamada. `meuMembro` faz o mesmo.
+     */
+    const bruto = resposta as StatusVinculoResposta & { verificado?: string | boolean | null };
+
+    return {
+      ...resposta,
+      verificado: !!bruto.verificado,
+    };
+  }
+
+  /** Leitura pura do membro ligado a conta atual. Nao cria nem altera nada. */
+  async meuMembro(): Promise<MembroVinculo> {
+    const { data, error } = await this.supabase.rpc('meu_membro');
+    if (error) {
+      return { existe: false, completo: false };
+    }
+    const bruto = (data ?? { existe: false, completo: false }) as MembroVinculo & {
+      verificado?: string | null;
+    };
+    return {
+      ...bruto,
+      // O banco devolve timestamptz. O que o front precisa saber e so se a
+      // tela ja foi vista, entao a data vira booleano aqui.
+      verificado: !!bruto.verificado,
+    };
+  }
+
+  /**
+   * Sai da tela sem preencher. Carimba a marca do mesmo jeito, senao ela volta
+   * no proximo login. O registro em si nao e tocado.
+   */
+  async pularAtualizacaoCadastral(): Promise<ResultadoOperacao> {
+    const { data, error } = await this.supabase.rpc('pular_atualizacao_cadastral');
+    if (error) {
+      return { status: 'erro' };
+    }
+    return (data ?? { status: 'erro' }) as ResultadoOperacao;
+  }
+
+  /** Fecha o pre-cadastro. Chamar completarMeuCadastro quando a pessoa envia. */
+  async completarMeuCadastro(dados: DadosCompletarCadastro): Promise<ResultadoOperacao> {
+    const { data, error } = await this.supabase.rpc('completar_meu_cadastro', {
+      p_nome: dados.nome ?? null,
+      p_telefone: dados.telefone ?? null,
+      p_data_nascimento: dados.dataNascimento || null,
+      p_sexo: dados.sexo ?? null,
+      p_endereco: dados.endereco ?? null,
+      p_funcao: dados.funcao ?? null,
+    });
+
+    if (error) {
+      return { status: 'erro', mensagem: 'Não foi possível salvar seu cadastro.' };
+    }
+    return (data ?? { status: 'erro', mensagem: 'Resposta inesperada do banco.' }) as ResultadoOperacao;
+  }
+
+  /**
+   * Grava a edição do perfil em `membros`.
+   *
+   * Não passa por `atualizarNome`, que escreve em `profiles`: o perfil passou a
+   * ser o cadastro do membro, e o nome da conta é só o espelho que o cabeçalho
+   * consome. `sem_vinculo` é um estado esperado, não uma falha — devolve
+   * quem entrou no app sem ter conta na lista de membros.
+   */
+  async atualizarMeuPerfil(dados: DadosPerfilMembro): Promise<ResultadoOperacao> {
+    const { data, error } = await this.supabase.rpc('atualizar_meu_perfil', {
+      p_nome: dados.nome ?? null,
+      p_telefone: dados.telefone ?? null,
+      p_data_nascimento: dados.dataNascimento || null,
+      p_sexo: dados.sexo ?? null,
+      p_endereco: dados.endereco ?? null,
+      p_funcao: dados.funcao ?? null,
+    });
+
+    if (error) {
+      return { status: 'erro', mensagem: 'Não foi possível salvar o perfil.' };
+    }
+
+    const bruto = (data ?? { status: 'erro', mensagem: 'Resposta inesperada do banco.' }) as {
+      status: ResultadoOperacao['status'];
+      id?: string | null;
+      perfil_sincronizado?: boolean;
+      mensagem?: string;
+    };
+
+    return {
+      status: bruto.status,
+      id: bruto.id,
+      perfilSincronizado: bruto.perfil_sincronizado,
+      mensagem: bruto.mensagem,
+    };
+  }
+
+  /**
+   * Previa do que a exclusão vai apagar, para o modal montar a confirmação.
+   * Não escreve nada.
+   */
+  async previaExclusaoMembro(id: string): Promise<PreviaExclusao> {
+    const { data, error } = await this.supabase
+      .from('membros')
+      .select('id, nome_completo, user_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error || !data) {
+      return { temConta: false, publicacoes: 0 };
+    }
+
+    if (!data.user_id) {
+      return { temConta: false, publicacoes: 0, nome: data.nome_completo };
+    }
+
+    const { count } = await this.supabase
+      .from('feed_publicacoes')
+      .select('id', { count: 'exact', head: true })
+      .eq('autor_id', data.user_id);
+
+    return { temConta: true, publicacoes: count ?? 0, nome: data.nome_completo };
+  }
+
+  /**
+   * Exclui o membro e derruba a conta dele.
+   *
+   * Não dá para fazer pelo `auth.admin.deleteUser()`: a SUPABASE_KEY do bundle
+   * é a chave `anon`, e apagar usuário exige `service_role`. A escrita em
+   * auth.users acontece dentro de `excluir_membro_e_conta`, SECURITY DEFINER,
+   * que revalida `public.pode('excluir_membros')` a cada chamada — ou seja,
+   * esconder o botão na interface não é a proteção.
+   */
+  async excluirMembroEConta(id: string): Promise<ResultadoExclusaoMembro> {
+    const { data, error } = await this.supabase.rpc('excluir_membro_e_conta', {
+      p_membro_id: id,
+    });
+
+    if (error) {
+      return { status: 'erro', mensagem: 'Não foi possível excluir o membro.' };
+    }
+    return (data ?? { status: 'erro', mensagem: 'Resposta inesperada do banco.' }) as ResultadoExclusaoMembro;
+  }
+
+/*
+ * Removido: `deleteMembro(id)`, que fazia `from('membros').delete()` direto.
+ *
+ * A exclusão passou por `excluirMembroEConta`. Deixar o caminho antigo vivo
+ * seria uma armadilha: apagava o registro e mantinha a conta, e na volta ao
+ * login `entrar_no_membro` não encontraria o e-mail em nenhum membro e abriria
+ * um pre-cadastro novo — a pessoa sairia da lista e voltaria sozinha.
+ */
 
 // --- CONFIRMAÇÕES ---
 

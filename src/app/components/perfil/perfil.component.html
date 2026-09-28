@@ -56,7 +56,32 @@
         </div>
 
         <div class="profile-field">
-          <span>Função</span>
+          <span>Função na igreja</span>
+          <strong>{{ membro()?.funcao || 'Não informada' }}</strong>
+        </div>
+
+        <div class="profile-field">
+          <span>Telefone</span>
+          <strong>{{ membro()?.telefone || 'Não informado' }}</strong>
+        </div>
+
+        <div class="profile-field">
+          <span>Data de nascimento</span>
+          <strong>{{ dataNascimentoBruta || 'Não informada' }}</strong>
+        </div>
+
+        <div class="profile-field">
+          <span>Sexo</span>
+          <strong>{{ membro()?.sexo || 'Não informado' }}</strong>
+        </div>
+
+        <div class="profile-field">
+          <span>Endereço</span>
+          <strong>{{ membro()?.endereco || 'Não informado' }}</strong>
+        </div>
+
+        <div class="profile-field">
+          <span>Perfil de acesso</span>
           <strong>{{ labels.length ? labels.join(' · ') : 'Membro' }}</strong>
         </div>
       </div>
@@ -66,9 +91,17 @@
         <section class="edit-block">
           <h2>Dados</h2>
 
+          @if (!temCadastro) {
+            <p class="edit-hint">
+              <mat-icon>info</mat-icon>
+              Esta conta ainda não tem um cadastro na lista de membros, então não há o que
+              editar. A secretaria pode vincular o seu registro a esta conta.
+            </p>
+          }
+
           <label class="edit-field">
-            <span>Nome</span>
-            <input type="text" name="nome" maxlength="80" [(ngModel)]="novoNome" placeholder="Como você quer ser chamado">
+            <span>Nome completo</span>
+            <input type="text" name="nome" maxlength="80" [(ngModel)]="novoNome" [disabled]="!temCadastro" placeholder="Como você quer ser chamado">
           </label>
 
           <div class="edit-field">
@@ -77,14 +110,49 @@
             <small>O e-mail é gerenciado pela autenticação e não pode ser alterado aqui.</small>
           </div>
 
+          <div class="dupla">
+            <label class="edit-field">
+              <span>Telefone</span>
+              <input type="tel" name="telefone" [(ngModel)]="telefone" [disabled]="!temCadastro" placeholder="(00) 00000-0000">
+            </label>
+
+            <label class="edit-field">
+              <span>Data de nascimento</span>
+              <input type="date" name="dataNascimento" [(ngModel)]="dataNascimento" [disabled]="!temCadastro">
+            </label>
+          </div>
+
+          <div class="dupla">
+            <label class="edit-field">
+              <span>Sexo</span>
+              <select name="sexo" [(ngModel)]="sexo" [disabled]="!temCadastro">
+                <option value="">Selecione</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Feminino">Feminino</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </label>
+
+            <label class="edit-field">
+              <span>Função na igreja</span>
+              <input type="text" name="funcao" [(ngModel)]="funcao" [disabled]="!temCadastro" placeholder="Ex.: Diaconisa">
+            </label>
+          </div>
+
+          <label class="edit-field">
+            <span>Endereço</span>
+            <input type="text" name="endereco" [(ngModel)]="endereco" [disabled]="!temCadastro" placeholder="Rua, número, bairro, cidade">
+          </label>
+
           <p class="edit-hint">
             <mat-icon>info</mat-icon>
-            Para trocar a foto, clique na sua imagem acima. JPG, PNG ou WEBP, até 10 MB — a imagem é reduzida para 512px antes de ser enviada.
+            Data de entrada e nome de batismo ficam com a secretaria. Para trocar a foto,
+            clique na sua imagem acima — JPG, PNG ou WEBP, até 10 MB.
           </p>
 
           <div class="edit-actions">
-            <button type="button" class="primary-button" [disabled]="salvando || !nomeAlterado" (click)="salvarNome()">
-              {{ salvando ? 'Salvando...' : 'Salvar' }}
+            <button type="button" class="primary-button" [disabled]="salvando || !algoAlterado || !temCadastro" (click)="salvarDados()">
+              {{ salvando ? 'Salvando...' : 'Salvar cadastro' }}
             </button>
           </div>
         </section>

@@ -2,15 +2,30 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title h5">Confirmação</h2>
+        <h2 class="modal-title h5">{{ titulo }}</h2>
         <button type="button" class="btn-close" (click)="cancelar()" aria-label="Fechar"></button>
       </div>
       <div class="modal-body">
         <p>{{ mensagem }}</p>
+
+        @if (detalhes.length) {
+          <ul class="consequencias">
+            @for (item of detalhes; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        }
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="cancelar()">Não</button>
-        <button type="button" class="btn btn-primary" (click)="confirmar()">Sim</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">{{ textoCancelar }}</button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn-danger]="perigo"
+          [class.btn-primary]="!perigo"
+          (click)="confirmar()">
+          {{ textoConfirmar }}
+        </button>
       </div>
     </div>
   </div>

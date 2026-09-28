@@ -102,6 +102,8 @@
                 [attr.aria-label]="'Confirmar ' + membro.nome_completo">
                 <mat-icon>how_to_reg</mat-icon> Confirmar
               </button>
+            }
+            @if (podeExcluir) {
               <button
                 type="button"
                 class="acao perigo"

@@ -145,6 +145,13 @@
   border-radius: 1rem;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 
+  /* Item de grid tem `min-width: auto`, e o piso do tamanho dele é o
+     min-content. Com o nome em `nowrap`, esse piso era o nome inteiro, então
+     o card esticava para fora da coluna e a grade vazava da tela no mobile.
+     Zerando aqui, o nome passa a ser cortado de verdade pelo `overflow` do
+     `.nomes strong` em vez de empurrar o card. */
+  min-width: 0;
+
   &:hover {
     transform: translateY(-2px);
     border-color: var(--color-primary);
@@ -212,9 +219,18 @@
   strong {
     font-weight: var(--font-semibold);
     line-height: 1.25;
+    /* Duas linhas em vez de uma com reticências. O cartão existe para
+       identificar a pessoa, e "DOUGLAS HEMI…" não identifica ninguém — com
+       nome em caixa alta de cadastro, a reticência aparecia em quase todo
+       mundo. O clamp segura o card sem cortar o nome ao meio. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* Rede de segurança para nome sem espaço nenhum, que o clamp não corta
+       no meio da palavra. */
+    overflow-wrap: break-word;
   }
 
   small {
