@@ -371,14 +371,25 @@
     flex-direction: column;
   }
 
+  /* `align-items: flex-start` num flex column deixa a largura do filho ser o
+     tamanho do conteúdo, e não mais a do container. O `overflow: hidden` do
+     h1 existe, mas ele não tinha o que cortar: o próprio bloco já crescia
+     junto com o nome. Sem este `width`, o nome inteiro saía do card. */
+  .profile-heading {
+    width: 100%;
+  }
+
   .edit-button {
     margin-left: 0;
     width: 100%;
     justify-content: center;
   }
 
+  /* `1fr` e não `minmax(0, 1fr)`: um `1fr` sozinho tem mínimo `auto`, que é
+     o min-content. O nome em `nowrap` virava a largura mínima da coluna e
+     esticava o card inteiro. */
   .profile-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .dupla {
