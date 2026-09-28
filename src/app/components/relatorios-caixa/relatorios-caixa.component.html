@@ -337,8 +337,8 @@
 </div>
 
 @if (modalReabrirAberto && caixaParaReabrir) {
-  <div class="modal-backdrop" role="presentation" (click)="fecharModalReabertura()">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="reabrir-title" (click)="$event.stopPropagation()">
+  <div class="reabertura-backdrop" role="presentation" (click)="fecharModalReabertura()">
+    <section class="reabertura-modal" role="dialog" aria-modal="true" aria-labelledby="reabrir-title" (click)="$event.stopPropagation()">
       <div class="modal-head">
         <div>
           <p class="eyebrow">Corrigir o caixa de {{ formatarData(caixaParaReabrir.aberto_em) }}</p>
@@ -367,6 +367,10 @@
         <input [(ngModel)]="observacoesReabertura" name="obs_reabertura" placeholder="Quitação de fiado da hamburgada">
         <small class="field-hint">Obrigatório. Fica registrado na reabertura deste caixa.</small>
       </label>
+
+      @if (erro) {
+        <div class="alert" role="alert">{{ erro }}</div>
+      }
 
       <div class="modal-actions">
         <button type="button" class="refresh-button" (click)="fecharModalReabertura()">Cancelar</button>
