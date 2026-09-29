@@ -40,3 +40,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Ambiente (gerado por mynode.js a partir de process.env / src/.env)
+src/.env
+src/environments/environments.development.ts
+src/environments/environments.prod.ts

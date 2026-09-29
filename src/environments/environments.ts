@@ -1,16 +1,18 @@
-// Valores de PRODUCAO. O build de desenvolvimento troca este arquivo pelo
-// environments.development.ts via fileReplacements (ver angular.json).
+// Placeholder. Nao e mais a fonte de nenhum build.
 //
-// A chave abaixo e a chave anon do Supabase: ela e feita para ser publica e
-// vai no bundle do navegador de qualquer jeito. O que nao pode ir para o
-// bundle e a service_role.
+// Antes este arquivo carregava a URL e a chave do Supabase e ia direto para o
+// bundle, o que fazia os dois ambientes apontarem para o mesmo banco. Agora:
 //
-// Se a producao usar outro projeto Supabase, troque SUPABASE_URL e SUPABASE_KEY
-// aqui.
+//   dev  -> src/.env        via mynode.js -> environments.development.ts
+//   prod -> Vercel          via mynode.js -> environments.prod.ts
+//
+// O build falha se SUPABASE_URL ou SUPABASE_KEY nao estiverem definidas, para
+// nunca publicar silenciosamente o banco errado.
+//
+// Este arquivo so existe para satisfazer o compilador de editor. Ele nao precisa
+// ter valor real.
 export const environment = {
-    SUPABASE_URL: 'https://cpnlcjwgwaaeptyudzec.supabase.co',
-    SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwbmxjandnd2FhZXB0eXVkemVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MzAwMTAsImV4cCI6MjA2MTAwNjAxMH0.R0mxsuT6bdtvqyX8cevpzQLZIIkW0TuQgM3BeDCPbi4',
-    // Sem barra no final: o redirect concatena o caminho e a barra viraria
-    // barra dupla na URL.
-    REDIRECT_URL: 'https://icasa.vercel.app'
+    SUPABASE_URL: '',
+    SUPABASE_KEY: '',
+    REDIRECT_URL: '',
   };
