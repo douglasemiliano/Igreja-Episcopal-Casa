@@ -443,6 +443,40 @@
 
 
 /* =====================================================
+   LINKS LEGAIS
+   Mesma escala e cor do texto de cadastro, um tom abaixo: a pessoa tem de
+   conseguir ler, mas o alvo da tela é o formulário, não o rodapé legal.
+   Os arquivos ficam em public/ e o Angular serve a partir da raiz, então o
+   caminho é relativo à raiz e não à rota - abrir em aba nova para não perder
+   o que já foi digitado no formulário.
+===================================================== */
+
+.legal-links {
+  margin: 0.9rem 0 0;
+
+  text-align: center;
+
+  color: var(--text-color);
+
+  opacity: 0.6;
+
+  font-size: 0.65rem;
+
+
+  a {
+    color: var(--color-primary);
+
+    text-decoration: none;
+
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+
+/* =====================================================
    COPYRIGHT
 ===================================================== */
 
