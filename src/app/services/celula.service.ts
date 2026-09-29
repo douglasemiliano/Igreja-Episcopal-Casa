@@ -388,6 +388,29 @@ export class CelulaService {
     return data === true;
   }
 
+  /**
+   * `true` quando quem está logado pode definir QUEM LIDERA uma célula.
+   *
+   * Não é a mesma pergunta que `podeFormarNa`, e a diferença é a regra: formar
+   * o grupo é do líder da célula, nomear quem conduz é da direção da igreja
+   * (administrador, pastor, secretaria). Ver
+   * supabase/20261002_lideranca_so_direcao.sql.
+   *
+   * Sai de public.pode_formar_qualquer_celula() pelo mesmo motivo do método
+   * acima: a lista de papéis de direção mora no banco. A tela pergunta, o banco
+   * responde, e a RLS é a mesma regra — a interface e a imposição não podem
+   * divergir.
+   */
+  async podeDefinirLideranca(): Promise<boolean> {
+    const { data, error } = await this.supabase.supabase.rpc('pode_formar_qualquer_celula');
+
+    if (error) {
+      console.error('[celulas] pode_formar_qualquer_celula falhou:', error.code, error.message);
+      return false;
+    }
+    return data === true;
+  }
+
   /** Id do membro ligado à conta logada, ou null se a conta não tem cadastro. */
   private async meuMembroId(): Promise<string | null> {
     const vinculo = await this.vinculo.meuMembro();
