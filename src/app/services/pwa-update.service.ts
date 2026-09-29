@@ -1,9 +1,8 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject, signal } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
-import { ToastService } from './toast.service';
 
-/** De quanto em quanto tempo procurar versão nova com o app aberto. */
+/** De quanto em quando tempo procurar versão nova com o app aberto. */
 const INTERVALO_CHECAGEM_MS = 10 * 60 * 1000;
 
 /**
@@ -16,15 +15,20 @@ const INTERVALO_CHECAGEM_MS = 10 * 60 * 1000;
  * versão nova nunca era ativada — e a saída era remover o app da tela inicial
  * e adicionar de novo.
  *
- * Aqui a versão pronta vira um aviso com botão, e a verificação passa a
- * acontecer quando o app abre, quando ele volta do segundo plano e de tempos
- * em tempos, em vez de esperar o intervalo padrão de 6 horas.
+ * A atualização continua existindo, mas virou silenciosa: quando a versão nova
+ * fica pronta, o estado é guardado e o botão do cabeçalho passa a dizer
+ * "Atualizar agora". Não há mais aviso automático, porque interromper a pessoa
+ * no meio de uma tela para falar de algo que ela resolve com um clique — ou
+ * com o gesto de arrastar para baixo — é mais atrapalhar do que ajudar.
+ *
+ * A periodicidade da verificação também é esta: abrir o app, voltar do segundo
+ * plano e de tempos em tempos, em vez de esperar o intervalo padrão de 6 horas.
  */
 @Injectable({ providedIn: 'root' })
 export class PwaUpdateService {
   private readonly swUpdate = inject(SwUpdate);
-  private readonly toast = inject(ToastService);
   private readonly document = inject(DOCUMENT);
+
 
   /** Versão nova baixada e pronta para virar a ativa. */
   readonly atualizacaoPronta = signal(false);
@@ -116,15 +120,17 @@ export class PwaUpdateService {
     this.document.defaultView?.location.reload();
   }
 
+  /**
+   * Registra que há versão nova esperando.
+   *
+   * Não avisa mais ninguém: o botão do cabeçalho (`atualizacaoDisponivel`) é
+   * quem mostra que existe atualização. O guard continua aqui porque
+   * VERSION_READY e checkForUpdate disparam para o mesmo download, e sem ele
+   * o estado piscaria entre verdadeiro e falso conforme as duas fontes
+   * discordassem.
+   */
   private anunciar(): void {
-    // O VERSION_READY e o checkForUpdate avisam a mesma coisa; dois avisos
-    // para o mesmo download seria dois toasts.
     if (this.atualizacaoPronta()) return;
-
     this.atualizacaoPronta.set(true);
-    this.toast.comAcao('Nova versão do aplicativo disponível.', {
-      rotulo: 'Atualizar agora',
-      executar: () => void this.aplicar(),
-    });
   }
 }
