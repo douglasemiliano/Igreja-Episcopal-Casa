@@ -64,6 +64,18 @@ export class DetalheCelulaComponent implements OnInit {
    */
   readonly podeFormar = signal<boolean>(false);
 
+  /**
+   * Quem pode nomear líder: só a direção da igreja (administrador, pastor,
+   * secretaria). O líder da célula não entra aqui, e é essa a separação que
+   * impede ele de tirar a própria liderança ou de promover quem quiser.
+   *
+   * Vem do banco pelo mesmo motivo de `podeFormar` — ver
+   * supabase/20261002_lideranca_so_direcao.sql. Esconder o botão é o que a
+   * pessoa espera; a RLS é o que de fato impede.
+   */
+  readonly podeDefinirLideranca = signal<boolean>(false);
+
+
   readonly participantes = computed<Participante[]>(() => this.detalhe()?.participantes ?? []);
 
   async ngOnInit(): Promise<void> {
@@ -89,6 +101,7 @@ export class DetalheCelulaComponent implements OnInit {
     try {
       this.detalhe.set(await this.celulasService.detalhe(this.celulaId()));
       this.podeFormar.set(await this.celulasService.podeFormarNa(this.celulaId()));
+      this.podeDefinirLideranca.set(await this.celulasService.podeDefinirLideranca());
 
       if (this.podeFormar()) {
         this.livres.set(await this.celulasService.membrosLivres());
@@ -153,7 +166,17 @@ export class DetalheCelulaComponent implements OnInit {
 
   /** Promove a pessoa a líder, ou devolve o papel. */
   async promover(participante: Participante): Promise<void> {
+    // Nomear e exonerar líder é decisão de direção da igreja. O botão já
+    // some para quem não é, mas a guarda fica porque o método é público: se
+    // alguém chamar por teclado, teste ou link direto, a recusa tem que ser
+    // um motivo legível e não um erro genérico de banco.
+    if (!this.podeDefinirLideranca()) {
+      this.toast.erro('Só a direção da igreja define quem lidera a célula.');
+      return;
+    }
+
     const alvo: PapelCelula = participante.papel === 'lider' ? 'membro' : 'lider';
+
     const resultado = await this.celulasService.definirPapel(
       this.celulaId(),
       participante.membro_id,
@@ -170,6 +193,14 @@ export class DetalheCelulaComponent implements OnInit {
   }
 
   async remover(participante: Participante): Promise<void> {
+    // Apagar a linha de um líder é o mesmo que exonerá-lo, só que pela porta do
+    // DELETE. A policy trata as duas igual, e a tela precisa tratar junto — senão
+    // sobra um "Remover" que o banco recusa.
+    if (participante.papel === 'lider' && !this.podeDefinirLideranca()) {
+      this.toast.erro('Só a direção da igreja tira a liderança de alguém.');
+      return;
+    }
+
     const confirmado = await this.confirmacao.confirmar(
       `Remover ${participante.nome} da célula? A pessoa continua membro da igreja, só fica sem célula.`,
       { titulo: 'Remover da célula', textoConfirmar: 'Remover', perigo: true }

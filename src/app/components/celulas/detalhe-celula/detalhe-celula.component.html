@@ -149,13 +149,17 @@
                 </a>
 
                 @if (podeFormar()) {
-                  <button type="button" class="acao" (click)="promover(participante)">
-                    <mat-icon>{{ participante.papel === 'lider' ? 'star_outline' : 'star' }}</mat-icon>
-                    {{ participante.papel === 'lider' ? 'Tirar liderança' : 'Tornar líder' }}
-                  </button>
-                  <button type="button" class="acao perigo" (click)="remover(participante)">
-                    <mat-icon>person_remove</mat-icon> Remover
-                  </button>
+                  @if (podeDefinirLideranca()) {
+                    <button type="button" class="acao" (click)="promover(participante)">
+                      <mat-icon>{{ participante.papel === 'lider' ? 'star_outline' : 'star' }}</mat-icon>
+                      {{ participante.papel === 'lider' ? 'Tirar liderança' : 'Tornar líder' }}
+                    </button>
+                  }
+                  @if (participante.papel !== 'lider' || podeDefinirLideranca()) {
+                    <button type="button" class="acao perigo" (click)="remover(participante)">
+                      <mat-icon>person_remove</mat-icon> Remover
+                    </button>
+                  }
                 }
               </footer>
             </article>
