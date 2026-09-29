@@ -45,3 +45,14 @@ Thumbs.db
 src/.env
 src/environments/environments.development.ts
 src/environments/environments.prod.ts
+
+# Identidade do PWA (copiado por mynode.js de pwa/<marca>/ conforme a URL do
+# projeto). Sao gerados de proposito: a fonte da verdade e pwa/, e versionar
+# estes aqui faria um build do DES sujar o repositorio com a marca errada.
+public/favicon.svg
+public/favicon.ico
+public/favicon-96x96.png
+public/apple-touch-icon.png
+public/web-app-manifest-192x192.png
+public/web-app-manifest-512x512.png
+public/manifest.webmanifest
