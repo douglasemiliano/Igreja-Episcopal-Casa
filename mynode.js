@@ -85,6 +85,63 @@ if (key.startsWith('sb_secret_')) {
   problema('SUPABASE_KEY e sb_secret_ (secret). Use a publishable, nunca a secret.');
 }
 
+// =====================================================
+// A MARCA DO PWA
+// --------------------------------------------------------
+// O PRD e o DES sao o mesmo aplicativo apontando para bancos diferentes, e o
+// PWA instalado na tela de inicio erixa em dois icones parecidos. A distincao
+// que importa nao esta no codigo: esta no ref do projeto, que ja esta na URL
+// que o build exigiu. Entao a URL decide a marca.
+//
+// A distincao visivel de verdade e o nome e a cor do manifesto, porque e o que
+// o sistema operacional mostra DEBAIXO do icone e na splash. Os PNGs sao
+// placeholders: o script copia os arquivos de pwa/<marca>/ para public/, entao
+// trocar a logo de verdade e so substituir o arquivo la.
+const MARCAS = {
+  'vzmzvhiqfswksyrgyecm': { pasta: 'prd', rotulo: 'PRD' },
+  'cpnlcjwgwaaeptyudzec': { pasta: 'des', rotulo: 'DES' }
+};
+
+// So a URL; a chave e a unica variavel que muda entre os dois e ja foi lida.
+const ref = (url.match(/^https:\/\/([a-z0-9]+)\.supabase\./) || [])[1];
+const marca = MARCAS[ref];
+
+// Arquivos que o index.html e o manifest referenciam por nome fixo. Sao
+// exatamente estes que precisam variar; a pasta public/icons nao entra aqui
+// porque nada a referencia.
+const ARQUIVOS_PWA = [
+  'favicon.svg',
+  'favicon.ico',
+  'favicon-96x96.png',
+  'apple-touch-icon.png',
+  'web-app-manifest-192x192.png',
+  'web-app-manifest-512x512.png',
+  'manifest.webmanifest'
+];
+
+function aplicarMarcaPwa() {
+  if (!marca) {
+    // Projeto novo, ou um terceiro. Deixa o que esta em public/ como esta, em
+    // vez de falhar o build: a marca e uma convenience, nao uma condicao.
+    console.log(`   PWA: ref "${ref || 'desconhecido'}" fora do mapa, mantida a marca atual`);
+    return;
+  }
+
+  const origem = path.join(__dirname, 'pwa', marca.pasta);
+  if (!fs.existsSync(origem)) {
+    console.log(`   PWA: pwa/${marca.pasta}/ nao existe, mantida a marca atual`);
+    return;
+  }
+
+  for (const arquivo of ARQUIVOS_PWA) {
+    const de = path.join(origem, arquivo);
+    if (!fs.existsSync(de)) continue;
+    fs.copyFileSync(de, path.join(__dirname, 'public', arquivo));
+  }
+
+  console.log(ok, `   PWA: marca ${marca.rotulo} (pwa/${marca.pasta}/ -> public/)`);
+}
+
 // Sem barra no final: o redirect concatena o caminho e a barra viraria barra dupla.
 const redirectNormalizado = redirect.replace(/\/+$/, '');
 
@@ -103,7 +160,12 @@ fs.writeFile(destino, conteudo, (err) => {
     console.error(erro, err);
     process.exit(1);
   }
-  console.log(ok, `${checkSign} environments.${modo === 'prod' ? 'prod' : 'development'}.ts gerado`);
+  console.log(ok, `✅ environments.${modo === 'prod' ? 'prod' : 'development'}.ts gerado`);
   console.log(ok, `   SUPABASE_URL: ${url}`);
   console.log(ok, `   REDIRECT_URL: ${redirectNormalizado || '(fallback: window.location.origin)'}`);
+
+  // A marca vai depois do arquivo, e nao antes: assim o build ja comeca com
+  // public/ na versao certa mesmo que a escrita acima tenha sido assincrona.
+  aplicarMarcaPwa();
 });
+
